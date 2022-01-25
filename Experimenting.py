@@ -57,11 +57,10 @@ class Alt():
 
 # Variables, Constants, and Mathematical expressions are all Terms.
 class Term():
-    def __init__(self, name, value, definedIn):
+    def __init__(self, name, value):
         self.name = name
         self.value = str(value)
         self.parents = []
-        self.definedIn = definedIn          # When value is set, this equals the goal it was set in. Only that goal can reset it.
     def __eq__(self, other):
         return self.value == other.value    # This is used to compare terms.
     def __bool__(self):
@@ -84,7 +83,7 @@ def __r{op_name}__(self, other):
 
 class Var(Term):
     def __init__(self, name):
-        super().__init__(name = name, value = "Undefined", definedIn = None)    # Initialize the Var.
+        super().__init__(name = name, value = "Undefined")    # Initialize the Var.
     def __copy__(self):
         return Var(self.name)   
     def __deepcopy__(self, memo):   
@@ -102,7 +101,7 @@ class Var(Term):
 class Const(Term):  # A constant, aka an atom or number.
     def __init__(self, value):
         # Consts are defined wherever they were created.
-        super().__init__(name = "Const", value = value, definedIn = "creation")
+        super().__init__(name = "Const", value = value)
     def __copy__(self):
         return Const(self.value)
     def __deepcopy__(self, memo):
@@ -119,7 +118,7 @@ class Math(Term):          # A mathematical expression.
         self.left = operand1            
         self.operator = operator
         self.right = operand2
-        super().__init__(name = "Math", value = "Undefined", definedIn = None)      
+        super().__init__(name = "Math", value = "Undefined")      
     def doMath(self):
         if isinstance(self.left, Math) and not self.left:
             self.left = self.left.doMath()
@@ -151,21 +150,12 @@ def tryGoal(goal):
             # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
             for attempt in altAttempts:
                 if attempt:
-                    # result = []
-                    # for arg, originalArg in zip(alt, originalAlt):
-                    #     if arg.value and isinstance(originalArg, Var):
-                    #         result.append(arg)
-                    #         # result.append("Boo")
-                    # yield result
-
-                    # yield [arg for arg in goal.args if '''isinstance(arg, Var) <- if previous arg was Var''' and arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
-                    yield [arg for arg in goal.args if arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
-
-                    # yield [arg for arg in goal.args if isinstance(arg, Var) and arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
+                    yield [arg for arg in goal.args if arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars. <- old comment???
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
             for arg in goal.args:
-                if arg.definedIn is goal:       # If the arg was defined in this goal, reset it and all things unified from it.  
-                    changePath(arg, "Undefined", None)
+                # if arg.definedIn is goal:       # If the arg was defined in this goal, reset it and all things unified from it.  
+                if isinstance(arg, Var):
+                    changePath(arg, "Undefined")
     except:
         # If the goal is write/1, print argument to screen.
         if goal.pred == write and len(goal.args) == 1:
@@ -228,22 +218,18 @@ def tryUnify(query, alt):
             if not altArg.value:        # The math failed.
                 return False
         if altArg:                           
-            if queryArg.definedIn:
-                changePath(queryArg, altArg.value, queryArg.definedIn)  # Set all unified terms to new value.
-            else:
-                changePath(queryArg, altArg.value, query)       
+            changePath(queryArg, altArg.value)  # Set all unified terms to new value.   
         elif queryArg:
-            changePath(altArg, queryArg.value, queryArg.definedIn)  # Set all unified terms to new value.
+            changePath(altArg, queryArg.value)  # Set all unified terms to new value.
         altArg.parents.append(queryArg)         # Add the queryArg as a parent of the altArg.
     return True                                 # If it reaches this point, they can be unified.    
 
 
-def changePath(arg, value, definedIn):      
+def changePath(arg, value):      
     if isinstance(arg, Var) or isinstance(arg, Math):    # Only change values if the argument isn't a const.
-        arg.value = value   
-        arg.definedIn = definedIn               
+        arg.value = value            
         for parent in arg.parents:                    
-            changePath(parent, value, definedIn)         # Change each parent to the new value.
+            changePath(parent, value)         # Change each parent to the new value.
 
 
 
