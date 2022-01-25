@@ -1,0 +1,9 @@
+In future versions, don't have DefinedIn. Just, whenever you go into a goal, deepcopy will make all Vars with a value automatically into Consts, and only the ones left as Vars can be redefined. When yielding the result, it will yield all the things that were originally vars when this was called, before the deepcopy. (It would do this by yielding the Consts with the same name as a Var from before the deepcopy.)
+
+Also, predicates should be able to be defined more than once, so the user does not need to put them all at the top of their code. To do this, I should add a deepcopy method to Goal that combines all preds with the same name/arity.
+
+Predicate alternatives should be a dictionary where the key is the arity and value is all the alts whose arg length shares that arity. That way, if predicates share a name, only the alts that share an arity will be searched though. That may speed up time significantly in tryGoal if only one alt has the same arity as the query out of millions that have a different arity.
+
+Maybe make the IS predicate a built in predicate in logic.py. That way, whenever the goal is IS, the program will know to do math. That may remove the need for the term Math().
+
+To add cut (!), maybe just make a bool 'cut = false'. 

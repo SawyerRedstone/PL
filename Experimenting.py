@@ -1,5 +1,4 @@
-# The PL Module offers Prolog functionality for Python programmers.
-# Created by Sawyer Redstone.
+# Removing DefinedIn!
 
 from copy import deepcopy
 
@@ -90,7 +89,10 @@ class Var(Term):
         return Var(self.name)   
     def __deepcopy__(self, memo):   
         if not self.name in memo:
-            result = Var(self.name)
+            if self.value:              # If this Var already has a value, turn it into a Const???
+                result = Const(self.value)
+            else:
+                result = Var(self.name)
             memo[self.name] = result
         else:
             result = memo[self.name]    # If the Var was already copied, don't re-copy.
@@ -139,14 +141,27 @@ class Math(Term):          # A mathematical expression.
 
 
 def tryGoal(goal):
+    originalAlts = goal.pred.alternatives[len(goal.args)]
     try:        # This fails if the predicate has no goals added. 
-        alts = deepcopy(goal.pred.alternatives[len(goal.args)], memo = {})      # Deepcopy the alts of correct arity so that they may be used again later without changes.
+        alts = deepcopy(originalAlts, memo = {})      # Deepcopy the alts of correct arity so that they may be used again later without changes.
+        # for index, alt in enumerate(alts):
+        # for alt, originalAlt in zip(alts, originalAlts):
         for alt in alts:
             altAttempts = tryAlt(goal, alt)
             # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
             for attempt in altAttempts:
                 if attempt:
-                    yield [arg for arg in goal.args if isinstance(arg, Var) and arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
+                    # result = []
+                    # for arg, originalArg in zip(alt, originalAlt):
+                    #     if arg.value and isinstance(originalArg, Var):
+                    #         result.append(arg)
+                    #         # result.append("Boo")
+                    # yield result
+
+                    # yield [arg for arg in goal.args if '''isinstance(arg, Var) <- if previous arg was Var''' and arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
+                    yield [arg for arg in goal.args if arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
+
+                    # yield [arg for arg in goal.args if isinstance(arg, Var) and arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
             for arg in goal.args:
                 if arg.definedIn is goal:       # If the arg was defined in this goal, reset it and all things unified from it.  

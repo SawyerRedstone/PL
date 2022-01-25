@@ -1,6 +1,7 @@
 # This file is used for internal testing.
 
-from PL import *
+# from PL import *
+from Experimenting import *
 
 
 ################### Testing #####################
@@ -153,7 +154,7 @@ Y = Var("Y")
 # success = tryGoal(Goal(child, X, Y))
 
 # # ?- parent(X, Y).
-# success = tryGoal(Goal(parent, X, Y))
+success = tryGoal(Goal(parent, X, Y))
 
 # # ?- father(X, Y).
 # success = tryGoal(Goal(father, X, Y))

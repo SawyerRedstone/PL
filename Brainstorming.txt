@@ -1,0 +1,12 @@
+When someone creates predicate male, what should happen?:
+
+male = Predicate("male")    # This makes an object male(). Male is like a goal. It also creates two functions
+maleAdd("Bob")              # This adds the fact that Bob is male.
+maleAsk(X)                  # This queries for all males.
+
+parent = Predicate("parent")
+X = Var(X)
+Y = Var(Y)
+parent(X, Y).add(child(Y, X)))
+
+-----------
