@@ -139,10 +139,10 @@ class Math(Term):          # A mathematical expression.
         return result
 
 
-def tryGoal(goal):
-    originalAlts = goal.pred.alternatives[len(goal.args)]
+def tryGoal(originalGoal):
+    goal = deepcopy(originalGoal, memo = {})
     try:        # This fails if the predicate has no goals added. 
-        alts = deepcopy(originalAlts, memo = {})      # Deepcopy the alts of correct arity so that they may be used again later without changes.
+        alts = goal.pred.alternatives[len(goal.args)]      # Deepcopy the alts of correct arity so that they may be used again later without changes.
         # for index, alt in enumerate(alts):
         # for alt, originalAlt in zip(alts, originalAlts):
         for alt in alts:
@@ -152,10 +152,10 @@ def tryGoal(goal):
                 if attempt:
                     yield [arg for arg in goal.args if arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars. <- old comment???
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
-            for arg in goal.args:
+            for arg, origArg in zip(goal.args, originalGoal.args):
                 # if arg.definedIn is goal:       # If the arg was defined in this goal, reset it and all things unified from it.  
-                if isinstance(arg, Var):
-                    changePath(arg, "Undefined")
+                # if isinstance(arg, Const) and isinstance(origArg, Var):    # ???
+                    changePath(origArg, "Undefined")
     except:
         # If the goal is write/1, print argument to screen.
         if goal.pred == write and len(goal.args) == 1:
