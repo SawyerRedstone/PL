@@ -154,7 +154,7 @@ Y = Var("Y")
 # success = tryGoal(Goal(child, X, Y))
 
 # # ?- parent(X, Y).
-success = tryGoal(Goal(parent, X, Y))
+# success = tryGoal(Goal(parent, X, Y))
 
 # # ?- father(X, Y).
 # success = tryGoal(Goal(father, X, Y))

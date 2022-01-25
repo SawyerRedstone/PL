@@ -147,6 +147,7 @@ def tryGoal(goal):
             for attempt in altAttempts:
                 if attempt:
                     yield [arg for arg in goal.args if isinstance(arg, Var) and arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
+                    # yield [arg for arg in goal.args if arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
             for arg in goal.args:
                 if arg.definedIn is goal:       # If the arg was defined in this goal, reset it and all things unified from it.  

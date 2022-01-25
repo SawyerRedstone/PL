@@ -89,7 +89,7 @@ class Var(Term):
         return Var(self.name)   
     def __deepcopy__(self, memo):   
         if not self.name in memo:
-            if self.value:              # If this Var already has a value, turn it into a Const???
+            if self:              # If this Var already has a value, turn it into a Const???
                 result = Const(self.value)
             else:
                 result = Var(self.name)
