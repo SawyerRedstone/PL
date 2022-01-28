@@ -221,6 +221,8 @@ def tryUnify(query, alt):
         elif queryArg:
             changePath(altArg, queryArg.value, queryArg.definedIn)  # Set all unified terms to new value.
         altArg.parents.append(queryArg)         # Add the queryArg as a parent of the altArg.
+        # queryArg.parents.append(altArg)         # This doesn't work. ???
+
     return True                                 # If it reaches this point, they can be unified.    
 
 

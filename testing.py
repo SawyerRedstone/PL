@@ -101,7 +101,7 @@ is_digesting.add([A, B], [Goal(just_ate, A, C), Goal(is_digesting, C, B)])
 
 # parent(michael, sawyer).
 # parent(A, B) :- child(B, A).
-parent.add([Const("Michael"), Const("Sawyer")])
+# parent.add([Const("Michael"), Const("Sawyer")])   # Add back later ???
 parent.add([A, B], [Goal(child, B, A)])
 # parent.add([Var("A"), Var("B")], [Goal(child, Var("B"), Var("A"))])     # Test success!
 
