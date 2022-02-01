@@ -1,6 +1,6 @@
 # Removing DefinedIn!
 
-from copy import deepcopy
+from copy import deepcopy, copy
 
 class Predicate():
     def __init__(self, name):
@@ -19,6 +19,12 @@ class Predicate():
             self.alternatives[len(args)].append(Alt(args, goals))
         else:
             self.alternatives[len(args)] = [Alt(args, goals)]
+    def __deepcopy__(self, memo):
+        if not id(self) in memo:
+            result = Predicate(self.name)
+            result.alternatives = deepcopy(self.alternatives)
+            memo[id(self)] = result
+
 
 
 # Goals must be completed in order to satisfy a query.
@@ -30,7 +36,11 @@ class Goal():
         return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
     def __deepcopy__(self, memo):
         if not id(self) in memo:
-            result = Goal(self.pred, *deepcopy(self.args, memo)) # This uses * to unpack the resulting list.
+            # result = Goal(self.pred, *deepcopy(self.args, memo)) # This uses * to unpack the resulting list.
+            result = Goal(deepcopy(self.pred, *copy(self.args)))  #??? Finish this.
+            # result = Goal(deepcopy(self.pred, *[copy(arg) for arg in self.args]))  #???
+
+            # [arg.copy() for arg in self.args]
             memo[id(self)] = result     # This is used to prevent unnecessary copies and infinite recursion.
         else:
             result = memo[id(self)]     # If the goal was already copied, don't copy again.
@@ -85,17 +95,15 @@ class Var(Term):
     def __init__(self, name):
         super().__init__(name = name, value = "Undefined")    # Initialize the Var.
     def __copy__(self):
+        if self.value != "Undefined":              # If this Var already has a value, turn it into a Const???
+            return Const(self.value)
         return Var(self.name)
     def __deepcopy__(self, memo):
         if not self.name in memo:
-            if self.value != "Undefined":              # If this Var already has a value, turn it into a Const???
-                result = Const(self.value)
-            else:
-                result = Var(self.name)
+            result = Var(self.name)
             memo[self.name] = result
         else:
             result = memo[self.name]    # If the Var was already copied, don't re-copy.
-
         return result
 
 
@@ -141,21 +149,23 @@ class Math(Term):          # A mathematical expression.
 
 
 def tryGoal(originalGoal):
+    # Problem! If we deepcopy the entire goal, that means we are copying the goal args, so changing them doesn't change the other goals' args in the alternative. ???
     goal = deepcopy(originalGoal, memo = {})
     try:        # This fails if the predicate has no goals added.
         alts = goal.pred.alternatives[len(goal.args)]
-        # for index, alt in enumerate(alts):
-        # for alt, originalAlt in zip(alts, originalAlts):
+        # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
         for alt in alts:
             altAttempts = tryAlt(goal, alt)
-            # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
             for attempt in altAttempts:
                 if attempt:
+
+                    # for arg, origArg in zip(goal, originalGoal):
+                    #     origArg.value = arg
+
                     yield [arg for arg in goal.args if arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars. <- old comment???
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
             for arg in goal.args:
-                # if arg.definedIn is goal:       # If the arg was defined in this goal, reset it and all things unified from it.
-                if isinstance(arg, Var):    # ???
+                if isinstance(arg, Var):
                     changePath(arg, "Undefined")
     except:
         # If the goal is write/1, print argument to screen.
@@ -223,7 +233,6 @@ def tryUnify(query, alt):
         # This way the path will always be correct, so it will never need to be looped through with changePath.
         elif queryArg:
             altArg.value = queryArg.value        
-
     return True                                 # If it reaches this point, they can be unified.
 
 

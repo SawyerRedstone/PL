@@ -152,6 +152,8 @@ Y = Var("Y")
 
 # # ?- child(X, Y).
 # success = tryGoal(Goal(child, X, Y))
+# success = tryGoal(Goal(child, Var("X"), Var("X")))    # It thinks these Xs are different! ???
+
 
 # # ?- parent(X, Y).
 # success = tryGoal(Goal(parent, X, Y))
