@@ -195,10 +195,7 @@ def tryGoals(goalsToTry):
 
 # This function tries to unify the query and alt args, and returns a bool of its success.
 def tryUnify(query, alt):
-    # # First, make sure the query and alt have the same arity.
-    # if len(query.args) != len(alt.args):                # If the arities don't match, then fail. ???
-    #     return False
-    # Then check if they are able to unify.
+    # First check if they are able to unify.
     for queryArg, altArg in zip(query.args, alt.args):
         if queryArg and altArg and queryArg != altArg:  # If the args both have values and not equal, fail.
             return False
