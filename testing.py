@@ -148,7 +148,7 @@ Y = Var("Y")
 
 # # ?- male(X).
 # # Becomes:
-# success = tryGoal(Goal(male, X))
+success = tryGoal(Goal(male, X))
 
 # # ?- child(X, Y).
 # success = tryGoal(Goal(child, X, Y))
@@ -159,7 +159,7 @@ Y = Var("Y")
 # success = tryGoal(Goal(parent, X, Y))
 
 # # ?- father(X, Y).
-success = tryGoal(Goal(father, X, Y))
+# success = tryGoal(Goal(father, X, Y))
 
 # # ?- child(X, ben).
 # success = tryGoal(Goal(child, X, Const("ben")))
@@ -171,8 +171,8 @@ success = tryGoal(Goal(father, X, Y))
 # success = tryGoal(Goal(just_ate, X, Y))
 
 
-# # ?- write_var(A)
-# success = tryGoal(Goal(write_var, X))
+# # ?- write_var(X)
+# success = tryGoal(Goal(write_var, X))     # ???
 
 # # ?- X is 2 + 4.
 # # ?- is(X, 2 + 4).
@@ -218,14 +218,14 @@ success = tryGoal(Goal(father, X, Y))
 ########################## Check results here! ##########################
 
 
-#### To see all results #####
-for s in success:
-    print(s)
+# #### To see all results #####
+# for s in success:
+#     print(s)
 
 
-# ### To see only some results ####
-# for _ in range(10):
-#     print(next(success))
+### To see only some results ####
+for _ in range(5):
+    print(next(success))
 
 #### Alternatives for specific cases ####
 # for i in tryGoal(Goal(parent, X, Y)):

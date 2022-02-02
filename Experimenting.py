@@ -1,9 +1,9 @@
 # Removing DefinedIn!
 
-from copy import deepcopy, copy
+from copy import deepcopy
 
-class Predicate():
-    def __init__(self, name):
+class Predicate(): 
+    def __init__(self, name): 
         self.name = name            # The name of the predicate
         self.alternatives = {}      # Dict filled with all of the predicate alternatives, with arity as key.
     def __repr__(self):
@@ -19,11 +19,6 @@ class Predicate():
             self.alternatives[len(args)].append(Alt(args, goals))
         else:
             self.alternatives[len(args)] = [Alt(args, goals)]
-    def __deepcopy__(self, memo):
-        if not id(self) in memo:
-            result = Predicate(self.name)
-            result.alternatives = deepcopy(self.alternatives)
-            memo[id(self)] = result
 
 
 
@@ -35,12 +30,8 @@ class Goal():
     def __str__(self):
         return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
     def __deepcopy__(self, memo):
-        if not id(self) in memo:
-            # result = Goal(self.pred, *deepcopy(self.args, memo)) # This uses * to unpack the resulting list.
-            result = Goal(deepcopy(self.pred, *copy(self.args)))  #??? Finish this.
-            # result = Goal(deepcopy(self.pred, *[copy(arg) for arg in self.args]))  #???
-
-            # [arg.copy() for arg in self.args]
+        if not id(self) in memo:    
+            result = Goal(self.pred, *deepcopy(self.args, memo)) # This uses * to unpack the resulting list.
             memo[id(self)] = result     # This is used to prevent unnecessary copies and infinite recursion.
         else:
             result = memo[id(self)]     # If the goal was already copied, don't copy again.
@@ -49,8 +40,8 @@ class Goal():
 
 # Alts are individual alternatives that were added to a predicate.
 class Alt():
-    def __init__(self, args, goals):
-        self.args = args
+    def __init__(self, args, goals): 
+        self.args = args  
         self.goals = goals
     def __str__(self):
         return "altArgs: " + str(self.args) + "\naltGoals: " + str(self.goals) + "\n"
@@ -58,7 +49,7 @@ class Alt():
         return repr(self.name + " = " + str(self.value))
     def __deepcopy__(self, memo):
         if not id(self) in memo:
-            result = Alt(deepcopy(self.args, memo), deepcopy(self.goals, memo))
+            result = Alt(deepcopy(self.args, memo), deepcopy(self.goals, memo))     
             memo[id(self)] = result
         else:
             result = memo[id(self)]     # If a copy was already made, use that one.
@@ -78,7 +69,7 @@ class Term():
     def __str__(self):
         return self.name + " = " + str(self.value)  # This is used to print the term.
     def __repr__(self):
-        return repr(self.name + " = " + str(self.value))
+        return repr(self.name + " = " + str(self.value))    
     def __hash__(self):
         return hash(repr(self))
     # Overload math operations.
@@ -95,10 +86,8 @@ class Var(Term):
     def __init__(self, name):
         super().__init__(name = name, value = "Undefined")    # Initialize the Var.
     def __copy__(self):
-        if self.value != "Undefined":              # If this Var already has a value, turn it into a Const???
-            return Const(self.value)
-        return Var(self.name)
-    def __deepcopy__(self, memo):
+        return Var(self.name)   
+    def __deepcopy__(self, memo):   
         if not self.name in memo:
             result = Var(self.name)
             memo[self.name] = result
@@ -124,19 +113,19 @@ class Const(Term):  # A constant, aka an atom or number.
 
 class Math(Term):          # A mathematical expression.
     def __init__(self, operand1, operator, operand2):
-        self.left = operand1
+        self.left = operand1            
         self.operator = operator
         self.right = operand2
-        super().__init__(name = "Math", value = "Undefined")
+        super().__init__(name = "Math", value = "Undefined")      
     def doMath(self):
         if isinstance(self.left, Math) and not self.left:
             self.left = self.left.doMath()
         try:                # Try to evaluate the math expression.
-            self.value = str(eval(self.left.value + self.operator + self.right.value))
+            self.value = str(eval(self.left.value + self.operator + self.right.value)) 
         except:             # If the expression cannot be evaluated, the value becomes false, safely failing the unification.
-            self.value = False
+            self.value = False  
     def __copy__(self):
-        return Math(self.left, self.operator, self.right)
+        return Math(self.left, self.operator, self.right)   
     def __deepcopy__(self, memo):
         if not id(self) in memo:
             newLeft = deepcopy(self.left, memo)
@@ -148,25 +137,31 @@ class Math(Term):          # A mathematical expression.
         return result
 
 
-def tryGoal(originalGoal):
-    # Problem! If we deepcopy the entire goal, that means we are copying the goal args, so changing them doesn't change the other goals' args in the alternative. ???
-    goal = deepcopy(originalGoal, memo = {})
+def tryGoal(goal):
+    # This will keep track of what was originally a variable.
+    originalArgs = [arg for arg in goal.args]       # ???
     try:        # This fails if the predicate has no goals added.
-        alts = goal.pred.alternatives[len(goal.args)]
+        alts = deepcopy(goal.pred.alternatives[len(goal.args)], memo = {})      # Deepcopy the alts of correct arity so that they may be used again later without changes.
+        # If a variable already has a value, this goal cannot change it.
+        # To ensure the value does not get reset, the variable must be changed to a Const.
+        for argIndex, arg in enumerate(goal.args):
+            if isinstance(arg, Var) and arg.value != "Undefined":
+                goal.args[argIndex] = Const(arg.value)
         # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
         for alt in alts:
             altAttempts = tryAlt(goal, alt)
+            # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
             for attempt in altAttempts:
                 if attempt:
+                    yield [arg for arg in goal.args if isinstance(arg, Var) and arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
 
-                    # for arg, origArg in zip(goal, originalGoal):
-                    #     origArg.value = arg
-
-                    yield [arg for arg in goal.args if arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars. <- old comment???
+                    # yield [arg for arg in goal.args if arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars. <- old comment???
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
             for arg in goal.args:
                 if isinstance(arg, Var):
                     changePath(arg, "Undefined")
+        goal.args = originalArgs    # ???
+        
     except:
         # If the goal is write/1, print argument to screen.
         if goal.pred == write and len(goal.args) == 1:
@@ -226,20 +221,25 @@ def tryUnify(query, alt):
             if not altArg.value:        # The math failed.
                 return False
         altArg.children.append(queryArg)         # The children are the variables we want to find out.
-        # If the alt argument is the one with the value, all its children should be set to the same value.
-        if altArg:
-            changePath(altArg, altArg.value)  # Set all unified terms to new value.
-        # If the query argument is the one with a value, set the parent level to that value.
-        # This way the path will always be correct, so it will never need to be looped through with changePath.
-        elif queryArg:
-            altArg.value = queryArg.value        
+        if queryArg:
+            altArg.value = queryArg.value
+        changePath(altArg, altArg.value)  # Set all unified terms to new value.
+
+        # # If the alt argument is the one with the value, all its children should be set to the same value.
+        # if altArg:
+        #     changePath(altArg, altArg.value)  # Set all unified terms to new value.
+        # # If the query argument is the one with a value, set the parent level to that value.
+        # # This way the path will always be correct, so it will never need to be looped through with changePath.
+        # elif queryArg:
+        #     altArg.value = queryArg.value        
     return True                                 # If it reaches this point, they can be unified.
 
 
 def changePath(arg, newValue):
     if isinstance(arg, Term):
+        arg.value = newValue
         for child in arg.children:
-            child.value = newValue
+            # child.value = newValue
             changePath(child, newValue)         # Change each parent to the new value.
 
 

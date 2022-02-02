@@ -141,6 +141,9 @@ class Math(Term):          # A mathematical expression.
 def tryGoal(goal):
     try:        # This fails if the predicate has no goals added. 
         alts = deepcopy(goal.pred.alternatives[len(goal.args)], memo = {})      # Deepcopy the alts of correct arity so that they may be used again later without changes.
+        # for argIndex, arg in enumerate(goal.args):
+        #     if isinstance(arg, Var) and arg.value != "Undefined":
+        #         goal.args[argIndex] = Const(arg.value)
         for alt in alts:
             altAttempts = tryAlt(goal, alt)
             # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
