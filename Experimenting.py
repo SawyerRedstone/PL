@@ -25,6 +25,7 @@ class Predicate():
 # Goals must be completed in order to satisfy a query.
 class Goal():
     def __init__(self, pred, *args):
+        # self.builtIn = False                 # Mark whether a goal is built into the system. ???
         self.pred = pred                # The predicate that is being queried.
         self.args = list(args)          # Create a list of the goal's arguments.
     def __str__(self):
@@ -138,9 +139,10 @@ class Math(Term):          # A mathematical expression.
 
 
 def tryGoal(goal):
-    # This will keep track of what was originally a variable.
-    originalArgs = [arg for arg in goal.args]       # ???
-    try:        # This fails if the predicate has no goals added.
+    # Keep copy of goal args.
+    originalArgs = [arg for arg in goal.args]
+    if len(goal.args) in goal.pred.alternatives:
+        # All normal things here.
         alts = deepcopy(goal.pred.alternatives[len(goal.args)], memo = {})      # Deepcopy the alts of correct arity so that they may be used again later without changes.
         # If a variable already has a value, this goal cannot change it.
         # To ensure the value does not get reset, the variable must be changed to a Const.
@@ -160,14 +162,13 @@ def tryGoal(goal):
             for arg in goal.args:
                 if isinstance(arg, Var):
                     changePath(arg, "Undefined")
-        goal.args = originalArgs    # ???
-        
-    except:
-        # If the goal is write/1, print argument to screen.
-        if goal.pred == write and len(goal.args) == 1:
+    # If no predicate exists with this number of arguments, it may be a built-in predicate.
+    elif goal.pred == write and len(goal.args) == 1:
             print(goal.args[0].value)
             yield True
-    yield False                             # If all the alts failed, then the goal failed.
+    # After trying all alts, reset any Vars that were turned into Consts.
+    goal.args = originalArgs
+    yield False               # If all the alts failed, then the goal failed.
 
 
 # This tries the current alternative to see if it succeeds.

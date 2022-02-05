@@ -1,7 +1,7 @@
 # This file is used for internal testing.
 
-from PL import *
-# from Experimenting import *
+# from PL import *
+from Experimenting import *
 
 
 ################### Testing #####################
@@ -148,7 +148,7 @@ Y = Var("Y")
 
 # # ?- male(X).
 # # Becomes:
-success = tryGoal(Goal(male, X))
+# success = tryGoal(Goal(male, X))
 
 # # ?- child(X, Y).
 # success = tryGoal(Goal(child, X, Y))
@@ -172,7 +172,7 @@ success = tryGoal(Goal(male, X))
 
 
 # # ?- write_var(X)
-# success = tryGoal(Goal(write_var, X))     # ???
+# success = tryGoal(Goal(write_var, X))
 
 # # ?- X is 2 + 4.
 # # ?- is(X, 2 + 4).
@@ -201,7 +201,7 @@ success = tryGoal(Goal(male, X))
 # success = tryGoal(Goal(is_digesting, X, Y))
 
 # # ?- count(0, X).
-# success = tryGoal(Goal(count, Const(0), X))
+success = tryGoal(Goal(count, Const(0), X))
 
 # # ?- ancestor(X, bob).
 # success = tryGoal(Goal(ancestor, X, Const("bob")))
@@ -218,14 +218,14 @@ success = tryGoal(Goal(male, X))
 ########################## Check results here! ##########################
 
 
-# #### To see all results #####
-# for s in success:
-#     print(s)
+#### To see all results #####
+for s in success:
+    print(s)
 
 
-### To see only some results ####
-for _ in range(5):
-    print(next(success))
+# ### To see only some results ####
+# for _ in range(5):
+#     print(next(success))
 
 #### Alternatives for specific cases ####
 # for i in tryGoal(Goal(parent, X, Y)):

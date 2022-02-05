@@ -6,7 +6,7 @@ from copy import deepcopy
 class Predicate(): 
     def __init__(self, name): 
         self.name = name            # The name of the predicate
-        self.alternatives = {}      # Dict filled with all of the predicate alternatives, with arity as key.
+        self.alternatives = []      # List filled with all of the predicate alternatives.
     def __repr__(self):
         return self.name
     def add(self, args = [], goals = []):
@@ -16,10 +16,7 @@ class Predicate():
         It is called with a list of the args that appear in the head of the clause being added,
         followed (optionally) by a list of goals that, if followed, can satisfy the query.
         """
-        if len(args) in self.alternatives:
-            self.alternatives[len(args)].append(Alt(args, goals))
-        else:
-            self.alternatives[len(args)] = [Alt(args, goals)]
+        self.alternatives.append(Alt(args, goals))
 
 
 # Goals must be completed in order to satisfy a query.
@@ -139,27 +136,21 @@ class Math(Term):          # A mathematical expression.
 
 
 def tryGoal(goal):
-    try:        # This fails if the predicate has no goals added. 
-        alts = deepcopy(goal.pred.alternatives[len(goal.args)], memo = {})      # Deepcopy the alts of correct arity so that they may be used again later without changes.
-        # for argIndex, arg in enumerate(goal.args):
-        #     if isinstance(arg, Var) and arg.value != "Undefined":
-        #         goal.args[argIndex] = Const(arg.value)
-        for alt in alts:
-            altAttempts = tryAlt(goal, alt)
-            # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
-            for attempt in altAttempts:
-                if attempt:
-                    yield [arg for arg in goal.args if isinstance(arg, Var) and arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
-                    # yield [arg for arg in goal.args if arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
-            # Clear any args that were defined in this goal, so they may be reused for the next alt.
-            for arg in goal.args:
-                if arg.definedIn is goal:       # If the arg was defined in this goal, reset it and all things unified from it.  
-                    changePath(arg, "Undefined", None)
-    except:
-        # If the goal is write/1, print argument to screen.
-        if goal.pred == write and len(goal.args) == 1:
-            print(goal.args[0].value)
-            yield True
+    # If the goal is write/1, print argument to screen.
+    if goal.pred == write and len(goal.args) == 1:
+        print(goal.args[0].value)
+        yield True
+    alts = deepcopy(goal.pred.alternatives, memo = {})      # Deepcopy the alts so that they may be used again later without changes.
+    for alt in alts:
+        altAttempts = tryAlt(goal, alt)
+        # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
+        for attempt in altAttempts:
+            if attempt:
+                yield [arg for arg in goal.args if isinstance(arg, Var) and arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
+        # Clear any args that were defined in this goal, so they may be reused for the next alt.
+        for arg in goal.args:
+            if arg.definedIn is goal:       # If the arg was defined in this goal, reset it and all things unified from it.  
+                changePath(arg, "Undefined", None)
     yield False                             # If all the alts failed, then the goal failed.
 
 
@@ -198,7 +189,10 @@ def tryGoals(goalsToTry):
 
 # This function tries to unify the query and alt args, and returns a bool of its success.
 def tryUnify(query, alt):
-    # First check if they are able to unify.
+    # First, make sure the query and alt have the same arity.
+    if len(query.args) != len(alt.args):                # If the arities don't match, then fail.
+        return False
+    # Then check if they are able to unify.
     for queryArg, altArg in zip(query.args, alt.args):
         if queryArg and altArg and queryArg != altArg:  # If the args both have values and not equal, fail.
             return False
@@ -221,8 +215,6 @@ def tryUnify(query, alt):
         elif queryArg:
             changePath(altArg, queryArg.value, queryArg.definedIn)  # Set all unified terms to new value.
         altArg.parents.append(queryArg)         # Add the queryArg as a parent of the altArg.
-        # queryArg.parents.append(altArg)         # This doesn't work. ???
-
     return True                                 # If it reaches this point, they can be unified.    
 
 
