@@ -19,6 +19,7 @@ just_ate = Predicate("just_ate")
 is_digesting = Predicate("is_digesting")
 always_true = Predicate("always_true")
 write_var = Predicate("write_var")
+collatz = Predicate("collatz")
 
 #### facts/rules ####
 
@@ -101,7 +102,7 @@ is_digesting.add([A, B], [Goal(just_ate, A, C), Goal(is_digesting, C, B)])
 
 # parent(michael, sawyer).
 # parent(A, B) :- child(B, A).
-# parent.add([Const("Michael"), Const("Sawyer")])   # Add back later ???
+parent.add([Const("Michael"), Const("Sawyer")])
 parent.add([A, B], [Goal(child, B, A)])
 # parent.add([Var("A"), Var("B")], [Goal(child, Var("B"), Var("A"))])     # Test success!
 
@@ -138,6 +139,14 @@ write_var.add([A], [Goal(equals, A, Const(6)+Const(2)), Goal(write, A), fail])
 # write_var.add([A], [Goal(equals, A, Const(6)+Const(2)), Goal(write, A)])
 
 always_true.add()
+
+# FAILED ???
+# collatz(A, A).
+# collatz(B, A) :- 0 is mod(B, 2), C is B / 2, collatz(C, A).
+# collatz(B, A) :- 1 is mod(B, 2), C is 3 * B + 1, collatz(C, A).
+collatz.add([A, A])
+collatz.add([B, A], [Goal(equals, Const(0), B % Const(2)), Goal(equals, C, B / Const(2)), Goal(collatz, C, A)])
+collatz.add([B, A], [Goal(equals, Const(1), B % Const(2)), Goal(equals, C, Const(3) * B + Const(1)), Goal(collatz, C, A)])
 
 ##########################################
 
@@ -206,6 +215,9 @@ Y = Var("Y")
 # # ?- ancestor(X, bob).
 # success = tryGoal(Goal(ancestor, X, Const("bob")))
 
+# collatz(10, X).
+success = tryGoal(Goal(collatz, Const(10), X))
+
 ######### Different arities for same predicate ###########
 # success = tryGoal(Goal(mother))
 # success = tryGoal(Goal(mother, X))
@@ -218,14 +230,14 @@ Y = Var("Y")
 ########################## Check results here! ##########################
 
 
-#### To see all results #####
-for s in success:
-    print(s)
+# #### To see all results #####
+# for s in success:
+#     print(s)
 
 
-# ### To see only some results ####
-# for _ in range(5):
-#     print(next(success))
+### To see only some results ####
+for _ in range(5):
+    print(next(success))
 
 #### Alternatives for specific cases ####
 # for i in tryGoal(Goal(parent, X, Y)):

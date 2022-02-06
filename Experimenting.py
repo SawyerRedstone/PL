@@ -1,3 +1,6 @@
+# The PL Module offers Prolog functionality for Python programmers.
+# Created by Sawyer Redstone.
+
 from copy import deepcopy
 
 class Predicate(): 
@@ -151,8 +154,8 @@ def tryGoal(goal):
             # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
             for attempt in altAttempts:
                 if attempt:
-                    yield [arg for arg in goal.args if isinstance(arg, Var) and arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
-                    # yield [arg for arg in goal.args if arg.value != "Undefined"] or True     # Yield args, or True if no args have values.
+                    # Yield vars, or True if this succeeded without changing vars.
+                    yield [arg for arg in goal.args if isinstance(arg, Var) and arg.value != "Undefined"] or True
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
             for arg in goal.args:
                 if isinstance(arg, Var):
@@ -169,7 +172,7 @@ def tryGoal(goal):
 # This tries the current alternative to see if it succeeds.
 def tryAlt(query, alt):
     goalsToTry = alt.goals          # A list of goals that must be satisfied for this alt to succeed.
-    if not tryUnify(query, alt):    # If the alt can't be unified, then it fails.
+    if not tryUnify(query.args, alt.args):    # If the alt can't be unified, then it fails.
         yield False
     elif len(goalsToTry) > 0:       # If this alt has goals, try them.
         for success in tryGoals(goalsToTry):
@@ -200,15 +203,15 @@ def tryGoals(goalsToTry):
 
 
 # This function tries to unify the query and alt args, and returns a bool of its success.
-def tryUnify(query, alt):
+def tryUnify(queryArgs, altArgs):
     # First check if they are able to unify.
-    for queryArg, altArg in zip(query.args, alt.args):
+    for queryArg, altArg in zip(queryArgs, altArgs):
         if queryArg and altArg and queryArg != altArg:  # If the args both have values and not equal, fail.
             return False
-        # Reset the alt's children.
+        # Remove the alt's previous children.
         altArg.children.clear()
     # If it reaches this point, they can be unified.
-    for queryArg, altArg in zip(query.args, alt.args):              # Loop through the query and alt arguments.
+    for queryArg, altArg in zip(queryArgs, altArgs):              # Loop through the query and alt arguments.
         # If either arg is a math term, evaluate it.
         if isinstance(queryArg, Math):
             queryArg.doMath()
@@ -232,7 +235,6 @@ def changePath(arg, newValue):
         for child in arg.children:
             # if child value already is new value, maybe don't need to change child's path? Try later! ???
             changePath(child, newValue)         # Change each parent to the new value.
-        # arg.children.clear()  # Failed ???
 
 
 

@@ -1,9 +1,12 @@
+# The PL Module offers Prolog functionality for Python programmers.
+# Created by Sawyer Redstone.
+
 from copy import deepcopy
 
 class Predicate(): 
     def __init__(self, name): 
         self.name = name            # The name of the predicate
-        self.alternatives = {}      # Dict filled with all of the predicate alternatives, with arity as key.
+        self.alternatives = []      # List filled with all of the predicate alternatives.
     def __repr__(self):
         return self.name
     def add(self, args = [], goals = []):
@@ -13,11 +16,7 @@ class Predicate():
         It is called with a list of the args that appear in the head of the clause being added,
         followed (optionally) by a list of goals that, if followed, can satisfy the query.
         """
-        if len(args) in self.alternatives:
-            self.alternatives[len(args)].append(Alt(args, goals))
-        else:
-            self.alternatives[len(args)] = [Alt(args, goals)]
-
+        self.alternatives.append(Alt(args, goals))
 
 
 # Goals must be completed in order to satisfy a query.
@@ -56,10 +55,11 @@ class Alt():
 
 # Variables, Constants, and Mathematical expressions are all Terms.
 class Term():
-    def __init__(self, name, value):
+    def __init__(self, name, value, definedIn):
         self.name = name
         self.value = str(value)
-        self.children = []                  # The children are the variables that will change if this term has a value.
+        self.parents = []
+        self.definedIn = definedIn          # When value is set, this equals the goal it was set in. Only that goal can reset it.
     def __eq__(self, other):
         return self.value == other.value    # This is used to compare terms.
     def __bool__(self):
@@ -82,7 +82,7 @@ def __r{op_name}__(self, other):
 
 class Var(Term):
     def __init__(self, name):
-        super().__init__(name = name, value = "Undefined")    # Initialize the Var.
+        super().__init__(name = name, value = "Undefined", definedIn = None)    # Initialize the Var.
     def __copy__(self):
         return Var(self.name)   
     def __deepcopy__(self, memo):   
@@ -97,7 +97,7 @@ class Var(Term):
 class Const(Term):  # A constant, aka an atom or number.
     def __init__(self, value):
         # Consts are defined wherever they were created.
-        super().__init__(name = "Const", value = value)
+        super().__init__(name = "Const", value = value, definedIn = "creation")
     def __copy__(self):
         return Const(self.value)
     def __deepcopy__(self, memo):
@@ -114,7 +114,7 @@ class Math(Term):          # A mathematical expression.
         self.left = operand1            
         self.operator = operator
         self.right = operand2
-        super().__init__(name = "Math", value = "Undefined")      
+        super().__init__(name = "Math", value = "Undefined", definedIn = None)      
     def doMath(self):
         if isinstance(self.left, Math) and not self.left:
             self.left = self.left.doMath()
@@ -136,38 +136,26 @@ class Math(Term):          # A mathematical expression.
 
 
 def tryGoal(goal):
-    # Keep copy of goal args. This is not a deep copy, so changed values will remain changed here.
-    originalArgs = [arg for arg in goal.args]
-    if len(goal.args) in goal.pred.alternatives:
-        alts = deepcopy(goal.pred.alternatives[len(goal.args)], memo = {})      # Deepcopy the alts of correct arity so that they may be used again later without changes.
-        # If a variable already has a value, this goal cannot change it.
-        # To ensure the value does not get reset, the variable must be changed to a Const.
-        for argIndex, arg in enumerate(goal.args):
-            if isinstance(arg, Var) and arg.value != "Undefined":
-                goal.args[argIndex] = Const(arg.value)
+    # If the goal is write/1, print argument to screen.
+    if goal.pred == write and len(goal.args) == 1:
+        print(goal.args[0].value)
+        yield True
+    alts = deepcopy(goal.pred.alternatives, memo = {})      # Deepcopy the alts so that they may be used again later without changes.
+    for alt in alts:
+        altAttempts = tryAlt(goal, alt)
         # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
-        for alt in alts:
-            altAttempts = tryAlt(goal, alt)
-            # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
-            for attempt in altAttempts:
-                if attempt:
-                    yield [arg for arg in goal.args if isinstance(arg, Var) and arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
-                    # yield [arg for arg in goal.args if arg.value != "Undefined"] or True     # Yield args, or True if no args have values.
-            # Clear any args that were defined in this goal, so they may be reused for the next alt.
-            for arg in goal.args:
-                if isinstance(arg, Var):
-                    changePath(arg, "Undefined")
-    # If no predicate exists with this number of arguments, it may be a built-in predicate.
-    elif goal.pred == write and len(goal.args) == 1:
-            print(goal.args[0].value)
-            yield True
-    # After trying all alts, reset any Vars that were turned into Consts.
-    goal.args = originalArgs
-    yield False               # If all the alts failed, then the goal failed.
+        for attempt in altAttempts:
+            if attempt:
+                yield [arg for arg in goal.args if isinstance(arg, Var) and arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
+        # Clear any args that were defined in this goal, so they may be reused for the next alt.
+        for arg in goal.args:
+            if arg.definedIn is goal:       # If the arg was defined in this goal, reset it and all things unified from it.  
+                changePath(arg, "Undefined", None)
+    yield False                             # If all the alts failed, then the goal failed.
 
 
 # This tries the current alternative to see if it succeeds.
-def tryAlt(query, alt):
+def tryAlt(query, alt):         
     goalsToTry = alt.goals          # A list of goals that must be satisfied for this alt to succeed.
     if not tryUnify(query, alt):    # If the alt can't be unified, then it fails.
         yield False
@@ -183,8 +171,8 @@ def tryGoals(goalsToTry):
     goals = [tryGoal(goal) for goal in goalsToTry]  # A list of [tryGoal(goal1), tryGoal(goal2), etc]
     currGoal = 0                                    # This is the index for the goal we are currently trying.
     failed = False
-    while not failed:
-        while 0 <= currGoal < len(goals):           # The goals succeed it currGoal reaches the end.
+    while not failed:   
+        while 0 <= currGoal < len(goals):           # The goals succeed it currGoal reaches the end.  
             currGoalArgs = next(goals[currGoal])    # Try the goal at the current index.
             if currGoalArgs:                        # This goal succeeded and args have been instantiated.
                 currGoal += 1
@@ -196,55 +184,58 @@ def tryGoals(goalsToTry):
                 currGoal -= 1
         if not failed:
             yield True          # If we got here, then all the goals succeeded.
-            currGoal -= 1       # Go back a goal to try for another solution.
+            currGoal -= 1       # Go back a goal to try for another solution.        
 
 
 # This function tries to unify the query and alt args, and returns a bool of its success.
 def tryUnify(query, alt):
-    # First check if they are able to unify.
+    # First, make sure the query and alt have the same arity.
+    if len(query.args) != len(alt.args):                # If the arities don't match, then fail.
+        return False
+    # Then check if they are able to unify.
     for queryArg, altArg in zip(query.args, alt.args):
         if queryArg and altArg and queryArg != altArg:  # If the args both have values and not equal, fail.
             return False
-        # Reset the alt's children.
-        altArg.children.clear()
     # If it reaches this point, they can be unified.
     for queryArg, altArg in zip(query.args, alt.args):              # Loop through the query and alt arguments.
         # If either arg is a math term, evaluate it.
-        if isinstance(queryArg, Math):
+        if isinstance(queryArg, Math):                              
             queryArg.doMath()
-            if not queryArg.value:      # The math failed.
+            if not queryArg.value:      # The math failed. 
                 return False
-        if isinstance(altArg, Math):
+        if isinstance(altArg, Math):                 
             altArg.doMath()
             if not altArg.value:        # The math failed.
                 return False
-        altArg.children.append(queryArg)         # The children are the variables we want to find out.
-        if queryArg:
-            altArg.value = queryArg.value
-        changePath(altArg, altArg.value)  # Set all unified terms to new value.   
-    return True                                 # If it reaches this point, they can be unified.
+        if altArg:                           
+            if queryArg.definedIn:
+                changePath(queryArg, altArg.value, queryArg.definedIn)  # Set all unified terms to new value.
+            else:
+                changePath(queryArg, altArg.value, query)       
+        elif queryArg:
+            changePath(altArg, queryArg.value, queryArg.definedIn)  # Set all unified terms to new value.
+        altArg.parents.append(queryArg)         # Add the queryArg as a parent of the altArg.
+    return True                                 # If it reaches this point, they can be unified.    
 
 
-def changePath(arg, newValue):
-    # if isinstance(arg, Term) and not isinstance(arg, Const):
-    if isinstance(arg, Term):
-        arg.value = newValue
-        for child in arg.children:
-            # if child value already is new value, maybe don't need to change child's path? Try later! ???
-            changePath(child, newValue)         # Change each parent to the new value.
-        # arg.children.clear()  # Failed ???
+def changePath(arg, value, definedIn):      
+    if isinstance(arg, Var) or isinstance(arg, Math):    # Only change values if the argument isn't a const.
+        arg.value = value   
+        arg.definedIn = definedIn               
+        for parent in arg.parents:                    
+            changePath(parent, value, definedIn)         # Change each parent to the new value.
 
 
 
 #### Built-in Predicates ####
 
 # The Prolog is/2 predicate, with a different name because "is" already exists in Python.
-equals = Predicate("equals")
+equals = Predicate("equals")    
 equals.add([Var("Q"), Var("Q")])
 
 # fail/0. This works differently from other goals, as users do not need to type Goal(fail)
 failPredicate = Predicate("failPredicate")
-fail = Goal(failPredicate)
+fail = Goal(failPredicate) 
 
 # write/1
 write = Predicate("write")
