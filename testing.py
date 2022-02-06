@@ -201,7 +201,7 @@ Y = Var("Y")
 # success = tryGoal(Goal(is_digesting, X, Y))
 
 # # ?- count(0, X).
-success = tryGoal(Goal(count, Const(0), X))
+# success = tryGoal(Goal(count, Const(0), X))
 
 # # ?- ancestor(X, bob).
 # success = tryGoal(Goal(ancestor, X, Const("bob")))

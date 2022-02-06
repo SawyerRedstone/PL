@@ -1,5 +1,3 @@
-# Removing DefinedIn!
-
 from copy import deepcopy
 
 class Predicate(): 
@@ -25,7 +23,6 @@ class Predicate():
 # Goals must be completed in order to satisfy a query.
 class Goal():
     def __init__(self, pred, *args):
-        # self.builtIn = False                 # Mark whether a goal is built into the system. ???
         self.pred = pred                # The predicate that is being queried.
         self.args = list(args)          # Create a list of the goal's arguments.
     def __str__(self):
@@ -139,10 +136,9 @@ class Math(Term):          # A mathematical expression.
 
 
 def tryGoal(goal):
-    # Keep copy of goal args.
+    # Keep copy of goal args. This is not a deep copy, so changed values will remain changed here.
     originalArgs = [arg for arg in goal.args]
     if len(goal.args) in goal.pred.alternatives:
-        # All normal things here.
         alts = deepcopy(goal.pred.alternatives[len(goal.args)], memo = {})      # Deepcopy the alts of correct arity so that they may be used again later without changes.
         # If a variable already has a value, this goal cannot change it.
         # To ensure the value does not get reset, the variable must be changed to a Const.
@@ -156,8 +152,7 @@ def tryGoal(goal):
             for attempt in altAttempts:
                 if attempt:
                     yield [arg for arg in goal.args if isinstance(arg, Var) and arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars.
-
-                    # yield [arg for arg in goal.args if arg.value != "Undefined"] or True     # Yield vars, or True if this succeeded without changing vars. <- old comment???
+                    # yield [arg for arg in goal.args if arg.value != "Undefined"] or True     # Yield args, or True if no args have values.
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
             for arg in goal.args:
                 if isinstance(arg, Var):
@@ -210,6 +205,8 @@ def tryUnify(query, alt):
     for queryArg, altArg in zip(query.args, alt.args):
         if queryArg and altArg and queryArg != altArg:  # If the args both have values and not equal, fail.
             return False
+        # Reset the alt's children.
+        altArg.children.clear()
     # If it reaches this point, they can be unified.
     for queryArg, altArg in zip(query.args, alt.args):              # Loop through the query and alt arguments.
         # If either arg is a math term, evaluate it.
@@ -224,24 +221,18 @@ def tryUnify(query, alt):
         altArg.children.append(queryArg)         # The children are the variables we want to find out.
         if queryArg:
             altArg.value = queryArg.value
-        changePath(altArg, altArg.value)  # Set all unified terms to new value.
-
-        # # If the alt argument is the one with the value, all its children should be set to the same value.
-        # if altArg:
-        #     changePath(altArg, altArg.value)  # Set all unified terms to new value.
-        # # If the query argument is the one with a value, set the parent level to that value.
-        # # This way the path will always be correct, so it will never need to be looped through with changePath.
-        # elif queryArg:
-        #     altArg.value = queryArg.value        
+        changePath(altArg, altArg.value)  # Set all unified terms to new value.   
     return True                                 # If it reaches this point, they can be unified.
 
 
 def changePath(arg, newValue):
+    # if isinstance(arg, Term) and not isinstance(arg, Const):
     if isinstance(arg, Term):
         arg.value = newValue
         for child in arg.children:
-            # child.value = newValue
+            # if child value already is new value, maybe don't need to change child's path? Try later! ???
             changePath(child, newValue)         # Change each parent to the new value.
+        # arg.children.clear()  # Failed ???
 
 
 
