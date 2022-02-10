@@ -1,11 +1,11 @@
-# Trying to allow the user to only imput strings.
+# Trying to allow the user to only input strings.
+# Can I remove types of terms? Do Consts do anything??? Maybe instead, just keep track of if they start undefined.
 
 from copy import deepcopy
 
-# args is a list of strings.
 def solve(goal = []):
     newGoal = stringsToTerms(goal)
-    for success in tryGoal(Goal(newGoal[0], *newGoal[1:])):
+    for success in tryGoal(Goal(newGoal)):
         yield success
 
 
@@ -27,10 +27,10 @@ def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already cr
         else:                       
             memo[word] = Const(word)
             nextWord = memo[word]
-        # Later add lists by checking if word[0] is []! ???
+        # Later add lists by checking if word[0] is '['! ???
         newList.append(nextWord)
     return newList
-    
+
 
 class Predicate(): 
     def __init__(self, name): 
@@ -38,10 +38,6 @@ class Predicate():
         self.alternatives = {}      # Dict filled with all of the predicate alternatives, with arity as key.
     def __repr__(self):
         return self.name
-
-# is_digesting.add(["A", "B"], [[just_ate, "A", "C"], [is_digesting, "C", "B"]])
-
-
     def add(self, args = [], goals = []):
         """
         'add' is used to add clauses (fact or rules) for a predicate.
@@ -49,11 +45,6 @@ class Predicate():
         It is called with a list of the args that appear in the head of the clause being added,
         followed (optionally) by a list of goals that, if followed, can satisfy the query.
         """
-        # Memo is a dictionary of all terms in this alt.
-        # This makes sure that no terms are duplicates.
-        memo = {}       
-        args = stringsToTerms(args, memo)
-        goals = [stringsToTerms(goal, memo) for goal in goals]
         if len(args) in self.alternatives:
             self.alternatives[len(args)].append(Alt(args, goals))
         else:
@@ -63,18 +54,11 @@ class Predicate():
 
 # Goals must be completed in order to satisfy a query.
 class Goal():
-    def __init__(self, pred, *args):
-        self.pred = pred                # The predicate that is being queried.
-        self.args = list(args)          # Create a list of the goal's arguments.
+    def __init__(self, info):
+        self.pred = info[0]               # The predicate that is being queried.
+        self.args = info[1:]          # Create a list of the goal's arguments.
     def __str__(self):
         return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
-    def __deepcopy__(self, memo):
-        if not id(self) in memo:    
-            result = Goal(self.pred, *deepcopy(self.args, memo)) # This uses * to unpack the resulting list.
-            memo[id(self)] = result     # This is used to prevent unnecessary copies and infinite recursion.
-        else:
-            result = memo[id(self)]     # If the goal was already copied, don't copy again.
-        return result
 
 
 # Alts are individual alternatives that were added to a predicate.
@@ -86,20 +70,13 @@ class Alt():
         return "altArgs: " + str(self.args) + "\naltGoals: " + str(self.goals) + "\n"
     def __repr__(self):
         return repr(self.name + " = " + str(self.value))
-    def __deepcopy__(self, memo):
-        if not id(self) in memo:
-            result = Alt(deepcopy(self.args, memo), deepcopy(self.goals, memo))     
-            memo[id(self)] = result
-        else:
-            result = memo[id(self)]     # If a copy was already made, use that one.
-        return result
 
 
 # Variables, Constants, and Mathematical expressions are all Terms.
 class Term():
     def __init__(self, name, value):
         self.name = name
-        self.value = str(value)
+        self.value = str(value) # Why str???
         self.children = []                  # The children are the variables that will change if this term has a value.
     def __eq__(self, other):
         return self.value == other.value    # This is used to compare terms.
@@ -112,42 +89,25 @@ class Term():
     def __hash__(self):
         return hash(repr(self))
     # Overload math operations.
+
     # This create methods on the fly to avoid typing repetitive code.
     for op_name, op in [("add", "+"), ("sub", "-"), ("mul", "*"), ("truediv", "/"), ("floordiv", "//"), ("mod", "%"), ("pow", "**")]:
         exec(f"""\
-def __{op_name}__(self, other):
-    return Math(self, f"{op}", other)
-def __r{op_name}__(self, other):
-    return Math(self, f"{op}", other)
+def __{op_name}__(self, addend):
+    return Math(self, f"{op}", addend)
+def __r{op_name}__(self, addend):
+    return Math(self, f"{op}", addend)
 """, globals(), locals())
 
 class Var(Term):
     def __init__(self, name):
         super().__init__(name = name, value = "Undefined")    # Initialize the Var.
-    def __copy__(self):
-        return Var(self.name)   
-    def __deepcopy__(self, memo):   
-        if not self.name in memo:
-            result = Var(self.name)
-            memo[self.name] = result
-        else:
-            result = memo[self.name]    # If the Var was already copied, don't re-copy.
-        return result
 
 
 class Const(Term):  # A constant, aka an atom or number.
     def __init__(self, value):
         # Consts are defined wherever they were created.
         super().__init__(name = "Const", value = value)
-    def __copy__(self):
-        return Const(self.value)
-    def __deepcopy__(self, memo):
-        if not id(self) in memo:
-            result = Const(self.value)
-            memo[id(self)] = result
-        else:
-            result = memo[id(self)]     # If the Const was already copied, don't re-copy.
-        return result
 
 
 class Math(Term):          # A mathematical expression.
@@ -178,10 +138,14 @@ class Math(Term):          # A mathematical expression.
 # class List    ???
 
 def tryGoal(goal):
+
     # Keep copy of goal args. This is not a deep copy, so changed values will remain changed here.
+    # This allows Vars that are temporary changed to Consts to return back to their Var form.
     originalArgs = [arg for arg in goal.args]
+
     if len(goal.args) in goal.pred.alternatives:
-        alts = deepcopy(goal.pred.alternatives[len(goal.args)], memo = {})      # Deepcopy the alts of correct arity so that they may be used again later without changes.
+        alts = goal.pred.alternatives[len(goal.args)]       # The list of all alts with matching arity.
+
         # If a variable already has a value, this goal cannot change it.
         # To ensure the value does not get reset, the variable must be changed to a Const.
         for argIndex, arg in enumerate(goal.args):
@@ -210,8 +174,15 @@ def tryGoal(goal):
 
 # This tries the current alternative to see if it succeeds.
 def tryAlt(query, alt):
-    goalsToTry = alt.goals          # A list of goals that must be satisfied for this alt to succeed.
-    if not tryUnify(query.args, alt.args):    # If the alt can't be unified, then it fails.
+
+    # Memo is a dictionary of all terms in this alt.
+    # This makes sure that no terms are duplicates.
+    memo = {}       
+    altArgs = stringsToTerms(alt.args, memo)
+    altGoals = [Goal(stringsToTerms(goal, memo)) for goal in alt.goals]
+
+    goalsToTry = altGoals          # A list of goals that must be satisfied for this alt to succeed.
+    if not tryUnify(query.args, altArgs):    # If the alt can't be unified, then it fails.
         yield False
     elif len(goalsToTry) > 0:       # If this alt has goals, try them.
         for success in tryGoals(goalsToTry):
@@ -282,15 +253,15 @@ def changePath(arg, newValue):
 # #### Built-in Predicates ####
 
 # # The Prolog is/2 predicate, with a different name because "is" already exists in Python.
-# equals = Predicate("equals")
-# equals.add([Var("Q"), Var("Q")])
+equals = Predicate("equals")
+equals.add(["Q", "Q"])
 
 # # fail/0. This works differently from other goals, as users do not need to type Goal(fail)
-# failPredicate = Predicate("failPredicate")
-# fail = Goal(failPredicate)
+failPredicate = Predicate("failPredicate")
+fail = Goal([failPredicate])    #???
 
 # # write/1
-# write = Predicate("write")
+write = Predicate("write")
 
 
 # class Foo():

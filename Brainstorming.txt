@@ -11,3 +11,7 @@ parent(X, Y).add(child(Y, X)))
 
 -----------
 Lists = [], [Var(A), Var(B), "Tail"]
+
+----
+
+What if alts are only turned into strings when they are being used? So no deepcopy needed. 

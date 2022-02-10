@@ -153,7 +153,7 @@ is_digesting.add(["A", "B"], [[just_ate, "A", "C"], [is_digesting, "C", "B"]])
 
 # # ?- male(X).
 # # Becomes:
-success = solve([male, "X"])
+# success = solve([male, "X"])
 
 # # ?- child(X, Y).
 # success = tryGoal(Goal(child, X, Y))
@@ -200,18 +200,18 @@ success = solve([male, "X"])
 ################ Recursion ##################
 
 # # ?- is_digesting(tiger, grass).
-# success = tryGoal(Goal(is_digesting, Const("tiger"), Const("grass")))
-success = solve([is_digesting, "tiger", "grass"])
+# success = solve([is_digesting, "tiger", "grass"])
 
 
 # # ?- is_digesting(X, Y).
-# success = tryGoal(Goal(is_digesting, X, Y))
+# success = solve([is_digesting, "X", "Y"])
+
 
 # # ?- count(0, X).
-# success = tryGoal(Goal(count, Const(0), X))
+# success = solve([count, "0", "X"])
 
 # # ?- ancestor(X, bob).
-# success = tryGoal(Goal(ancestor, X, Const("bob")))
+# success = solve([ancestor, "X", "bob"])
 
 # collatz(10, X).   # Fails. ???
 # success = tryGoal(Goal(collatz, Const(10), X))
