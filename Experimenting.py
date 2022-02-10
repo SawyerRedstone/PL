@@ -1,7 +1,36 @@
-# The PL Module offers Prolog functionality for Python programmers.
-# Created by Sawyer Redstone.
+# Trying to allow the user to only imput strings.
 
 from copy import deepcopy
+
+# args is a list of strings.
+def solve(goal = []):
+    newGoal = stringsToTerms(goal)
+    for success in tryGoal(Goal(newGoal[0], *newGoal[1:])):
+        yield success
+
+
+# This will take a list, for example [just_ate, "A", "C"], and convert all the strings to Terms.
+def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already created
+    newList = []
+    for word in oldList:
+        # Represent duplicate strings as the same Term.
+        if word in memo:
+            nextWord = memo[word]
+        # If the word is a predicate, don't change it.
+        elif isinstance(word, Predicate):
+            nextWord = word
+        # Otherwise, if the first letter is uppercase, it is a Var.
+        elif word[0].isupper():     
+            memo[word] = Var(word)
+            nextWord = memo[word]
+        # All other strings (including mathematical expressions) are consts.
+        else:                       
+            memo[word] = Const(word)
+            nextWord = memo[word]
+        # Later add lists by checking if word[0] is []! ???
+        newList.append(nextWord)
+    return newList
+    
 
 class Predicate(): 
     def __init__(self, name): 
@@ -9,6 +38,10 @@ class Predicate():
         self.alternatives = {}      # Dict filled with all of the predicate alternatives, with arity as key.
     def __repr__(self):
         return self.name
+
+# is_digesting.add(["A", "B"], [[just_ate, "A", "C"], [is_digesting, "C", "B"]])
+
+
     def add(self, args = [], goals = []):
         """
         'add' is used to add clauses (fact or rules) for a predicate.
@@ -16,6 +49,11 @@ class Predicate():
         It is called with a list of the args that appear in the head of the clause being added,
         followed (optionally) by a list of goals that, if followed, can satisfy the query.
         """
+        # Memo is a dictionary of all terms in this alt.
+        # This makes sure that no terms are duplicates.
+        memo = {}       
+        args = stringsToTerms(args, memo)
+        goals = [stringsToTerms(goal, memo) for goal in goals]
         if len(args) in self.alternatives:
             self.alternatives[len(args)].append(Alt(args, goals))
         else:
@@ -137,6 +175,7 @@ class Math(Term):          # A mathematical expression.
             result = memo[id(self)]         # If this was already copied, don't re-copy.
         return result
 
+# class List    ???
 
 def tryGoal(goal):
     # Keep copy of goal args. This is not a deep copy, so changed values will remain changed here.
@@ -206,6 +245,8 @@ def tryGoals(goalsToTry):
 def tryUnify(queryArgs, altArgs):
     # First check if they are able to unify.
     for queryArg, altArg in zip(queryArgs, altArgs):
+        # if isinstance(queryArg, list) or isinstance(altArg, list):
+        #     tryUnify(queryArg, altArg)
         if queryArg and altArg and queryArg != altArg:  # If the args both have values and not equal, fail.
             return False
         # Remove the alt's previous children.
@@ -238,15 +279,30 @@ def changePath(arg, newValue):
 
 
 
-#### Built-in Predicates ####
+# #### Built-in Predicates ####
 
-# The Prolog is/2 predicate, with a different name because "is" already exists in Python.
-equals = Predicate("equals")
-equals.add([Var("Q"), Var("Q")])
+# # The Prolog is/2 predicate, with a different name because "is" already exists in Python.
+# equals = Predicate("equals")
+# equals.add([Var("Q"), Var("Q")])
 
-# fail/0. This works differently from other goals, as users do not need to type Goal(fail)
-failPredicate = Predicate("failPredicate")
-fail = Goal(failPredicate)
+# # fail/0. This works differently from other goals, as users do not need to type Goal(fail)
+# failPredicate = Predicate("failPredicate")
+# fail = Goal(failPredicate)
 
-# write/1
-write = Predicate("write")
+# # write/1
+# write = Predicate("write")
+
+
+# class Foo():
+#     def __init__(self, num):
+#         self.num_val = num
+#     def __add__(self, addend):
+#         if isinstance(addend, Foo):
+#             return Foo(self.num_val + addend.num_val)
+#         return Foo(self.num_val + addend) 
+#     def __str__(self):
+#         return f"{self.num_val}"
+
+# myFoo = Foo(18)
+# res = eval("myFoo + 2")
+# print(res) 

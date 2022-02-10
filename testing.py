@@ -1,7 +1,7 @@
 # This file is used for internal testing.
 
-from PL import *
-# from Experimenting import *
+# from PL import *
+from Experimenting import *
 
 
 ################### Testing #####################
@@ -20,144 +20,140 @@ is_digesting = Predicate("is_digesting")
 always_true = Predicate("always_true")
 write_var = Predicate("write_var")
 collatz = Predicate("collatz")
+member = Predicate("member")
 
 #### facts/rules ####
 
-male.add([Const("bob")])
-male.add([Const("john")])
-male.add([Const("ben")])
-male.add([Const("martin")])
-male.add([Const("edmund")])
-male.add([Const("david")])
-male.add([Const("isidore")])
-male.add([Const("william")])
-male.add([Const("ferdinand")])
-male.add([Const("morris")])
-male.add([Const("alphonse")])
-male.add([Const("jiri")])
+
+male.add(["bob"])
+male.add(["john"])
+male.add(["ben"])
+male.add(["martin"])
+male.add(["edmund"])
+male.add(["david"])
+male.add(["isidore"])
+male.add(["william"])
+male.add(["ferdinand"])
+male.add(["morris"])
+male.add(["alphonse"])
+male.add(["jiri"])
 
 
-female.add([Const("kathryn")])
-female.add([Const("beatrice")])
-female.add([Const("rachel")])
-female.add([Const("lillian")])
-female.add([Const("alice")])
-female.add([Const("rosa")])
-female.add([Const("marjorie")])
-female.add([Const("emma")])
-female.add([Const("nellie")])
-female.add([Const("eva")])
-female.add([Const("bertha")])
-female.add([Const("fergie")])
+female.add(["kathryn"])
+female.add(["beatrice"])
+female.add(["rachel"])
+female.add(["lillian"])
+female.add(["alice"])
+female.add(["rosa"])
+female.add(["marjorie"])
+female.add(["emma"])
+female.add(["nellie"])
+female.add(["eva"])
+female.add(["bertha"])
+female.add(["fergie"])
 
 
-child.add([Const("bob"), Const("john")])
-child.add([Const("bob"), Const("kathryn")])
-child.add([Const("beatrice"), Const("john")])
-child.add([Const("beatrice"), Const("kathryn")])
-child.add([Const("john"), Const("ben")])
-child.add([Const("john"), Const("rachel")])
-child.add([Const("lillian"), Const("ben")])
-child.add([Const("lillian"), Const("rachel")])
-child.add([Const("kathryn"), Const("rosa")])
-child.add([Const("kathryn"), Const("martin")])
-child.add([Const("alice"), Const("martin")])
-child.add([Const("alice"), Const("rosa")])
-child.add([Const("ferdinand"), Const("martin")])
-child.add([Const("ferdinand"), Const("fergie")])
-child.add([Const("marjorie"), Const("edmund")])
-child.add([Const("marjorie"), Const("lillian")])
-child.add([Const("david"), Const("lillian")])
-child.add([Const("david"), Const("edmund")])
-child.add([Const("ben"), Const("isidore")])
-child.add([Const("ben"), Const("bertha")])
-child.add([Const("william"), Const("isidore")])
-child.add([Const("william"), Const("bertha")])
-child.add([Const("emma"), Const("isidore")])
-child.add([Const("emma"), Const("bertha")])
-child.add([Const("morris"), Const("alphonse")])
-child.add([Const("morris"), Const("emma")])
-child.add([Const("nellie"), Const("alphonse")])
-child.add([Const("nellie"), Const("emma")])
-child.add([Const("eva"), Const("alphonse")])
-child.add([Const("eva"), Const("emma")])
-child.add([Const("jiri"), Const("alphonse")])
-child.add([Const("jiri"), Const("emma")])
+child.add(["bob", "john"])
+child.add(["bob", "kathryn"])
+child.add(["beatrice", "john"])
+child.add(["beatrice", "kathryn"])
+child.add(["john", "ben"])
+child.add(["john", "rachel"])
+child.add(["lillian", "ben"])
+child.add(["lillian", "rachel"])
+
+# child.add([Const("kathryn"), Const("rosa")])
+# child.add([Const("kathryn"), Const("martin")])
+# child.add([Const("alice"), Const("martin")])
+# child.add([Const("alice"), Const("rosa")])
+# child.add([Const("ferdinand"), Const("martin")])
+# child.add([Const("ferdinand"), Const("fergie")])
+# child.add([Const("marjorie"), Const("edmund")])
+# child.add([Const("marjorie"), Const("lillian")])
+# child.add([Const("david"), Const("lillian")])
+# child.add([Const("david"), Const("edmund")])
+# child.add([Const("ben"), Const("isidore")])
+# child.add([Const("ben"), Const("bertha")])
+# child.add([Const("william"), Const("isidore")])
+# child.add([Const("william"), Const("bertha")])
+# child.add([Const("emma"), Const("isidore")])
+# child.add([Const("emma"), Const("bertha")])
+# child.add([Const("morris"), Const("alphonse")])
+# child.add([Const("morris"), Const("emma")])
+# child.add([Const("nellie"), Const("alphonse")])
+# child.add([Const("nellie"), Const("emma")])
+# child.add([Const("eva"), Const("alphonse")])
+# child.add([Const("eva"), Const("emma")])
+# child.add([Const("jiri"), Const("alphonse")])
+# child.add([Const("jiri"), Const("emma")])
 
 
-just_ate.add([Const("deer"), Const("grass")])
-just_ate.add([Const("tiger"), Const("deer")])
+just_ate.add(["deer", "grass"])
+just_ate.add(["tiger", "deer"])
 
 
-# Save typing by defining Vars on top.
-A = Var("A")
-B = Var("B")
-C = Var("C")
+# # is_digesting(A, B) :- just_ate(A, B).
+# # is_digesting(A, B) :- just_ate(A, C), is_digesting(C, B).
+is_digesting.add(["A", "B"], [[just_ate, "A", "B"]])
+is_digesting.add(["A", "B"], [[just_ate, "A", "C"], [is_digesting, "C", "B"]])
 
 
-# is_digesting(A, B) :- just_ate(A, B).
-# is_digesting(A, B) :- just_ate(A, C), is_digesting(C, B).
-is_digesting.add([A, B], [Goal(just_ate, A, B)])
-is_digesting.add([A, B], [Goal(just_ate, A, C), Goal(is_digesting, C, B)])
-
-# parent(michael, sawyer).
-# parent(A, B) :- child(B, A).
-parent.add([Const("Michael"), Const("Sawyer")])
-parent.add([A, B], [Goal(child, B, A)])
-# parent.add([Var("A"), Var("B")], [Goal(child, Var("B"), Var("A"))])     # Test success!
+# # parent(michael, sawyer).
+# # parent(A, B) :- child(B, A).
+# parent.add([Const("Michael"), Const("Sawyer")])
+# parent.add([A, B], [Goal(child, B, A)])
+# # parent.add([Var("A"), Var("B")], [Goal(child, Var("B"), Var("A"))])     # Test success!
 
 
-# father(A, B) :- male(A), parent(A, B).
-father.add([A, B], [Goal(male, A), Goal(parent, A, B)])
+# # father(A, B) :- male(A), parent(A, B).
+# father.add([A, B], [Goal(male, A), Goal(parent, A, B)])
 
 
-# # father(B, A) :- male(B), parent(B, A).
-# father.add([B, A], [Goal(male, B), Goal(parent, B, A)])              # Test success!
+# # # father(B, A) :- male(B), parent(B, A).
+# # father.add([B, A], [Goal(male, B), Goal(parent, B, A)])              # Test success!
 
-# mother(A, B) :- female(A), parent(A, B).
-# mother(lily).
-# mother(ella).
-mother.add([A, B], [Goal(female, A), Goal(parent, A, B)])
-mother.add([Const("Lily")])
-mother.add([Const("Ella")])
+# # mother(A, B) :- female(A), parent(A, B).
+# # mother(lily).
+# # mother(ella).
+# mother.add([A, B], [Goal(female, A), Goal(parent, A, B)])
+# mother.add([Const("Lily")])
+# mother.add([Const("Ella")])
 
 
-# ancestor(A, B) :- parent(A, B).
-# ancestor(A, B) :- parent(A, C), ancestor(C, B).
-ancestor.add([A, B], [Goal(parent, A, B)])
-ancestor.add([A, B], [Goal(parent, A, C), Goal(ancestor, C, B)])
+# # ancestor(A, B) :- parent(A, B).
+# # ancestor(A, B) :- parent(A, C), ancestor(C, B).
+# ancestor.add([A, B], [Goal(parent, A, B)])
+# ancestor.add([A, B], [Goal(parent, A, C), Goal(ancestor, C, B)])
 
-# count(A, A).
-# count(A, C) :- B is A+1, count(B, C).
-count.add([A, A])
-count.add([A, C], [Goal(equals, B, A + Const(1)), Goal(count, B, C)])
+# # count(A, A).
+# # count(A, C) :- B is A+1, count(B, C).
+# count.add([A, A])
+# count.add([A, C], [Goal(equals, B, A + Const(1)), Goal(count, B, C)])
 
-# write_var(A) :- A is 6 + 2, write(A), fail.
-write_var.add([A], [Goal(equals, A, Const(6)+Const(2)), Goal(write, A), fail])
+# # write_var(A) :- A is 6 + 2, write(A), fail.
+# write_var.add([A], [Goal(equals, A, Const(6)+Const(2)), Goal(write, A), fail])
 
-# write_var(A) :- A is 6 + 2, write(A).
-# write_var.add([A], [Goal(equals, A, Const(6)+Const(2)), Goal(write, A)])
+# # write_var(A) :- A is 6 + 2, write(A).
+# # write_var.add([A], [Goal(equals, A, Const(6)+Const(2)), Goal(write, A)])
 
-always_true.add()
+# always_true.add()
 
-# FAILED ???
-# collatz(A, A).
-# collatz(B, A) :- 0 is mod(B, 2), C is B / 2, collatz(C, A).
-# collatz(B, A) :- 1 is mod(B, 2), C is 3 * B + 1, collatz(C, A).
-collatz.add([A, A])
-collatz.add([B, A], [Goal(equals, Const(0), B % Const(2)), Goal(equals, C, B / Const(2)), Goal(collatz, C, A)])
-collatz.add([B, A], [Goal(equals, Const(1), B % Const(2)), Goal(equals, C, Const(3) * B + Const(1)), Goal(collatz, C, A)])
+# # FAILED ???
+# # collatz(A, A).
+# # collatz(B, A) :- 0 is mod(B, 2), C is B / 2, collatz(C, A).
+# # collatz(B, A) :- 1 is mod(B, 2), C is 3 * B + 1, collatz(C, A).
+# collatz.add([A, A])
+# collatz.add([B, A], [Goal(equals, Const(0), B % Const(2)), Goal(equals, C, B / Const(2)), Goal(collatz, C, A)])
+# collatz.add([B, A], [Goal(equals, Const(1), B % Const(2)), Goal(equals, C, Const(3) * B + Const(1)), Goal(collatz, C, A)])
 
 ##########################################
 
 ### All tests below succeed! ###
 
-X = Var("X")
-Y = Var("Y")
 
 # # ?- male(X).
 # # Becomes:
-# success = tryGoal(Goal(male, X))
+success = solve([male, "X"])
 
 # # ?- child(X, Y).
 # success = tryGoal(Goal(child, X, Y))
@@ -205,6 +201,8 @@ Y = Var("Y")
 
 # # ?- is_digesting(tiger, grass).
 # success = tryGoal(Goal(is_digesting, Const("tiger"), Const("grass")))
+success = solve([is_digesting, "tiger", "grass"])
+
 
 # # ?- is_digesting(X, Y).
 # success = tryGoal(Goal(is_digesting, X, Y))
@@ -215,8 +213,8 @@ Y = Var("Y")
 # # ?- ancestor(X, bob).
 # success = tryGoal(Goal(ancestor, X, Const("bob")))
 
-# collatz(10, X).
-success = tryGoal(Goal(collatz, Const(10), X))
+# collatz(10, X).   # Fails. ???
+# success = tryGoal(Goal(collatz, Const(10), X))
 
 ######### Different arities for same predicate ###########
 # success = tryGoal(Goal(mother))
@@ -230,14 +228,14 @@ success = tryGoal(Goal(collatz, Const(10), X))
 ########################## Check results here! ##########################
 
 
-# #### To see all results #####
-# for s in success:
-#     print(s)
+#### To see all results #####
+for s in success:
+    print(s)
 
 
-### To see only some results ####
-for _ in range(5):
-    print(next(success))
+# ### To see only some results ####
+# for _ in range(5):
+#     print(next(success))
 
 #### Alternatives for specific cases ####
 # for i in tryGoal(Goal(parent, X, Y)):

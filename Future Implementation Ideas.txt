@@ -7,3 +7,5 @@ Predicate alternatives should be a dictionary where the key is the arity and val
 Maybe make the IS predicate a built in predicate in logic.py. That way, whenever the goal is IS, the program will know to do math. That may remove the need for the term Math().
 
 To add cut (!), maybe just make a bool 'cut = false'. 
+
+Vars and consts etc. should be inputted by the user as strings, and the inner code converts them into Vars and Consts.
