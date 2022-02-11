@@ -72,7 +72,7 @@ class Alt():
         return repr(self.name + " = " + str(self.value))
 
 
-# Variables, Constants, and Mathematical expressions are all Terms.
+# Variables and Constants are Terms.
 class Term():
     def __init__(self, name, value):
         self.name = name
@@ -101,7 +101,9 @@ class Var(Term):
 class Const(Term):  # A constant, aka an atom or number.
     def __init__(self, value):
         # Consts are defined wherever they were created.
-        super().__init__(name = "Const", value = value)
+        super().__init__(name = "const", value = value)
+
+
 
 
 # class List    ???
@@ -203,7 +205,7 @@ def tryUnify(queryArgs, altArgs):
         if queryArg:
             altArg.value = queryArg.value
         changePath(altArg, altArg.value)  # Set all unified terms to new value.   
-    return True                                 # If it reaches this point, they can be unified.
+    return True                                 # If it reaches this point, they can be unified.    
 
 
 def changePath(arg, newValue):

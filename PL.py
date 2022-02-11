@@ -1,7 +1,40 @@
 # The PL Module offers Prolog functionality for Python programmers.
 # Created by Sawyer Redstone.
 
-from copy import deepcopy
+def solve(goal = []):
+    newGoal = stringsToTerms(goal)
+    for success in tryGoal(Goal(newGoal)):
+        yield success
+
+
+# This will take a list, for example [just_ate, "A", "C"], and convert all the strings to Terms.
+def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already created
+    newList = []
+    for word in oldList:
+        # Represent duplicate strings as the same Term.
+        if word in memo:
+            nextWord = memo[word]
+        # If the word is a predicate, don't change it.
+        elif isinstance(word, Predicate):
+            nextWord = word
+        # Anything with a space or digit must be Math.
+        elif ' ' in word or word.isdigit():
+            parts = word.split()
+            parts = [memo[part] if part in memo else part for part in parts]
+            memo[word] = Math(word, parts)
+            nextWord = memo[word]
+        # Otherwise, if the first letter is uppercase, it is a Var.
+        elif word[0].isupper():     
+            memo[word] = Var(word)
+            nextWord = memo[word]
+        # All other strings are Consts.
+        else:                       
+            memo[word] = Const(word)
+            nextWord = memo[word]
+        # Later add lists by checking if word[0] is '['! ???
+        newList.append(nextWord)
+    return newList
+
 
 class Predicate(): 
     def __init__(self, name): 
@@ -25,18 +58,11 @@ class Predicate():
 
 # Goals must be completed in order to satisfy a query.
 class Goal():
-    def __init__(self, pred, *args):
-        self.pred = pred                # The predicate that is being queried.
-        self.args = list(args)          # Create a list of the goal's arguments.
+    def __init__(self, info):
+        self.pred = info[0]               # The predicate that is being queried.
+        self.args = info[1:]          # Create a list of the goal's arguments.
     def __str__(self):
         return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
-    def __deepcopy__(self, memo):
-        if not id(self) in memo:    
-            result = Goal(self.pred, *deepcopy(self.args, memo)) # This uses * to unpack the resulting list.
-            memo[id(self)] = result     # This is used to prevent unnecessary copies and infinite recursion.
-        else:
-            result = memo[id(self)]     # If the goal was already copied, don't copy again.
-        return result
 
 
 # Alts are individual alternatives that were added to a predicate.
@@ -48,16 +74,9 @@ class Alt():
         return "altArgs: " + str(self.args) + "\naltGoals: " + str(self.goals) + "\n"
     def __repr__(self):
         return repr(self.name + " = " + str(self.value))
-    def __deepcopy__(self, memo):
-        if not id(self) in memo:
-            result = Alt(deepcopy(self.args, memo), deepcopy(self.goals, memo))     
-            memo[id(self)] = result
-        else:
-            result = memo[id(self)]     # If a copy was already made, use that one.
-        return result
 
 
-# Variables, Constants, and Mathematical expressions are all Terms.
+# Variables and Constants are Terms.
 class Term():
     def __init__(self, name, value):
         self.name = name
@@ -67,83 +86,52 @@ class Term():
         return self.value == other.value    # This is used to compare terms.
     def __bool__(self):
         return self.value != "Undefined"    # A term is false it if has no value.
-    def __str__(self):
-        return self.name + " = " + str(self.value)  # This is used to print the term.
     def __repr__(self):
         return repr(self.name + " = " + str(self.value))    
     def __hash__(self):
         return hash(repr(self))
-    # Overload math operations.
-    # This create methods on the fly to avoid typing repetitive code.
-    for op_name, op in [("add", "+"), ("sub", "-"), ("mul", "*"), ("truediv", "/"), ("floordiv", "//"), ("mod", "%"), ("pow", "**")]:
-        exec(f"""\
-def __{op_name}__(self, other):
-    return Math(self, f"{op}", other)
-def __r{op_name}__(self, other):
-    return Math(self, f"{op}", other)
-""", globals(), locals())
-
+    
+        
 class Var(Term):
     def __init__(self, name):
         super().__init__(name = name, value = "Undefined")    # Initialize the Var.
-    def __copy__(self):
-        return Var(self.name)   
-    def __deepcopy__(self, memo):   
-        if not self.name in memo:
-            result = Var(self.name)
-            memo[self.name] = result
-        else:
-            result = memo[self.name]    # If the Var was already copied, don't re-copy.
-        return result
+    def __str__(self):
+        return str(self.value)
 
 
-class Const(Term):  # A constant, aka an atom or number.
+class Const(Term):  # A constant, aka an atom.
     def __init__(self, value):
-        # Consts are defined wherever they were created.
         super().__init__(name = "Const", value = value)
-    def __copy__(self):
-        return Const(self.value)
-    def __deepcopy__(self, memo):
-        if not id(self) in memo:
-            result = Const(self.value)
-            memo[id(self)] = result
-        else:
-            result = memo[id(self)]     # If the Const was already copied, don't re-copy.
-        return result
+    def __str__(self):
+        return self.name + " = " + str(self.value)  # This is used to print the term.
+    
+
+class Math(Term):        # This is a number or mathematical expression.
+    def __init__(self, name, terms):
+        self.terms = terms
+        super().__init__(name = name, value = "Undefined")
+    def __str__(self):
+        try:
+            # First turn each term into its value form.
+            self.terms = [str(term) for term in self.terms]
+            # Then evalute and return the results.
+            result = float(eval("".join(self.terms)))
+            return ('%f' % result).rstrip('0').rstrip('.')  # Strip trailing 0s.
+        # Catch if the user typed math that makes no sense, such as adding "3 + *".
+        except:
+            raise Exception("Your equation \"" + self.name + "\" seems to have an error in it.") from None
 
 
-class Math(Term):          # A mathematical expression.
-    def __init__(self, operand1, operator, operand2):
-        self.left = operand1            
-        self.operator = operator
-        self.right = operand2
-        super().__init__(name = "Math", value = "Undefined")      
-    def doMath(self):
-        if isinstance(self.left, Math) and not self.left:
-            self.left = self.left.doMath()
-        try:                # Try to evaluate the math expression.
-            self.value = str(eval(self.left.value + self.operator + self.right.value)) 
-        except:             # If the expression cannot be evaluated, the value becomes false, safely failing the unification.
-            self.value = False  
-    def __copy__(self):
-        return Math(self.left, self.operator, self.right)   
-    def __deepcopy__(self, memo):
-        if not id(self) in memo:
-            newLeft = deepcopy(self.left, memo)
-            newRight = deepcopy(self.right, memo)
-            result = Math(newLeft, self.operator, newRight)
-            memo[id(self)] = result
-        else:
-            result = memo[id(self)]         # If this was already copied, don't re-copy.
-        return result
 
 # class List    ???
 
 def tryGoal(goal):
-    # Keep copy of goal args. This is not a deep copy, so changed values will remain changed here.
+
+    # Keep copy of original goal args. This is not a deep copy, so changed values will remain changed here.
+    # This allows Vars that are temporary changed to Consts to return back to their Var form.
     originalArgs = [arg for arg in goal.args]
     if len(goal.args) in goal.pred.alternatives:
-        alts = deepcopy(goal.pred.alternatives[len(goal.args)], memo = {})      # Deepcopy the alts of correct arity so that they may be used again later without changes.
+        alts = goal.pred.alternatives[len(goal.args)]       # The list of all alts with matching arity.
         # If a variable already has a value, this goal cannot change it.
         # To ensure the value does not get reset, the variable must be changed to a Const.
         for argIndex, arg in enumerate(goal.args):
@@ -172,15 +160,19 @@ def tryGoal(goal):
 
 # This tries the current alternative to see if it succeeds.
 def tryAlt(query, alt):
-    goalsToTry = alt.goals          # A list of goals that must be satisfied for this alt to succeed.
-    if not tryUnify(query.args, alt.args):    # If the alt can't be unified, then it fails.
+    # Memo is a dictionary of all terms in this alt.
+    # This makes sure that no terms are duplicates.
+    memo = {}       
+    altArgs = stringsToTerms(alt.args, memo)
+    altGoals = [Goal(stringsToTerms(goal, memo)) for goal in alt.goals]
+    goalsToTry = altGoals          # A list of goals that must be satisfied for this alt to succeed.
+    if not tryUnify(query.args, altArgs):    # If the alt can't be unified, then it fails.
         yield False
     elif len(goalsToTry) > 0:       # If this alt has goals, try them.
         for success in tryGoals(goalsToTry):
             yield success
     else:
         yield True  # If there are no goals to try, this alt succeeded.
-
 
 
 def tryGoals(goalsToTry):
@@ -215,24 +207,22 @@ def tryUnify(queryArgs, altArgs):
         altArg.children.clear()
     # If it reaches this point, they can be unified.
     for queryArg, altArg in zip(queryArgs, altArgs):              # Loop through the query and alt arguments.
-        # If either arg is a math term, evaluate it.
+        # Evalute args in case they have math in them.
         if isinstance(queryArg, Math):
-            queryArg.doMath()
-            if not queryArg.value:      # The math failed.
-                return False
+            queryArg.value = str(eval("queryArg"))
         if isinstance(altArg, Math):
-            altArg.doMath()
-            if not altArg.value:        # The math failed.
-                return False
+            altArg.value = str(eval("altArg"))
+        # Now that they have been evaluated, check once again if they can unify.
+        if queryArg and altArg and queryArg != altArg:  # If the args both have values and not equal, fail.
+            return False
         altArg.children.append(queryArg)         # The children are the variables we want to find out.
         if queryArg:
             altArg.value = queryArg.value
         changePath(altArg, altArg.value)  # Set all unified terms to new value.   
-    return True                                 # If it reaches this point, they can be unified.
+    return True                                 # If it reaches this point, they can be unified.    
 
 
 def changePath(arg, newValue):
-    # if isinstance(arg, Term) and not isinstance(arg, Const):
     if isinstance(arg, Term):
         arg.value = newValue
         for child in arg.children:
@@ -241,15 +231,14 @@ def changePath(arg, newValue):
 
 
 
-#### Built-in Predicates ####
+# #### Built-in Predicates ####
 
-# The Prolog is/2 predicate, with a different name because "is" already exists in Python.
+# # The Prolog is/2 predicate, with a different name because "is" already exists in Python.
 equals = Predicate("equals")
-equals.add([Var("Q"), Var("Q")])
+equals.add(["Q", "Q"])
 
-# fail/0. This works differently from other goals, as users do not need to type Goal(fail)
-failPredicate = Predicate("failPredicate")
-fail = Goal(failPredicate)
+# # fail/0. This works differently from other goals, as users do not need to type Goal(fail)
+fail = Predicate("failPredicate")
 
-# write/1
+# # write/1
 write = Predicate("write")

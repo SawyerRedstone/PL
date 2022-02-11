@@ -1,7 +1,7 @@
 # This file is used for internal testing.
 
-# from PL import *
-from Experimenting import *
+from PL import *
+# from Experimenting import *
 
 
 ################### Testing #####################
@@ -65,51 +65,47 @@ child.add(["kathryn", "rosa"])
 child.add(["kathryn", "martin"])
 child.add(["alice", "martin"])
 child.add(["alice", "rosa"])
-# child.add([Const("ferdinand"), Const("martin")])
-# child.add([Const("ferdinand"), Const("fergie")])
-# child.add([Const("marjorie"), Const("edmund")])
-# child.add([Const("marjorie"), Const("lillian")])
-# child.add([Const("david"), Const("lillian")])
-# child.add([Const("david"), Const("edmund")])
-# child.add([Const("ben"), Const("isidore")])
-# child.add([Const("ben"), Const("bertha")])
-# child.add([Const("william"), Const("isidore")])
-# child.add([Const("william"), Const("bertha")])
-# child.add([Const("emma"), Const("isidore")])
-# child.add([Const("emma"), Const("bertha")])
-# child.add([Const("morris"), Const("alphonse")])
-# child.add([Const("morris"), Const("emma")])
-# child.add([Const("nellie"), Const("alphonse")])
-# child.add([Const("nellie"), Const("emma")])
-# child.add([Const("eva"), Const("alphonse")])
-# child.add([Const("eva"), Const("emma")])
-# child.add([Const("jiri"), Const("alphonse")])
-# child.add([Const("jiri"), Const("emma")])
+child.add(["ferdinand", "martin"])
+child.add(["ferdinand", "fergie"])
+child.add(["marjorie", "edmund"])
+child.add(["marjorie", "lillian"])
+child.add(["david", "lillian"])
+child.add(["david", "edmund"])
+child.add(["ben", "isidore"])
+child.add(["ben", "bertha"])
+child.add(["william", "isidore"])
+child.add(["william", "bertha"])
+child.add(["emma", "isidore"])
+child.add(["emma", "bertha"])
+child.add(["morris", "alphonse"])
+child.add(["morris", "emma"])
+child.add(["nellie", "alphonse"])
+child.add(["nellie", "emma"])
+child.add(["eva", "alphonse"])
+child.add(["eva", "emma"])
+child.add(["jiri", "alphonse"])
+child.add(["jiri", "emma"])
 
 
 just_ate.add(["deer", "grass"])
 just_ate.add(["tiger", "deer"])
 
 
-# # is_digesting(A, B) :- just_ate(A, B).
-# # is_digesting(A, B) :- just_ate(A, C), is_digesting(C, B).
+# is_digesting(A, B) :- just_ate(A, B).
+# is_digesting(A, B) :- just_ate(A, C), is_digesting(C, B).
 is_digesting.add(["A", "B"], [[just_ate, "A", "B"]])
 is_digesting.add(["A", "B"], [[just_ate, "A", "C"], [is_digesting, "C", "B"]])
 
 
-# # parent(michael, sawyer).
-# # parent(A, B) :- child(B, A).
+# parent(michael, sawyer).
+# parent(A, B) :- child(B, A).
 parent.add(["michael", "sawyer"])
 parent.add(["A", "B"], [[child, "B", "A"]])
-# # parent.add([Var("A"), Var("B")], [Goal(child, Var("B"), Var("A"))])     # Test success!
 
 
-# # father(A, B) :- male(A), parent(A, B).
+# father(A, B) :- male(A), parent(A, B).
 father.add(["A", "B"], [[male, "A"], [parent, "A", "B"]])
 
-
-# # # father(B, A) :- male(B), parent(B, A).
-# # father.add(["B", "A"], [[male, "B"], [parent, "B", "A"]])              # Test success!
 
 # # mother(A, B) :- female(A), parent(A, B).
 # # mother(lily).
@@ -134,13 +130,12 @@ write_var.add(["A"], [[equals, "A", "6 + 2"], [write, "A"], [fail]])
 
 always_true.add()
 
-# # FAILED ???
 # # collatz(A, A).
 # # collatz(B, A) :- 0 is mod(B, 2), C is B / 2, collatz(C, A).
 # # collatz(B, A) :- 1 is mod(B, 2), C is 3 * B + 1, collatz(C, A).
 collatz.add(["A", "A"])
 collatz.add(["B", "A"], [[equals, "0", "B % 2"], [equals, "C", "B / 2"], [collatz, "C", "A"]])
-collatz.add(["B", "A"], [[equals, 1, "B % 2"], [equals, "C", "3 * B + 1"], [collatz, "C", "A"]])
+collatz.add(["B", "A"], [[equals, "1", "B % 2"], [equals, "C", "3 * B + 1"], [collatz, "C", "A"]])
 
 ##########################################
 
@@ -153,7 +148,6 @@ collatz.add(["B", "A"], [[equals, 1, "B % 2"], [equals, "C", "3 * B + 1"], [coll
 
 # # ?- child(X, Y).
 # success = solve([child, "X", "Y"])
-# success = tryGoal(Goal(child, Var("X"), Var("X")))    # It thinks these Xs are different! ???
 
 # # ?- parent(X, Y).
 # success = solve([parent, "X", "Y"])
@@ -188,7 +182,7 @@ collatz.add(["B", "A"], [[equals, 1, "B % 2"], [equals, "C", "3 * B + 1"], [coll
 # success = solve([equals, "6", "2 + 8"])
 
 # # ?- 6 is 2 + "hi".
-# success = solve([equals, "X", "2 + hi"])      # Wrong. ???
+# success = solve([equals, "X", "2 + hi"])        # Correctly catches error!
 
 ############# Arity of 0 #################
 
@@ -209,34 +203,34 @@ collatz.add(["B", "A"], [[equals, 1, "B % 2"], [equals, "C", "3 * B + 1"], [coll
 
 
 # # ?- count(0, X).
-success = solve([count, "0", "X"])
+# success = solve([count, "0", "X"])
 
 # # ?- ancestor(X, bob).
 # success = solve([ancestor, "X", "bob"])
 
-# collatz(10, X).   # Fails. ???
-# success = tryGoal(Goal(collatz, Const(10), X))
+# collatz(10, X).
+# success = solve([collatz, "10", "X"])
 
 ######### Different arities for same predicate ###########
-# success = tryGoal(Goal(mother))
-# success = tryGoal(Goal(mother, X))
-# success = tryGoal(Goal(mother, X, Y))
+# success = solve([mother])
+# success = solve([mother, "X"])
+# success = solve([mother, "X", "Y"])
 
 ########## Using the Write goal. #######
-# success = tryGoal(Goal(write, Const("hi")))
-# success = tryGoal(Goal(write_var, X))
+# success = solve([write, "hi"])
+# success = solve([write_var, "X"])
 
 ########################## Check results here! ##########################
 
 
-#### To see all results #####
-# for s in success:
-#     print(s)
+### To see all results #####
+for s in success:
+    print(s)
 
 
 # ### To see only some results ####
-for _ in range(5):
-    print(next(success))
+# for _ in range(5):
+#     print(next(success))
 
 #### Alternatives for specific cases ####
 # for i in tryGoal(Goal(parent, X, Y)):
