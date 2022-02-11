@@ -76,29 +76,23 @@ class Alt():
 class Term():
     def __init__(self, name, value):
         self.name = name
-        self.value = str(value) # Why str???
+        self.value = str(value)
         self.children = []                  # The children are the variables that will change if this term has a value.
     def __eq__(self, other):
         return self.value == other.value    # This is used to compare terms.
     def __bool__(self):
         return self.value != "Undefined"    # A term is false it if has no value.
     def __str__(self):
-        return self.name + " = " + str(self.value)  # This is used to print the term.
+        try:
+            return str(eval(self.value))  # This is used to print the term.
+        except:
+            return self.value
     def __repr__(self):
         return repr(self.name + " = " + str(self.value))    
     def __hash__(self):
         return hash(repr(self))
-    # Overload math operations.
 
-    # This create methods on the fly to avoid typing repetitive code.
-    for op_name, op in [("add", "+"), ("sub", "-"), ("mul", "*"), ("truediv", "/"), ("floordiv", "//"), ("mod", "%"), ("pow", "**")]:
-        exec(f"""\
-def __{op_name}__(self, addend):
-    return Math(self, f"{op}", addend)
-def __r{op_name}__(self, addend):
-    return Math(self, f"{op}", addend)
-""", globals(), locals())
-
+        
 class Var(Term):
     def __init__(self, name):
         super().__init__(name = name, value = "Undefined")    # Initialize the Var.
@@ -109,31 +103,6 @@ class Const(Term):  # A constant, aka an atom or number.
         # Consts are defined wherever they were created.
         super().__init__(name = "Const", value = value)
 
-
-class Math(Term):          # A mathematical expression.
-    def __init__(self, operand1, operator, operand2):
-        self.left = operand1            
-        self.operator = operator
-        self.right = operand2
-        super().__init__(name = "Math", value = "Undefined")      
-    def doMath(self):
-        if isinstance(self.left, Math) and not self.left:
-            self.left = self.left.doMath()
-        try:                # Try to evaluate the math expression.
-            self.value = str(eval(self.left.value + self.operator + self.right.value)) 
-        except:             # If the expression cannot be evaluated, the value becomes false, safely failing the unification.
-            self.value = False  
-    def __copy__(self):
-        return Math(self.left, self.operator, self.right)   
-    def __deepcopy__(self, memo):
-        if not id(self) in memo:
-            newLeft = deepcopy(self.left, memo)
-            newRight = deepcopy(self.right, memo)
-            result = Math(newLeft, self.operator, newRight)
-            memo[id(self)] = result
-        else:
-            result = memo[id(self)]         # If this was already copied, don't re-copy.
-        return result
 
 # class List    ???
 
@@ -224,15 +193,12 @@ def tryUnify(queryArgs, altArgs):
         altArg.children.clear()
     # If it reaches this point, they can be unified.
     for queryArg, altArg in zip(queryArgs, altArgs):              # Loop through the query and alt arguments.
-        # If either arg is a math term, evaluate it.
-        if isinstance(queryArg, Math):
-            queryArg.doMath()
-            if not queryArg.value:      # The math failed.
-                return False
-        if isinstance(altArg, Math):
-            altArg.doMath()
-            if not altArg.value:        # The math failed.
-                return False
+        # Evalute args in case they have math in them.
+        queryArg.value = str(eval("queryArg"))
+        altArg.value = str(eval("altArg"))
+        # Now that they have been evaluated, check once again if they can unify.
+        if queryArg and altArg and queryArg != altArg:  # If the args both have values and not equal, fail.
+            return False
         altArg.children.append(queryArg)         # The children are the variables we want to find out.
         if queryArg:
             altArg.value = queryArg.value
@@ -257,23 +223,7 @@ equals = Predicate("equals")
 equals.add(["Q", "Q"])
 
 # # fail/0. This works differently from other goals, as users do not need to type Goal(fail)
-failPredicate = Predicate("failPredicate")
-fail = Goal([failPredicate])    #???
+fail = Predicate("failPredicate")
 
 # # write/1
 write = Predicate("write")
-
-
-# class Foo():
-#     def __init__(self, num):
-#         self.num_val = num
-#     def __add__(self, addend):
-#         if isinstance(addend, Foo):
-#             return Foo(self.num_val + addend.num_val)
-#         return Foo(self.num_val + addend) 
-#     def __str__(self):
-#         return f"{self.num_val}"
-
-# myFoo = Foo(18)
-# res = eval("myFoo + 2")
-# print(res) 

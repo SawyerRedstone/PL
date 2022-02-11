@@ -61,11 +61,10 @@ child.add(["john", "ben"])
 child.add(["john", "rachel"])
 child.add(["lillian", "ben"])
 child.add(["lillian", "rachel"])
-
-# child.add([Const("kathryn"), Const("rosa")])
-# child.add([Const("kathryn"), Const("martin")])
-# child.add([Const("alice"), Const("martin")])
-# child.add([Const("alice"), Const("rosa")])
+child.add(["kathryn", "rosa"])
+child.add(["kathryn", "martin"])
+child.add(["alice", "martin"])
+child.add(["alice", "rosa"])
 # child.add([Const("ferdinand"), Const("martin")])
 # child.add([Const("ferdinand"), Const("fergie")])
 # child.add([Const("marjorie"), Const("edmund")])
@@ -100,51 +99,48 @@ is_digesting.add(["A", "B"], [[just_ate, "A", "C"], [is_digesting, "C", "B"]])
 
 # # parent(michael, sawyer).
 # # parent(A, B) :- child(B, A).
-# parent.add([Const("Michael"), Const("Sawyer")])
-# parent.add([A, B], [Goal(child, B, A)])
+parent.add(["michael", "sawyer"])
+parent.add(["A", "B"], [[child, "B", "A"]])
 # # parent.add([Var("A"), Var("B")], [Goal(child, Var("B"), Var("A"))])     # Test success!
 
 
 # # father(A, B) :- male(A), parent(A, B).
-# father.add([A, B], [Goal(male, A), Goal(parent, A, B)])
+father.add(["A", "B"], [[male, "A"], [parent, "A", "B"]])
 
 
 # # # father(B, A) :- male(B), parent(B, A).
-# # father.add([B, A], [Goal(male, B), Goal(parent, B, A)])              # Test success!
+# # father.add(["B", "A"], [[male, "B"], [parent, "B", "A"]])              # Test success!
 
 # # mother(A, B) :- female(A), parent(A, B).
 # # mother(lily).
 # # mother(ella).
-# mother.add([A, B], [Goal(female, A), Goal(parent, A, B)])
-# mother.add([Const("Lily")])
-# mother.add([Const("Ella")])
+mother.add(["A", "B"], [[female, "A"], [parent, "A", "B"]])
+mother.add(["lily"])
+mother.add(["ella"])
 
 
 # # ancestor(A, B) :- parent(A, B).
 # # ancestor(A, B) :- parent(A, C), ancestor(C, B).
-# ancestor.add([A, B], [Goal(parent, A, B)])
-# ancestor.add([A, B], [Goal(parent, A, C), Goal(ancestor, C, B)])
+ancestor.add(["A", "B"], [[parent, "A", "B"]])
+ancestor.add(["A", "B"], [[parent, "A", "C"], [ancestor, "C", "B"]])
 
 # # count(A, A).
 # # count(A, C) :- B is A+1, count(B, C).
-# count.add([A, A])
-# count.add([A, C], [Goal(equals, B, A + Const(1)), Goal(count, B, C)])
+count.add(["A", "A"])
+count.add(["A", "C"], [[equals, "B", "A + 1"], [count, "B", "C"]])
 
 # # write_var(A) :- A is 6 + 2, write(A), fail.
-# write_var.add([A], [Goal(equals, A, Const(6)+Const(2)), Goal(write, A), fail])
+write_var.add(["A"], [[equals, "A", "6 + 2"], [write, "A"], [fail]])
 
-# # write_var(A) :- A is 6 + 2, write(A).
-# # write_var.add([A], [Goal(equals, A, Const(6)+Const(2)), Goal(write, A)])
-
-# always_true.add()
+always_true.add()
 
 # # FAILED ???
 # # collatz(A, A).
 # # collatz(B, A) :- 0 is mod(B, 2), C is B / 2, collatz(C, A).
 # # collatz(B, A) :- 1 is mod(B, 2), C is 3 * B + 1, collatz(C, A).
-# collatz.add([A, A])
-# collatz.add([B, A], [Goal(equals, Const(0), B % Const(2)), Goal(equals, C, B / Const(2)), Goal(collatz, C, A)])
-# collatz.add([B, A], [Goal(equals, Const(1), B % Const(2)), Goal(equals, C, Const(3) * B + Const(1)), Goal(collatz, C, A)])
+collatz.add(["A", "A"])
+collatz.add(["B", "A"], [[equals, "0", "B % 2"], [equals, "C", "B / 2"], [collatz, "C", "A"]])
+collatz.add(["B", "A"], [[equals, 1, "B % 2"], [equals, "C", "3 * B + 1"], [collatz, "C", "A"]])
 
 ##########################################
 
@@ -156,46 +152,51 @@ is_digesting.add(["A", "B"], [[just_ate, "A", "C"], [is_digesting, "C", "B"]])
 # success = solve([male, "X"])
 
 # # ?- child(X, Y).
-# success = tryGoal(Goal(child, X, Y))
+# success = solve([child, "X", "Y"])
 # success = tryGoal(Goal(child, Var("X"), Var("X")))    # It thinks these Xs are different! ???
 
-
 # # ?- parent(X, Y).
-# success = tryGoal(Goal(parent, X, Y))
+# success = solve([parent, "X", "Y"])
 
 # # ?- father(X, Y).
-# success = tryGoal(Goal(father, X, Y))
+# success = solve([father, "X", "Y"])
 
 # # ?- child(X, ben).
-# success = tryGoal(Goal(child, X, Const("ben")))
+# success = solve([child, "X", "ben"])
 
 # # ?- parent(john, X).
-# success = tryGoal(Goal(parent, Const("john"), X))
+# success = solve([parent, "john", "X"])
 
 # # ?- just_ate(X, Y).
-# success = tryGoal(Goal(just_ate, X, Y))
+# success = solve([just_ate, "X", "Y"])
 
+# # ?- write(hi)
+# success = solve([write, "hi"])
 
 # # ?- write_var(X)
-# success = tryGoal(Goal(write_var, X))
+# success = solve([write_var, "X"])
 
 # # ?- X is 2 + 4.
 # # ?- is(X, 2 + 4).
-# success = tryGoal(Goal(equals, X, Const(2)+Const(4)))
+# success = solve([equals, "X", "2 + 4"])
+
 
 # # ?- 6 is 2 + 4.
-# success = tryGoal(Goal(equals, Const(6), Const(2) + Const(4)))
+# success = solve([equals, "6", "2 + 4"])
+
+# # ?- 6 is 2 + 8.
+# success = solve([equals, "6", "2 + 8"])
 
 # # ?- 6 is 2 + "hi".
-# success = tryGoal(Goal(equals, X, Const(2) + Const("hi")))
+# success = solve([equals, "X", "2 + hi"])      # Wrong. ???
 
 ############# Arity of 0 #################
 
 # # ?- fail.
-# success = tryGoal(fail)
+# success = solve([fail])
 
 # # ?- always_true.
-# success = tryGoal(Goal(always_true))
+# success = solve([always_true])
 
 ################ Recursion ##################
 
@@ -208,7 +209,7 @@ is_digesting.add(["A", "B"], [[just_ate, "A", "C"], [is_digesting, "C", "B"]])
 
 
 # # ?- count(0, X).
-# success = solve([count, "0", "X"])
+success = solve([count, "0", "X"])
 
 # # ?- ancestor(X, bob).
 # success = solve([ancestor, "X", "bob"])
@@ -229,13 +230,13 @@ is_digesting.add(["A", "B"], [[just_ate, "A", "C"], [is_digesting, "C", "B"]])
 
 
 #### To see all results #####
-for s in success:
-    print(s)
+# for s in success:
+#     print(s)
 
 
 # ### To see only some results ####
-# for _ in range(5):
-#     print(next(success))
+for _ in range(5):
+    print(next(success))
 
 #### Alternatives for specific cases ####
 # for i in tryGoal(Goal(parent, X, Y)):
