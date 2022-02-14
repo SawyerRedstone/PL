@@ -137,12 +137,12 @@ collatz.add(["A", "A"])
 collatz.add(["B", "A"], [[equals, "0", "B % 2"], [equals, "C", "B / 2"], [collatz, "C", "A"]])
 collatz.add(["B", "A"], [[equals, "1", "B % 2"], [equals, "C", "3 * B + 1"], [collatz, "C", "A"]])
 
-listTest.add(["A"])
+listTest.add([["bob", "carol", "ted", "alice"]])
 
 
 ##########################################
 
-success = solve([listTest, ['a', 'c']])
+success = solve([listTest, ["X", "|", "Y"]])
 
 
 ### All tests below succeed! ###

@@ -29,7 +29,7 @@ def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already cr
             nextWord = memo[word]
         # Otherwise, if the first letter is uppercase, it is a Var.
         # elif word[0].isupper():     
-        elif word[0].isupper() or word[0] is "_":    # Does _ work???
+        elif word[0].isupper() or word[0] == "_":    # Does _ work???
             memo[word] = Var(word)
             nextWord = memo[word]
         # All other strings are Consts.
@@ -88,7 +88,9 @@ class Term():
         self.value = value
         self.children = []                  # The children are the variables that will change if this term has a value.
     def __eq__(self, other):
-        return self.value == other.value    # This is used to compare terms.
+        if isinstance(other, Term):
+            return self.value == other.value    # This is used to compare terms.
+        return self.value == other
     def __bool__(self):
         return self.value != "Undefined"    # A term is false it if has no value.
     def __repr__(self):
@@ -126,13 +128,40 @@ class Math(Term):        # This is a number or mathematical expression.
         except:
             raise Exception("Your equation \"" + self.name + "\" seems to have an error in it.") from None
 
+# class ListPL(Term):
+#     def __init__(self, lst):  # Value is a list as a string.
+#         self.head = lst
+#         self.tail = []
+#         if '|' in lst:
+#             self.head = lst[:-2]
+#             self.tail = lst[-1]
+#         super().__init__(name = "List", value = lst)
+#     def __len__(self):
+#         return len(self.value)
+#     def __eq__(self, other):
+#         self.head.extend(self.tail.value) == other.head.extend(other.tail.value)
+
+# # A list is sort of a Var?
 class ListPL(Term):
-    def __init__(self, value):  # Value is a list as a string.
-        super().__init__(name = "List", value = value)
+    def __init__(self, lst):  # Value is a list as a string.
+        # This may look like [0, 1, 2] or [0, |, A].
+        self.head = lst[0]
+        if len(lst) == 1:       # There is only one item in the list.
+            self.tail = []
+        elif lst[1] == "|":     # The tail comes after the "|".
+            self.tail = ListPL(lst[-1]) 
+        else:                   # The rest of the list is all the tail.
+            self.tail = ListPL(lst[1:])
+        super().__init__(name = "List", value = self.head)
+    def __len__(self):
+        return len(self.value)
+    def __eq__(self, other):
+        self.head.extend(self.tail.value) == other.head.extend(other.tail.value)
+        
+
 
 
 def tryGoal(goal):
-
     # Keep copy of original goal args. This is not a deep copy, so changed values will remain changed here.
     # This allows Vars that are temporary changed to Consts to return back to their Var form.
     originalArgs = [arg for arg in goal.args]
@@ -204,10 +233,22 @@ def tryGoals(goalsToTry):
 
 # This function tries to unify the query and alt args, and returns a bool of its success.
 def tryUnify(queryArgs, altArgs):
+    # # If lengths aren't equal, check if "|" in longer one. If so, Var after "|" = end of other list.
+    # if len(queryArgs) != len(altArgs):
+    #     shorterList = min([queryArgs, altArgs], key=len)        # Shorter list has the tail.
+    #     longerList = max([queryArgs, altArgs], key=len)
+    #     if "|" in shorterList:
+    #         shorterList.tail.value = longerList[len(longerList) - len(shorterList):]
+    #     else:
+    #         return False
     # First check if they are able to unify.
     for queryArg, altArg in zip(queryArgs, altArgs):
         if isinstance(queryArg, ListPL) and isinstance(altArg, ListPL):
-            tryUnify(queryArg.value, altArg.value)
+            shorterList = min([queryArg, altArg], key=len)        # Shorter list has the tail.
+            longerList = max([queryArg, altArg], key=len)
+            tryUnify(shorterList.head, longerList.value[:len(shorterList)])
+            shorterList.tail.value = longerList.value[len(shorterList.head):]# Don't forget that tail might be []!! ???
+            # tryUnify(queryArg.value, altArg.value)
         if queryArg and altArg and queryArg != altArg:  # If the args both have values and not equal, fail.
             return False
         # Remove the alt's previous children.

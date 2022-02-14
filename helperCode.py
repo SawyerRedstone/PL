@@ -73,5 +73,16 @@
 # res = eval("myFoo")
 # print(res)
 
-test = eval("[1, 2]")
-print(test)
+value = [1, 2, 3, "|", 5]
+
+# try:
+#     tailStart = value.index('|') + 1
+# except:
+#     tailStart = len(value)
+
+# tail = value[tailStart:]
+# head = value[:tailStart - 1]
+# print(head)
+# print(tail)
+
+print(value[-1])
