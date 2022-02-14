@@ -73,4 +73,5 @@
 # res = eval("myFoo")
 # print(res)
 
-print(float(2.5))
+test = eval("[1, 2]")
+print(test)

@@ -10,8 +10,6 @@ Y = Var(Y)
 parent(X, Y).add(child(Y, X)))
 
 -----------
-Lists = [], [Var(A), Var(B), "Tail"]
+Lists = "["1", "apple", "|", "[c]"]"
 
-----
-
-What if alts are only turned into strings when they are being used? So no deepcopy needed. 
+"|" seperates the head and tail. Everything after "|" must be a list.

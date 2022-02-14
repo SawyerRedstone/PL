@@ -12,11 +12,15 @@ def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already cr
     newList = []
     for word in oldList:
         # Represent duplicate strings as the same Term.
-        if word in memo:
+        if str(word) in memo:
             nextWord = memo[word]
-        # If the word is a predicate, don't change it.
+        # If the word is a predicate or list, don't change it.
         elif isinstance(word, Predicate):
             nextWord = word
+        elif isinstance(word, list):
+            recursed = stringsToTerms(word, memo)
+            memo[str(word)] = ListPL(recursed)
+            nextWord = memo[str(word)]
         # Anything with a space or digit must be Math.
         elif ' ' in word or word.isdigit():
             parts = word.split()
@@ -24,14 +28,14 @@ def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already cr
             memo[word] = Math(word, parts)
             nextWord = memo[word]
         # Otherwise, if the first letter is uppercase, it is a Var.
-        elif word[0].isupper():     
+        # elif word[0].isupper():     
+        elif word[0].isupper() or word[0] is "_":    # Does _ work???
             memo[word] = Var(word)
             nextWord = memo[word]
         # All other strings are Consts.
         else:                       
             memo[word] = Const(word)
             nextWord = memo[word]
-        # Later add lists by checking if word[0] is '['! ???
         newList.append(nextWord)
     return newList
 
@@ -80,7 +84,8 @@ class Alt():
 class Term():
     def __init__(self, name, value):
         self.name = name
-        self.value = str(value)
+        # self.value = str(value)
+        self.value = value
         self.children = []                  # The children are the variables that will change if this term has a value.
     def __eq__(self, other):
         return self.value == other.value    # This is used to compare terms.
@@ -121,9 +126,10 @@ class Math(Term):        # This is a number or mathematical expression.
         except:
             raise Exception("Your equation \"" + self.name + "\" seems to have an error in it.") from None
 
+class ListPL(Term):
+    def __init__(self, value):  # Value is a list as a string.
+        super().__init__(name = "List", value = value)
 
-
-# class List    ???
 
 def tryGoal(goal):
 
@@ -144,7 +150,8 @@ def tryGoal(goal):
             for attempt in altAttempts:
                 if attempt:
                     # Yield vars, or True if this succeeded without changing vars.
-                    yield [arg for arg in goal.args if isinstance(arg, Var) and arg.value != "Undefined"] or True
+                    yield findVars(goal.args) or True
+                    # yield [arg for arg in goal.args if isinstance(arg, Var) and arg.value != "Undefined"] or True
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
             for arg in goal.args:
                 if isinstance(arg, Var):
@@ -199,8 +206,8 @@ def tryGoals(goalsToTry):
 def tryUnify(queryArgs, altArgs):
     # First check if they are able to unify.
     for queryArg, altArg in zip(queryArgs, altArgs):
-        # if isinstance(queryArg, list) or isinstance(altArg, list):
-        #     tryUnify(queryArg, altArg)
+        if isinstance(queryArg, ListPL) and isinstance(altArg, ListPL):
+            tryUnify(queryArg.value, altArg.value)
         if queryArg and altArg and queryArg != altArg:  # If the args both have values and not equal, fail.
             return False
         # Remove the alt's previous children.
@@ -228,6 +235,20 @@ def changePath(arg, newValue):
         for child in arg.children:
             # if child value already is new value, maybe don't need to change child's path? Try later! ???
             changePath(child, newValue)         # Change each parent to the new value.
+
+
+# Returns a list of all Vars found in a list.
+def findVars(args, memo = set()):
+    result = []
+    for arg in args:
+        if isinstance(arg, ListPL):
+            result.extend(findVars(arg.value, memo))
+        # elif isinstance(arg, Var) and arg not in memo:
+        elif isinstance(arg, Var) and arg[0] != "_" and arg not in memo:
+            memo.add(arg)
+            result.append(arg)
+    return result
+
 
 
 

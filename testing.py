@@ -20,10 +20,10 @@ is_digesting = Predicate("is_digesting")
 always_true = Predicate("always_true")
 write_var = Predicate("write_var")
 collatz = Predicate("collatz")
-member = Predicate("member")
+# member = Predicate("member")
+listTest = Predicate("list_test")
 
 #### facts/rules ####
-
 
 male.add(["bob"])
 male.add(["john"])
@@ -137,7 +137,13 @@ collatz.add(["A", "A"])
 collatz.add(["B", "A"], [[equals, "0", "B % 2"], [equals, "C", "B / 2"], [collatz, "C", "A"]])
 collatz.add(["B", "A"], [[equals, "1", "B % 2"], [equals, "C", "3 * B + 1"], [collatz, "C", "A"]])
 
+listTest.add(["A"])
+
+
 ##########################################
+
+success = solve([listTest, ['a', 'c']])
+
 
 ### All tests below succeed! ###
 
@@ -232,10 +238,10 @@ for s in success:
 # for _ in range(5):
 #     print(next(success))
 
-#### Alternatives for specific cases ####
-# for i in tryGoal(Goal(parent, X, Y)):
+# #### Alternatives for specific cases ####
+# for i in solve([parent, "X", "Y"]):
 #     print(i)
 
-# success = tryGoal(Goal(parent, X, Y))
+# success = solve([parent, "X", "Y"])
 # print(next(success))
 # print(next(success))
