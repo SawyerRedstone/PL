@@ -243,12 +243,12 @@ def tryUnify(queryArgs, altArgs):
     #         return False
     # First check if they are able to unify.
     for queryArg, altArg in zip(queryArgs, altArgs):
-        if isinstance(queryArg, ListPL) and isinstance(altArg, ListPL):
-            shorterList = min([queryArg, altArg], key=len)        # Shorter list has the tail.
-            longerList = max([queryArg, altArg], key=len)
-            tryUnify(shorterList.head, longerList.value[:len(shorterList)])
-            shorterList.tail.value = longerList.value[len(shorterList.head):]# Don't forget that tail might be []!! ???
-            # tryUnify(queryArg.value, altArg.value)
+        # if isinstance(queryArg, ListPL) and isinstance(altArg, ListPL):
+        #     shorterList = min([queryArg, altArg], key=len)        # Shorter list has the tail.
+        #     longerList = max([queryArg, altArg], key=len)
+        #     tryUnify(shorterList.head, longerList.value[:len(shorterList)])
+        #     shorterList.tail.value = longerList.value[len(shorterList.head):]# Don't forget that tail might be []!! ???
+        #     # tryUnify(queryArg.value, altArg.value)
         if queryArg and altArg and queryArg != altArg:  # If the args both have values and not equal, fail.
             return False
         # Remove the alt's previous children.
@@ -262,7 +262,7 @@ def tryUnify(queryArgs, altArgs):
             altArg.value = str(eval("altArg"))
         # Now that they have been evaluated, check once again if they can unify.
         if queryArg and altArg and queryArg != altArg:  # If the args both have values and not equal, fail.
-            return False
+            return False                                # Is this a problem if the fail occures in middle of unifying???
         altArg.children.append(queryArg)         # The children are the variables we want to find out.
         if queryArg:
             altArg.value = queryArg.value
