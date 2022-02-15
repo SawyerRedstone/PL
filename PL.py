@@ -128,20 +128,9 @@ class Math(Term):        # This is a number or mathematical expression.
         except:
             raise Exception("Your equation \"" + self.name + "\" seems to have an error in it.") from None
 
-# class ListPL(Term):
-#     def __init__(self, lst):  # Value is a list as a string.
-#         self.head = lst
-#         self.tail = []
-#         if '|' in lst:
-#             self.head = lst[:-2]
-#             self.tail = lst[-1]
-#         super().__init__(name = "List", value = lst)
-#     def __len__(self):
-#         return len(self.value)
-#     def __eq__(self, other):
-#         self.head.extend(self.tail.value) == other.head.extend(other.tail.value)
 
 # # A list is sort of a Var?
+# What if tail is a Var with a value equal to the remaining list? ???
 class ListPL(Term):
     def __init__(self, lst):  # Value is a list as a string.
         # This may look like [0, 1, 2] or [0, |, A].
@@ -149,7 +138,7 @@ class ListPL(Term):
         if len(lst) == 1:       # There is only one item in the list.
             self.tail = []
         elif lst[1] == "|":     # The tail comes after the "|".
-            self.tail = ListPL(lst[-1]) 
+            self.tail = lst[-1] # This is
         else:                   # The rest of the list is all the tail.
             self.tail = ListPL(lst[1:])
         super().__init__(name = "List", value = self.head)
@@ -233,27 +222,11 @@ def tryGoals(goalsToTry):
 
 # This function tries to unify the query and alt args, and returns a bool of its success.
 def tryUnify(queryArgs, altArgs):
-    # # If lengths aren't equal, check if "|" in longer one. If so, Var after "|" = end of other list.
-    # if len(queryArgs) != len(altArgs):
-    #     shorterList = min([queryArgs, altArgs], key=len)        # Shorter list has the tail.
-    #     longerList = max([queryArgs, altArgs], key=len)
-    #     if "|" in shorterList:
-    #         shorterList.tail.value = longerList[len(longerList) - len(shorterList):]
-    #     else:
-    #         return False
-    # First check if they are able to unify.
+    # First clear alt's previous children.
     for queryArg, altArg in zip(queryArgs, altArgs):
-        # if isinstance(queryArg, ListPL) and isinstance(altArg, ListPL):
-        #     shorterList = min([queryArg, altArg], key=len)        # Shorter list has the tail.
-        #     longerList = max([queryArg, altArg], key=len)
-        #     tryUnify(shorterList.head, longerList.value[:len(shorterList)])
-        #     shorterList.tail.value = longerList.value[len(shorterList.head):]# Don't forget that tail might be []!! ???
-        #     # tryUnify(queryArg.value, altArg.value)
-        if queryArg and altArg and queryArg != altArg:  # If the args both have values and not equal, fail.
-            return False
         # Remove the alt's previous children.
         altArg.children.clear()
-    # If it reaches this point, they can be unified.
+    # Now try to unify.
     for queryArg, altArg in zip(queryArgs, altArgs):              # Loop through the query and alt arguments.
         # Evalute args in case they have math in them.
         if isinstance(queryArg, Math):
