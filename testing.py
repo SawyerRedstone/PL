@@ -142,7 +142,10 @@ listTest.add([["bob", "carol", "ted", "alice"]])
 
 ##########################################
 
-success = solve([listTest, ["X", "|", "Y"]])
+# success = solve([listTest, ["X", "|", "Y"]])
+# success = solve([listTest, ["bob", "carol", "ted", "ali"]])
+# success = solve([listTest, ["bob", "carol", "ted", "alice"]])
+
 
 
 ### All tests below succeed! ###

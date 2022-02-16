@@ -133,19 +133,26 @@ class Math(Term):        # This is a number or mathematical expression.
 # What if tail is a Var with a value equal to the remaining list? ???
 class ListPL(Term):
     def __init__(self, lst):  # Value is a list as a string.
+        self.lst = lst
         # This may look like [0, 1, 2] or [0, |, A].
         self.head = lst[0]
+        self.tail = Var("_")
         if len(lst) == 1:       # There is only one item in the list.
-            self.tail = []
+            self.tail.value = "[]"
         elif lst[1] == "|":     # The tail comes after the "|".
-            self.tail = lst[-1] # This is
+            self.tail = lst[-1] # This makes the tail be equal to the tail variable.
         else:                   # The rest of the list is all the tail.
+            # self.tail.value = ListPL(lst[1:])
             self.tail = ListPL(lst[1:])
         super().__init__(name = "List", value = self.head)
     def __len__(self):
         return len(self.value)
     def __eq__(self, other):
-        self.head.extend(self.tail.value) == other.head.extend(other.tail.value)
+    #     # self.head.extend(self.tail.value) == other.head.extend(other.tail.value)
+    #     self.head == other.head
+        if self.head == other.head and self.tail == other.tail:
+            return True
+        return False
         
 
 
@@ -256,9 +263,10 @@ def findVars(args, memo = set()):
     result = []
     for arg in args:
         if isinstance(arg, ListPL):
-            result.extend(findVars(arg.value, memo))
+            # result.extend(findVars(arg.value, memo))
+            result.extend(findVars(arg.lst, memo))
         # elif isinstance(arg, Var) and arg not in memo:
-        elif isinstance(arg, Var) and arg[0] != "_" and arg not in memo:
+        elif isinstance(arg, Var) and arg.name[0] != "_" and arg not in memo:
             memo.add(arg)
             result.append(arg)
     return result
