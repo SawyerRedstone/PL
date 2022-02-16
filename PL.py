@@ -1,6 +1,8 @@
 # The PL Module offers Prolog functionality for Python programmers.
 # Created by Sawyer Redstone.
 
+# Changing == to unify as it checks! ???
+
 def solve(goal = []):
     newGoal = stringsToTerms(goal)
     for success in tryGoal(Goal(newGoal)):
@@ -88,9 +90,10 @@ class Term():
         self.value = value
         self.children = []                  # The children are the variables that will change if this term has a value.
     def __eq__(self, other):
-        if isinstance(other, Term):
-            return self.value == other.value    # This is used to compare terms.
-        return self.value == other
+        # if isinstance(other, Term):
+        #     return self.value == other.value    # This is used to compare terms.
+        # return self.value == other
+        return self.value == other.value
     def __bool__(self):
         return self.value != "Undefined"    # A term is false it if has no value.
     def __repr__(self):
@@ -258,19 +261,36 @@ def changePath(arg, newValue):
             changePath(child, newValue)         # Change each parent to the new value.
 
 
+# # Returns a list of all Vars found in a list.
+# def findVars(args, memo = set()):
+#     result = []
+#     for arg in args:
+#         if isinstance(arg, ListPL):
+#             # result.extend(findVars(arg.value, memo))
+#             result.extend(findVars(arg.lst, memo))
+#         # elif isinstance(arg, Var) and arg not in memo:
+#         elif isinstance(arg, Var) and arg.name[0] != "_" and arg not in memo:
+#         # elif arg.name[0] != "_" and arg not in memo:
+
+#             memo.add(arg)
+#             result.append(arg)
+#     return result
+
+
 # Returns a list of all Vars found in a list.
-def findVars(args, memo = set()):
+def findVars(args):
     result = []
     for arg in args:
         if isinstance(arg, ListPL):
             # result.extend(findVars(arg.value, memo))
-            result.extend(findVars(arg.lst, memo))
+            result.extend(findVars(arg.lst))
         # elif isinstance(arg, Var) and arg not in memo:
-        elif isinstance(arg, Var) and arg.name[0] != "_" and arg not in memo:
-            memo.add(arg)
+        elif isinstance(arg, Var) and arg.name[0] != "_":
+        # elif arg.name[0] != "_" and arg not in memo:
+
+            # memo.add(arg)
             result.append(arg)
     return result
-
 
 
 
