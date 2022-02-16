@@ -145,7 +145,8 @@ member.add(["X", ["X", "|", "_"]])
 member.add(["X", ["_", "|", "T"]], [[member, "X", "T"]])
 
 ##########################################
-
+# member.add(["apple", ["apple", "|", "_"]])
+# success = solve([member, "apple", ["apple", "soup", "grape", "bob"]])
 
 
 # success = solve([member, "apple", ["bob", "apple", "shirt", "pip"]])  # THIS NEXT! ???
@@ -153,7 +154,7 @@ member.add(["X", ["_", "|", "T"]], [[member, "X", "T"]])
 
 ### All tests below succeed! ###
 
-# success = solve([listTest, ["X", "|", "Y"]])
+success = solve([listTest, ["X", "|", "Y"]])
 # success = solve([listTest, ["bob", "carol", "ted", "ali"]])
 # success = solve([listTest, ["bob", "carol", "ted", "alice"]])
 
@@ -253,10 +254,3 @@ for s in success:
 # success = solve([parent, "X", "Y"])
 # print(next(success))
 # print(next(success))
-
-# # Why does it work fine here???
-# YList = ListPL([Const("bob"), Const("carol"), Const("ted"), Const("alice")])
-
-
-# XList.unifyWith(YList)
-# print(XList)

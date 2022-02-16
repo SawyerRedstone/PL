@@ -104,9 +104,7 @@ class Term():
         self.children = []                  # The children are the variables that will change if this term has a value.
     # This checks if they *can* be equal.
     def __eq__(self, other):
-        # if self and other and self != other:  # If the args both have values and not equal, fail.
-        #     return False
-        # return True
+
         return self.value == other.value or not self or not other
         # return self.value == other.value
     def __bool__(self):
@@ -134,6 +132,10 @@ class Var(Term):
 
 class Const(Term):  # A constant, aka an atom.
     def __init__(self, value):
+        # self.value = value
+        # if isinstance(self.value, list): #???
+        #     self.value = ListPL(self.value)
+        # super().__init__(name = "Const", value = self.value)
         super().__init__(name = "Const", value = value)
     def __repr__(self):
         return str(self.value)
@@ -146,7 +148,8 @@ class Math(Term):        # This is a number or mathematical expression.
     def __eq__(self, other):
         try:
             self.value = str(self)
-            other.value = str(other)
+            if isinstance(other, Math):
+                other.value = str(other)
             return super().__eq__(other)
         except:
             return False
@@ -158,29 +161,31 @@ class Math(Term):        # This is a number or mathematical expression.
         return ('%f' % result).rstrip('0').rstrip('.')  # Strip trailing 0s.
 
 
-# What if tail is a Var with a value equal to the remaining list? ???
 class ListPL(Term):
     def __init__(self, lst):
-        # self.lst = lst
-        # This may look like [Var(X), 1, 2] or [0, |, A].
-        self.head = lst[0]
-        # self.head.value = 3
-        if len(lst) == 1:               # There is only one item in the list.
-            self.tail = Const("[]")     #  Check if this works! ???
-        elif lst[1].value == "|":       # The tail comes after the "|".
-            # self.tail = ListPL(lst[-1])
-            self.tail = lst[-1]         # This makes the tail be equal to the tail variable.
+        self.lst = lst
+        self.head = self.lst[0]
+        if len(self.lst) == 1:               # There is only one item in the list.
+            self.tail = Const("[]")
+        elif self.lst[1].value == "|":       # The tail comes after the "|".
+            self.tail = self.lst[-1]         # This makes the tail be equal to the tail variable.
+            # self.tail = ListPL(lst[-1:])  #???
         else:                           # The rest of the list is all the tail.
-            self.tail = ListPL(lst[1:])
-        super().__init__(name = "List", value = lst)
+            self.tail = ListPL(self.lst[1:])
+        # super().__init__(name = "List", value = lst)
+        super().__init__(name = "List", value = self)
     def __len__(self):
         return len(self.value)
     def __eq__(self, other):
-        return self.head == other.head and self.tail == other.tail
+        if isinstance(other, ListPL):
+            return self.head == other.head and self.tail == other.tail
+        return super().__eq__(other)
     def unifyWith(self, altArg):
-        return self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail)
+        if isinstance(altArg, ListPL):
+            return self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail)
+        return super().unifyWith(altArg)
     def __repr__(self):
-        return str(self.value)
+        return str(self.lst)
 
 
 
@@ -270,7 +275,7 @@ def findVars(args):
         if isinstance(arg, ListPL):
             result.extend(findVars(arg.value))
         elif isinstance(arg, Var) and arg.name[0] != "_":
-            result.append(arg)      # Maybe change arg to const???
+            result.append(arg)
     return result
 
 
@@ -286,17 +291,3 @@ fail = Predicate("failPredicate")
 
 # # write/1
 write = Predicate("write")
-
-# ???
-# XList = ListPL([Var("X")])
-XList = ListPL([Var("X"), Const("|"), Var("Y")])
-
-
-# # Why does it work fine here???
-# X = Var("X", 18)
-# Y = Var("Y", 3)
-# Z = Var("Z", 4)
-# YList = ListPL([X, Y, Z])
-
-# XList.unifyWith(YList)
-# print(XList)
