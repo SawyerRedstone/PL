@@ -20,7 +20,7 @@ is_digesting = Predicate("is_digesting")
 always_true = Predicate("always_true")
 write_var = Predicate("write_var")
 collatz = Predicate("collatz")
-# member = Predicate("member")
+member = Predicate("member")
 listTest = Predicate("list_test")
 
 #### facts/rules ####
@@ -139,17 +139,23 @@ collatz.add(["B", "A"], [[equals, "1", "B % 2"], [equals, "C", "3 * B + 1"], [co
 
 listTest.add([["bob", "carol", "ted", "alice"]])
 
+# member(X, [X|_]).
+# member(X, [_|T]):- member(X, T).
+member.add(["X", ["X", "|", "_"]])
+member.add(["X", ["_", "|", "T"]], [[member, "X", "T"]])
 
 ##########################################
 
-# success = solve([listTest, ["X", "|", "Y"]])
-# success = solve([listTest, ["bob", "carol", "ted", "ali"]])
-# success = solve([listTest, ["bob", "carol", "ted", "alice"]])
 
+
+# success = solve([member, "apple", ["bob", "apple", "shirt", "pip"]])  # THIS NEXT! ???
 
 
 ### All tests below succeed! ###
 
+# success = solve([listTest, ["X", "|", "Y"]])
+# success = solve([listTest, ["bob", "carol", "ted", "ali"]])
+# success = solve([listTest, ["bob", "carol", "ted", "alice"]])
 
 # # ?- male(X).
 # # Becomes:
@@ -183,7 +189,6 @@ listTest.add([["bob", "carol", "ted", "alice"]])
 # # ?- is(X, 2 + 4).
 # success = solve([equals, "X", "2 + 4"])
 
-
 # # ?- 6 is 2 + 4.
 # success = solve([equals, "6", "2 + 4"])
 
@@ -191,7 +196,7 @@ listTest.add([["bob", "carol", "ted", "alice"]])
 # success = solve([equals, "6", "2 + 8"])
 
 # # ?- 6 is 2 + "hi".
-# success = solve([equals, "X", "2 + hi"])        # Correctly catches error!
+# success = solve([equals, "X", "2 + hi"])
 
 ############# Arity of 0 #################
 
@@ -248,3 +253,10 @@ for s in success:
 # success = solve([parent, "X", "Y"])
 # print(next(success))
 # print(next(success))
+
+# # Why does it work fine here???
+# YList = ListPL([Const("bob"), Const("carol"), Const("ted"), Const("alice")])
+
+
+# XList.unifyWith(YList)
+# print(XList)

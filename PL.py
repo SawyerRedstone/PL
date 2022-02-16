@@ -1,7 +1,6 @@
 # The PL Module offers Prolog functionality for Python programmers.
 # Created by Sawyer Redstone.
 
-# Changing == to unify as it checks! ???
 
 def solve(goal = []):
     newGoal = stringsToTerms(goal)
@@ -21,7 +20,9 @@ def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already cr
             nextWord = word
         elif isinstance(word, list):
             recursed = stringsToTerms(word, memo)
+            # print(recursed)
             memo[str(word)] = ListPL(recursed)
+
             nextWord = memo[str(word)]
         # Anything with a space or digit must be Math.
         elif ' ' in word or word.isdigit():
@@ -81,6 +82,18 @@ class Alt():
     def __repr__(self):
         return repr(self.name + " = " + str(self.value))
 
+# This function tries to unify the query and alt args, and returns a bool of its success.
+def tryUnify(queryArgs, altArgs):
+    # First clear alt's previous children.
+    for queryArg, altArg in zip(queryArgs, altArgs):
+        # Remove the alt's previous children.
+        altArg.children.clear()
+    # Now try to unify.
+    for queryArg, altArg in zip(queryArgs, altArgs):              # Loop through the query and alt arguments.
+        if queryArg != altArg:
+            return False
+        queryArg.unifyWith(altArg)
+    return True                                 # If it reaches this point, they can be unified.   
 
 # Variables and Constants are Terms.
 class Term():
@@ -89,74 +102,86 @@ class Term():
         # self.value = str(value)
         self.value = value
         self.children = []                  # The children are the variables that will change if this term has a value.
+    # This checks if they *can* be equal.
     def __eq__(self, other):
-        # if isinstance(other, Term):
-        #     return self.value == other.value    # This is used to compare terms.
-        # return self.value == other
-        return self.value == other.value
+        # if self and other and self != other:  # If the args both have values and not equal, fail.
+        #     return False
+        # return True
+        return self.value == other.value or not self or not other
+        # return self.value == other.value
     def __bool__(self):
         return self.value != "Undefined"    # A term is false it if has no value.
     def __repr__(self):
         return repr(self.name + " = " + str(self.value))    
+    def __str__(self):
+        return str(self.value)
     def __hash__(self):
         return hash(repr(self))
+    def unifyWith(self, altArg):
+        if self and altArg and self != altArg:  # If the args both have values and not equal, fail.
+            return False                                    # Is this a problem if the fail occures in middle of unifying???
+        altArg.children.append(self)                        # The children are the variables we want to find out.
+        if self:
+            altArg.value = self.value
+        changePath(altArg, altArg.value)  # Set all unified terms to new value.   
+        return True
     
         
 class Var(Term):
-    def __init__(self, name):
-        super().__init__(name = name, value = "Undefined")    # Initialize the Var.
-    def __str__(self):
-        return str(self.value)
+    def __init__(self, name, value = "Undefined"):
+        super().__init__(name = name, value = value)    # Initialize the Var.
 
 
 class Const(Term):  # A constant, aka an atom.
     def __init__(self, value):
         super().__init__(name = "Const", value = value)
-    def __str__(self):
-        return self.name + " = " + str(self.value)  # This is used to print the term.
-    
+    def __repr__(self):
+        return str(self.value)
 
 class Math(Term):        # This is a number or mathematical expression.
     def __init__(self, name, terms):
         self.terms = terms
         super().__init__(name = name, value = "Undefined")
-    def __str__(self):
+    # Find their value and check if equal.
+    def __eq__(self, other):
         try:
-            # First turn each term into its value form.
-            self.terms = [str(term) for term in self.terms]
-            # Then evalute and return the results.
-            result = float(eval("".join(self.terms)))
-            return ('%f' % result).rstrip('0').rstrip('.')  # Strip trailing 0s.
-        # Catch if the user typed math that makes no sense, such as adding "3 + *".
+            self.value = str(self)
+            other.value = str(other)
+            return super().__eq__(other)
         except:
-            raise Exception("Your equation \"" + self.name + "\" seems to have an error in it.") from None
+            return False
+    def __str__(self):
+        # First turn each term into its value form.
+        self.terms = [str(term) for term in self.terms]
+        # Then evalute and return the results.
+        result = float(eval("".join(self.terms)))
+        return ('%f' % result).rstrip('0').rstrip('.')  # Strip trailing 0s.
 
 
-# # A list is sort of a Var?
 # What if tail is a Var with a value equal to the remaining list? ???
 class ListPL(Term):
-    def __init__(self, lst):  # Value is a list as a string.
-        self.lst = lst
-        # This may look like [0, 1, 2] or [0, |, A].
+    def __init__(self, lst):
+        # self.lst = lst
+        # This may look like [Var(X), 1, 2] or [0, |, A].
         self.head = lst[0]
-        self.tail = Var("_")
-        if len(lst) == 1:       # There is only one item in the list.
-            self.tail.value = "[]"
-        elif lst[1] == "|":     # The tail comes after the "|".
-            self.tail = lst[-1] # This makes the tail be equal to the tail variable.
-        else:                   # The rest of the list is all the tail.
-            # self.tail.value = ListPL(lst[1:])
+        # self.head.value = 3
+        if len(lst) == 1:               # There is only one item in the list.
+            self.tail = Const("[]")     #  Check if this works! ???
+        elif lst[1].value == "|":       # The tail comes after the "|".
+            # self.tail = ListPL(lst[-1])
+            self.tail = lst[-1]         # This makes the tail be equal to the tail variable.
+        else:                           # The rest of the list is all the tail.
             self.tail = ListPL(lst[1:])
-        super().__init__(name = "List", value = self.head)
+        super().__init__(name = "List", value = lst)
     def __len__(self):
         return len(self.value)
     def __eq__(self, other):
-    #     # self.head.extend(self.tail.value) == other.head.extend(other.tail.value)
-    #     self.head == other.head
-        if self.head == other.head and self.tail == other.tail:
-            return True
-        return False
-        
+        return self.head == other.head and self.tail == other.tail
+    def unifyWith(self, altArg):
+        return self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail)
+    def __repr__(self):
+        return str(self.value)
+
 
 
 
@@ -230,29 +255,6 @@ def tryGoals(goalsToTry):
             currGoal -= 1       # Go back a goal to try for another solution.
 
 
-# This function tries to unify the query and alt args, and returns a bool of its success.
-def tryUnify(queryArgs, altArgs):
-    # First clear alt's previous children.
-    for queryArg, altArg in zip(queryArgs, altArgs):
-        # Remove the alt's previous children.
-        altArg.children.clear()
-    # Now try to unify.
-    for queryArg, altArg in zip(queryArgs, altArgs):              # Loop through the query and alt arguments.
-        # Evalute args in case they have math in them.
-        if isinstance(queryArg, Math):
-            queryArg.value = str(eval("queryArg"))
-        if isinstance(altArg, Math):
-            altArg.value = str(eval("altArg"))
-        # Now that they have been evaluated, check once again if they can unify.
-        if queryArg and altArg and queryArg != altArg:  # If the args both have values and not equal, fail.
-            return False                                # Is this a problem if the fail occures in middle of unifying???
-        altArg.children.append(queryArg)         # The children are the variables we want to find out.
-        if queryArg:
-            altArg.value = queryArg.value
-        changePath(altArg, altArg.value)  # Set all unified terms to new value.   
-    return True                                 # If it reaches this point, they can be unified.    
-
-
 def changePath(arg, newValue):
     if isinstance(arg, Term):
         arg.value = newValue
@@ -261,35 +263,14 @@ def changePath(arg, newValue):
             changePath(child, newValue)         # Change each parent to the new value.
 
 
-# # Returns a list of all Vars found in a list.
-# def findVars(args, memo = set()):
-#     result = []
-#     for arg in args:
-#         if isinstance(arg, ListPL):
-#             # result.extend(findVars(arg.value, memo))
-#             result.extend(findVars(arg.lst, memo))
-#         # elif isinstance(arg, Var) and arg not in memo:
-#         elif isinstance(arg, Var) and arg.name[0] != "_" and arg not in memo:
-#         # elif arg.name[0] != "_" and arg not in memo:
-
-#             memo.add(arg)
-#             result.append(arg)
-#     return result
-
-
 # Returns a list of all Vars found in a list.
 def findVars(args):
     result = []
     for arg in args:
         if isinstance(arg, ListPL):
-            # result.extend(findVars(arg.value, memo))
-            result.extend(findVars(arg.lst))
-        # elif isinstance(arg, Var) and arg not in memo:
+            result.extend(findVars(arg.value))
         elif isinstance(arg, Var) and arg.name[0] != "_":
-        # elif arg.name[0] != "_" and arg not in memo:
-
-            # memo.add(arg)
-            result.append(arg)
+            result.append(arg)      # Maybe change arg to const???
     return result
 
 
@@ -305,3 +286,17 @@ fail = Predicate("failPredicate")
 
 # # write/1
 write = Predicate("write")
+
+# ???
+# XList = ListPL([Var("X")])
+XList = ListPL([Var("X"), Const("|"), Var("Y")])
+
+
+# # Why does it work fine here???
+# X = Var("X", 18)
+# Y = Var("Y", 3)
+# Z = Var("Z", 4)
+# YList = ListPL([X, Y, Z])
+
+# XList.unifyWith(YList)
+# print(XList)

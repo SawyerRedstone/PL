@@ -73,16 +73,38 @@
 # res = eval("myFoo")
 # print(res)
 
-value = [1, 2, 3, "|", 5]
+# value = [1, 2, 3, "|", 5]
 
-# try:
-#     tailStart = value.index('|') + 1
-# except:
-#     tailStart = len(value)
+# # try:
+# #     tailStart = value.index('|') + 1
+# # except:
+# #     tailStart = len(value)
 
-# tail = value[tailStart:]
-# head = value[:tailStart - 1]
-# print(head)
-# print(tail)
+# # tail = value[tailStart:]
+# # head = value[:tailStart - 1]
+# # print(head)
+# # print(tail)
 
-print(value[-1])
+# print(value[-1])
+
+class Var():
+    def __init__(self, name):
+        self.name = name
+        self.value = "unknown"
+    def __repr__(self):
+        return str(self.value)
+
+class ListPL():
+    def __init__(self, lst):  # Value is a list as a string.
+        self.myList = lst
+        self.head = lst[0]
+        # self.head.value = 3
+    def changeList(self):
+        self.head.value = 3
+    def __repr__(self):
+        return str(self.myList)
+        
+XList = ListPL([Var("X")])
+
+XList.changeList()
+print(XList)
