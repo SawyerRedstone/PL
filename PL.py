@@ -20,10 +20,15 @@ def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already cr
             nextWord = word
         elif isinstance(word, list):
             recursed = stringsToTerms(word, memo)
-            # print(recursed)
             memo[str(word)] = ListPL(recursed)
-
             nextWord = memo[str(word)]
+        # elif "=" in word:
+        #     parts = word.split(" = ") #??????????
+        #     if parts[0]
+        #     # left = stringsToTerms(parts[0])
+        #     # right = stringsToTerms(parts[0])
+        #     # left.children.append(right)
+        #     # right.children.append(left)
         # Anything with a space or digit must be Math.
         elif ' ' in word or word.isdigit():
             parts = word.split()
@@ -41,6 +46,9 @@ def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already cr
             nextWord = memo[word]
         newList.append(nextWord)
     return newList
+
+
+# class Match():        #???
 
 
 class Predicate(): 
@@ -66,7 +74,7 @@ class Predicate():
 # Goals must be completed in order to satisfy a query.
 class Goal():
     def __init__(self, info):
-        self.pred = info[0]               # The predicate that is being queried.
+        self.pred = info[0]           # The predicate that is being queried.
         self.args = info[1:]          # Create a list of the goal's arguments.
     def __str__(self):
         return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
@@ -84,29 +92,23 @@ class Alt():
 
 # This function tries to unify the query and alt args, and returns a bool of its success.
 def tryUnify(queryArgs, altArgs):
-    # First clear alt's previous children.
-    for queryArg, altArg in zip(queryArgs, altArgs):
-        # Remove the alt's previous children.
-        altArg.children.clear()
-    # Now try to unify.
-    for queryArg, altArg in zip(queryArgs, altArgs):              # Loop through the query and alt arguments.
-        if queryArg != altArg:
+    for queryArg, altArg in zip(queryArgs, altArgs):    # Loop through the query and alt arguments.
+        # Check if unification is possible before unifying.
+        if queryArg != altArg:                  # Is this a problem if the fail occures in middle of unifying???
             return False
         queryArg.unifyWith(altArg)
     return True                                 # If it reaches this point, they can be unified.   
+
 
 # Variables and Constants are Terms.
 class Term():
     def __init__(self, name, value):
         self.name = name
-        # self.value = str(value)
         self.value = value
         self.children = []                  # The children are the variables that will change if this term has a value.
     # This checks if they *can* be equal.
     def __eq__(self, other):
-
         return self.value == other.value or not self or not other
-        # return self.value == other.value
     def __bool__(self):
         return self.value != "Undefined"    # A term is false it if has no value.
     def __repr__(self):
@@ -115,9 +117,7 @@ class Term():
         return str(self.value)
     def __hash__(self):
         return hash(repr(self))
-    def unifyWith(self, altArg):
-        if self and altArg and self != altArg:  # If the args both have values and not equal, fail.
-            return False                                    # Is this a problem if the fail occures in middle of unifying???
+    def unifyWith(self, altArg):                               
         altArg.children.append(self)                        # The children are the variables we want to find out.
         if self:
             altArg.value = self.value
@@ -132,10 +132,6 @@ class Var(Term):
 
 class Const(Term):  # A constant, aka an atom.
     def __init__(self, value):
-        # self.value = value
-        # if isinstance(self.value, list): #???
-        #     self.value = ListPL(self.value)
-        # super().__init__(name = "Const", value = self.value)
         super().__init__(name = "Const", value = value)
     def __repr__(self):
         return str(self.value)
@@ -151,6 +147,7 @@ class Math(Term):        # This is a number or mathematical expression.
             if isinstance(other, Math):
                 other.value = str(other)
             return super().__eq__(other)
+        # If the math doesn't make sense, return False.
         except:
             return False
     def __str__(self):
@@ -163,17 +160,15 @@ class Math(Term):        # This is a number or mathematical expression.
 
 class ListPL(Term):
     def __init__(self, lst):
-        self.lst = lst
-        self.head = self.lst[0]
-        if len(self.lst) == 1:               # There is only one item in the list.
+        self.head = lst[0]
+        if len(lst) == 1:               # There is only one item in the list.
             self.tail = Const("[]")
-        elif self.lst[1].value == "|":       # The tail comes after the "|".
-            self.tail = self.lst[-1]         # This makes the tail be equal to the tail variable.
+        elif lst[1].value == "|":       # The tail comes after the "|".
+            self.tail = lst[-1]         # This makes the tail be equal to the tail variable.
             # self.tail = ListPL(lst[-1:])  #???
         else:                           # The rest of the list is all the tail.
-            self.tail = ListPL(self.lst[1:])
-        # super().__init__(name = "List", value = lst)
-        super().__init__(name = "List", value = self)
+            self.tail = ListPL(lst[1:])
+        super().__init__(name = "List", value = lst)
     def __len__(self):
         return len(self.value)
     def __eq__(self, other):
@@ -185,7 +180,7 @@ class ListPL(Term):
             return self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail)
         return super().unifyWith(altArg)
     def __repr__(self):
-        return str(self.lst)
+        return str(self.value)
 
 
 
@@ -200,7 +195,10 @@ def tryGoal(goal):
         # To ensure the value does not get reset, the variable must be changed to a Const.
         for argIndex, arg in enumerate(goal.args):
             if isinstance(arg, Var) and arg.value != "Undefined":
-                goal.args[argIndex] = Const(arg.value)
+                if isinstance(arg.value, list):
+                    goal.args[argIndex] = ListPL(arg.value)
+                else:
+                    goal.args[argIndex] = Const(arg.value)
         # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
         for alt in alts:
             altAttempts = tryAlt(goal, alt)
@@ -209,7 +207,6 @@ def tryGoal(goal):
                 if attempt:
                     # Yield vars, or True if this succeeded without changing vars.
                     yield findVars(goal.args) or True
-                    # yield [arg for arg in goal.args if isinstance(arg, Var) and arg.value != "Undefined"] or True
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
             for arg in goal.args:
                 if isinstance(arg, Var):
@@ -282,12 +279,22 @@ def findVars(args):
 
 # #### Built-in Predicates ####
 
-# # The Prolog is/2 predicate, with a different name because "is" already exists in Python.
+# The Prolog is/2 predicate, with a different name because "is" already exists in Python.
 equals = Predicate("equals")
 equals.add(["Q", "Q"])
 
-# # fail/0. This works differently from other goals, as users do not need to type Goal(fail)
+# fail/0. This works differently from other goals, as users do not need to type Goal(fail)
 fail = Predicate("failPredicate")
 
-# # write/1
+# write/1
 write = Predicate("write")
+
+# member/2
+member = Predicate("member")
+
+# member(X, [X|_]).
+# member(X, [_|T]):- member(X, T).
+member.add(["X", ["X", "|", "_"]])
+member.add(["X", ["_", "|", "T"]], [[member, "X", "T"]])
+
+setEqual = Predicate("setEqual")

@@ -1,7 +1,7 @@
 # This file is used for internal testing.
 
-from PL import *
-# from Experimenting import *
+# from PL import *
+from Experimenting import *
 
 
 ################### Testing #####################
@@ -20,8 +20,9 @@ is_digesting = Predicate("is_digesting")
 always_true = Predicate("always_true")
 write_var = Predicate("write_var")
 collatz = Predicate("collatz")
-member = Predicate("member")
 listTest = Predicate("list_test")
+inboth = Predicate("inboth")
+increment_all = Predicate("increment_all")
 
 #### facts/rules ####
 
@@ -139,24 +140,30 @@ collatz.add(["B", "A"], [[equals, "1", "B % 2"], [equals, "C", "3 * B + 1"], [co
 
 listTest.add([["bob", "carol", "ted", "alice"]])
 
-# member(X, [X|_]).
-# member(X, [_|T]):- member(X, T).
-member.add(["X", ["X", "|", "_"]])
-member.add(["X", ["_", "|", "T"]], [[member, "X", "T"]])
+# inboth(A, B, X) :- member(X, A), member(X, B).
+inboth.add(["A", "B", "X"], [[member, "X", "A"], [member, "X", "B"]])
+
+# increment_all([], X) :- X = [].
+# increment_all([H|T], X) :- Y is H + 1, increment_all(T, Z), X = [Y|Z].
+increment_all.add([[], "X"], ["X = []"])
 
 ##########################################
-# member.add(["apple", ["apple", "|", "_"]])
-# success = solve([member, "apple", ["apple", "soup", "grape", "bob"]])
-
-
-# success = solve([member, "apple", ["bob", "apple", "shirt", "pip"]])  # THIS NEXT! ???
 
 
 ### All tests below succeed! ###
 
-success = solve([listTest, ["X", "|", "Y"]])
+# ?- inboth([green, red, orange], [apple, orange, pear], orange).
+# success = solve([inboth, ["green", "red", "orange"], ["apple", "orange", "pear"], "orange"])
+
+# ?- inboth([1, 2, 3, 4], [2, 5, 6, 1], X).
+# success = solve([inboth, ["1", "2", "3", "4"], ["2", "5", "6", "1"], "X"])
+
+# success = solve([listTest, ["X", "|", "Y"]])
 # success = solve([listTest, ["bob", "carol", "ted", "ali"]])
 # success = solve([listTest, ["bob", "carol", "ted", "alice"]])
+
+# # ?- member(X, [bob, apple, shirt, pip]).
+# success = solve([member, "X", ["bob", "apple", "shirt", "pip"]])
 
 # # ?- male(X).
 # # Becomes:
@@ -238,8 +245,12 @@ success = solve([listTest, ["X", "|", "Y"]])
 ########################## Check results here! ##########################
 
 
+# ### To see all results #####
+# for s in success:
+#     print(s)
+
 ### To see all results #####
-for s in success:
+for s in collatz("10", "X"):
     print(s)
 
 
