@@ -13,3 +13,9 @@ parent(X, Y).add(child(Y, X)))
 Lists = "["1", "apple", "|", "[c]"]"
 
 "|" seperates the head and tail. Everything after "|" must be a list.
+
+-------------
+
+parent(A, B) :- child(B, A).
+
+parent("A", "B") >> child("B", "A")
