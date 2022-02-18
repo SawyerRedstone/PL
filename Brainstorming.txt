@@ -19,3 +19,8 @@ Lists = "["1", "apple", "|", "[c]"]"
 parent(A, B) :- child(B, A).
 
 parent("A", "B") >> child("B", "A")
+
+-------
+
+'+' for putting info IN.
+'-' for taking info OUT.

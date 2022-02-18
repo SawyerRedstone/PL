@@ -2,10 +2,10 @@
 # Created by Sawyer Redstone.
 
 
-# def solve(goal = []):
-#     newGoal = stringsToTerms(goal)
-#     for success in tryGoal(Goal(newGoal)):
-#         yield success
+def solve(goal = []):
+    newGoal = stringsToTerms(goal.args)
+    for success in tryGoal(Goal(newGoal)):
+        yield success
 
 
 # This will take a list, for example [just_ate, "A", "C"], and convert all the strings to Terms.
@@ -22,13 +22,6 @@ def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already cr
             recursed = stringsToTerms(word, memo)
             memo[str(word)] = ListPL(recursed)
             nextWord = memo[str(word)]
-        # elif "=" in word:
-        #     parts = word.split(" = ") #??????????
-        #     if parts[0]
-        #     # left = stringsToTerms(parts[0])
-        #     # right = stringsToTerms(parts[0])
-        #     # left.children.append(right)
-        #     # right.children.append(left)
         # Anything with a space or digit must be Math.
         elif ' ' in word or word.isdigit():
             parts = word.split()
@@ -48,115 +41,42 @@ def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already cr
     return newList
 
 
-# class Match():        #???
-
-
 class Predicate(): 
     def __init__(self, name): 
         self.name = name            # The name of the predicate
         self.alternatives = {}      # Dict filled with all of the predicate alternatives, with arity as key.
     def __repr__(self):
         return self.name
-    def add(self, args = [], goals = []):
-        """
-        'add' is used to add clauses (fact or rules) for a predicate.
-
-        It is called with a list of the args that appear in the head of the clause being added,
-        followed (optionally) by a list of goals that, if followed, can satisfy the query.
-        """
-        if len(args) in self.alternatives:
-            self.alternatives[len(args)].append(Alt(args, goals))
-        else:
-            self.alternatives[len(args)] = [Alt(args, goals)]
-
-    # Create goal with this predicate.
     def __call__(self, *args):
-        if isinstance(args[0], str):
-            args = stringsToTerms(args)
-        # Keep copy of original goal args. This is not a deep copy, so changed values will remain changed here.
-        # This allows Vars that are temporary changed to Consts to return back to their Var form.
-        originalArgs = [arg for arg in args]
-        if len(args) in self.alternatives:
-            alts = self.alternatives[len(args)]       # The list of all alts with matching arity.
-            # If a variable already has a value, this goal cannot change it.
-            # To ensure the value does not get reset, the variable must be changed to a Const.
-            for argIndex, arg in enumerate(args):
-                if isinstance(arg, Var) and arg.value != "Undefined":
-                    if isinstance(arg.value, list):
-                        args[argIndex] = ListPL(arg.value)
-                    else:
-                        args[argIndex] = Const(arg.value)
-            # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
-            for alt in alts:
-                altAttempts = self.tryAlt(args, alt)
-                # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
-                for attempt in altAttempts:
-                    if attempt:
-                        # Yield vars, or True if this succeeded without changing vars.
-                        yield findVars(args) or True
-                # Clear any args that were defined in this goal, so they may be reused for the next alt.
-                for arg in args:
-                    if isinstance(arg, Var):
-                        changePath(arg, "Undefined")
-        # If no predicate exists with this number of arguments, it may be a built-in predicate.
-        elif self == write and len(args) == 1:
-                print(args[0].value)
-                yield True
-        # After trying all alts, reset any Vars that were turned into Consts.
-        args = originalArgs
-        yield False               # If all the alts failed, then the goal failed.
+        return Goal(self, args)
 
-    # This tries the current alternative to see if it succeeds.
-    def tryAlt(self, queryArgs, alt):
-        # Memo is a dictionary of all terms in this alt.
-        # This makes sure that no terms are duplicates.
-        memo = {}       
-        altArgs = stringsToTerms(alt.args, memo)
-        altGoals = [Goal(stringsToTerms(goal, memo)) for goal in alt.goals]
-        goalsToTry = altGoals          # A list of goals that must be satisfied for this alt to succeed.
-        if not tryUnify(queryArgs, altArgs):    # If the alt can't be unified, then it fails.
-            yield False
-        elif len(goalsToTry) > 0:       # If this alt has goals, try them.
-            for success in self.tryGoals(goalsToTry):
-                yield success
-        else:
-            yield True  # If there are no goals to try, this alt succeeded.
-
-    def tryGoals(self, *goalsToTry):
-        goals = [goal for goal in goalsToTry]  # A list of [tryGoal(goal1), tryGoal(goal2), etc]
-        currGoal = 0                                    # This is the index for the goal we are currently trying.
-        failed = False
-        while not failed:
-            while 0 <= currGoal < len(goals):           # The goals succeed it currGoal reaches the end.
-                currGoalArgs = next(goals[currGoal])    # Try the goal at the current index.
-                if currGoalArgs:                        # This goal succeeded and args have been instantiated.
-                    currGoal += 1
-                else:
-                    if currGoal == 0:   # If the first goal fails, there are no more things to try, and the function fails.
-                        failed = True
-                        break
-                    goals[currGoal] = goalsToTry[currGoal]  # Reset the generator.
-                    currGoal -= 1
-            if not failed:
-                yield True          # If we got here, then all the goals succeeded.
-                currGoal -= 1       # Go back a goal to try for another solution.
-
-# is_digesting(A, B) :- just_ate(A, B).
-# is_digesting(A, B) :- just_ate(A, C), is_digesting(C, B).
-
-# is_digesting(A, B).add(just_ate(A, B), is_digesting(C, B))
-
-# collatz(10, X).
-# success = solve([collatz, "10", "X"])
 
 
 # Goals must be completed in order to satisfy a query.
 class Goal():
-    def __init__(self, info):
-        self.pred = info[0]           # The predicate that is being queried.
-        self.args = info[1:]          # Create a list of the goal's arguments.
+    def __init__(self, pred = [], args = []):
+        self.pred = pred           # The predicate that is being queried.
+        self.args = list(args)          # Create a list of the goal's arguments.
     def __str__(self):
         return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
+    def __rshift__(self, *others):
+        # others = list(others)
+        # if len(self.args) in self.pred.alternatives:
+        #     self.pred.alternatives[len(self.args)].append(Alt(self.args, others))
+        # else:
+        #     self.pred.alternatives[len(self.args)] = [Alt(self.args, others)]
+        return others     # ???
+    def __neg__(self):
+        self.args = stringsToTerms(self.args)
+        for success in tryGoal(self):
+            yield success
+    def __pos__(self):
+        # get args, then use that for >>.
+        self.args = 
+        # add alts.
+        # self >> []
+        # self >> Goal()
+
 
 
 # Alts are individual alternatives that were added to a predicate.
@@ -263,6 +183,79 @@ class ListPL(Term):
 
 
 
+
+def tryGoal(goal):
+    # Keep copy of original goal args. This is not a deep copy, so changed values will remain changed here.
+    # This allows Vars that are temporary changed to Consts to return back to their Var form.
+    originalArgs = [arg for arg in goal.args]
+    if len(goal.args) in goal.pred.alternatives:
+        alts = goal.pred.alternatives[len(goal.args)]       # The list of all alts with matching arity.
+        # If a variable already has a value, this goal cannot change it.
+        # To ensure the value does not get reset, the variable must be changed to a Const.
+        for argIndex, arg in enumerate(goal.args):
+            if isinstance(arg, Var) and arg.value != "Undefined":
+                if isinstance(arg.value, list):
+                    goal.args[argIndex] = ListPL(arg.value)
+                else:
+                    goal.args[argIndex] = Const(arg.value)
+        # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
+        for alt in alts:
+            altAttempts = tryAlt(goal, alt)
+            # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
+            for attempt in altAttempts:
+                if attempt:
+                    # Yield vars, or True if this succeeded without changing vars.
+                    yield findVars(goal.args) or True
+            # Clear any args that were defined in this goal, so they may be reused for the next alt.
+            for arg in goal.args:
+                if isinstance(arg, Var):
+                    changePath(arg, "Undefined")
+    # If no predicate exists with this number of arguments, it may be a built-in predicate.
+    elif goal.pred == write and len(goal.args) == 1:
+            print(goal.args[0].value)
+            yield True
+    # After trying all alts, reset any Vars that were turned into Consts.
+    goal.args = originalArgs
+    yield False               # If all the alts failed, then the goal failed.
+
+
+# This tries the current alternative to see if it succeeds.
+def tryAlt(query, alt):
+    # Memo is a dictionary of all terms in this alt.
+    # This makes sure that no terms are duplicates.
+    memo = {}       
+    altArgs = stringsToTerms(alt.args, memo)
+    altGoals = [Goal(goal.pred, stringsToTerms(goal.args, memo)) for goal in alt.goals if goal]
+    goalsToTry = altGoals          # A list of goals that must be satisfied for this alt to succeed.
+    if not tryUnify(query.args, altArgs):    # If the alt can't be unified, then it fails.
+        yield False
+    elif len(goalsToTry) > 0:       # If this alt has goals, try them.
+        for success in tryGoals(goalsToTry):
+            yield success
+    else:
+        yield True  # If there are no goals to try, this alt succeeded.
+
+
+def tryGoals(goalsToTry):
+    goals = [tryGoal(goal) for goal in goalsToTry]  # A list of [tryGoal(goal1), tryGoal(goal2), etc]
+    currGoal = 0                                    # This is the index for the goal we are currently trying.
+    failed = False
+    while not failed:
+        while 0 <= currGoal < len(goals):           # The goals succeed it currGoal reaches the end.
+            currGoalArgs = next(goals[currGoal])    # Try the goal at the current index.
+            if currGoalArgs:                        # This goal succeeded and args have been instantiated.
+                currGoal += 1
+            else:
+                if currGoal == 0:   # If the first goal fails, there are no more things to try, and the function fails.
+                    failed = True
+                    break
+                goals[currGoal] = tryGoal(goalsToTry[currGoal])  # Reset the generator.
+                currGoal -= 1
+        if not failed:
+            yield True          # If we got here, then all the goals succeeded.
+            currGoal -= 1       # Go back a goal to try for another solution.
+
+
 def changePath(arg, newValue):
     if isinstance(arg, Term):
         arg.value = newValue
@@ -287,7 +280,8 @@ def findVars(args):
 
 # The Prolog is/2 predicate, with a different name because "is" already exists in Python.
 equals = Predicate("equals")
-equals.add(["Q", "Q"])
+# equals.add(["Q", "Q"])
++equals("Q", "Q")
 
 # fail/0. This works differently from other goals, as users do not need to type Goal(fail)
 fail = Predicate("failPredicate")
@@ -298,10 +292,9 @@ write = Predicate("write")
 # member/2
 member = Predicate("member")
 
-# member(X, [X|_]).
-# member(X, [_|T]):- member(X, T).
-member.add(["X", ["X", "|", "_"]])
-member.add(["X", ["_", "|", "T"]], [[member, "X", "T"]])
-# member.add(["X", ["_", "|", "T"]], [[member("X", "T")]])
+# # member(X, [X|_]).
+# # member(X, [_|T]):- member(X, T).
+# member.add(["X", ["X", "|", "_"]])
+# member.add(["X", ["_", "|", "T"]], [[member, "X", "T"]])
 
-setEqual = Predicate("setEqual")
+# setEqual = Predicate("setEqual")
