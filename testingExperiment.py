@@ -262,8 +262,8 @@ increment_all = Predicate("increment_all")
 # # is_digesting(A, B) :- just_ate(A, B).
 # # is_digesting(A, B) :- just_ate(A, C), is_digesting(C, B).
 
-is_digesting("A", "B") >> just_ate("A", "B")
-is_digesting("A", "B") >> just_ate("A", "C"), is_digesting("C", "B")
+is_digesting("A", "B") >> [just_ate("A", "B")]
+is_digesting("A", "B") >> [just_ate("A", "C"), is_digesting("C", "B")]
 
 # # # ?- is_digesting(tiger, grass).
 # success = -is_digesting("tiger", "grass")

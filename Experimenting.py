@@ -2,12 +2,6 @@
 # Created by Sawyer Redstone.
 
 
-def solve(goal = []):
-    newGoal = stringsToTerms(goal.args)
-    for success in tryGoal(Goal(newGoal)):
-        yield success
-
-
 # This will take a list, for example [just_ate, "A", "C"], and convert all the strings to Terms.
 def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already created
     newList = []
@@ -15,9 +9,6 @@ def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already cr
         # Represent duplicate strings as the same Term.
         if str(word) in memo:
             nextWord = memo[word]
-        # If the word is a predicate or list, don't change it.
-        elif isinstance(word, Predicate):
-            nextWord = word
         elif isinstance(word, list):
             recursed = stringsToTerms(word, memo)
             memo[str(word)] = ListPL(recursed)
@@ -59,22 +50,20 @@ class Goal():
         self.args = list(args)          # Create a list of the goal's arguments.
     def __str__(self):
         return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
-    def __rshift__(self, *others):
-        # others = list(others)
-        # if len(self.args) in self.pred.alternatives:
-        #     self.pred.alternatives[len(self.args)].append(Alt(self.args, others))
-        # else:
-        #     self.pred.alternatives[len(self.args)] = [Alt(self.args, others)]
-        return others     # ???
+    def __rshift__(self, others):
+        others = list(others)
+        if len(self.args) in self.pred.alternatives:
+            self.pred.alternatives[len(self.args)].append(Alt(self.args, others))
+        else:
+            self.pred.alternatives[len(self.args)] = [Alt(self.args, others)]
     def __neg__(self):
         self.args = stringsToTerms(self.args)
         for success in tryGoal(self):
             yield success
     def __pos__(self):
         # get args, then use that for >>.
-        self.args = 
         # add alts.
-        # self >> []
+        self >> []
         # self >> Goal()
 
 
