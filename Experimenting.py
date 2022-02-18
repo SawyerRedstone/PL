@@ -71,7 +71,8 @@ class Predicate():
 
     # Create goal with this predicate.
     def __call__(self, *args):
-        args = stringsToTerms(args)
+        if isinstance(args[0], str):
+            args = stringsToTerms(args)
         # Keep copy of original goal args. This is not a deep copy, so changed values will remain changed here.
         # This allows Vars that are temporary changed to Consts to return back to their Var form.
         originalArgs = [arg for arg in args]
@@ -122,7 +123,7 @@ class Predicate():
             yield True  # If there are no goals to try, this alt succeeded.
 
     def tryGoals(self, *goalsToTry):
-        goals = [self.tryGoal(goal) for goal in goalsToTry]  # A list of [tryGoal(goal1), tryGoal(goal2), etc]
+        goals = [goal for goal in goalsToTry]  # A list of [tryGoal(goal1), tryGoal(goal2), etc]
         currGoal = 0                                    # This is the index for the goal we are currently trying.
         failed = False
         while not failed:
@@ -134,16 +135,11 @@ class Predicate():
                     if currGoal == 0:   # If the first goal fails, there are no more things to try, and the function fails.
                         failed = True
                         break
-                    goals[currGoal] = self.tryGoal(goalsToTry[currGoal])  # Reset the generator.
+                    goals[currGoal] = goalsToTry[currGoal]  # Reset the generator.
                     currGoal -= 1
             if not failed:
                 yield True          # If we got here, then all the goals succeeded.
                 currGoal -= 1       # Go back a goal to try for another solution.
-
-# def solve(goal = []):
-#     newGoal = stringsToTerms(goal)
-#     for success in tryGoal(Goal(newGoal)):
-#         yield success
 
 # is_digesting(A, B) :- just_ate(A, B).
 # is_digesting(A, B) :- just_ate(A, C), is_digesting(C, B).
@@ -306,5 +302,6 @@ member = Predicate("member")
 # member(X, [_|T]):- member(X, T).
 member.add(["X", ["X", "|", "_"]])
 member.add(["X", ["_", "|", "T"]], [[member, "X", "T"]])
+# member.add(["X", ["_", "|", "T"]], [[member("X", "T")]])
 
 setEqual = Predicate("setEqual")

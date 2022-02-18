@@ -101,7 +101,9 @@ is_digesting.add(["A", "B"], [[just_ate, "A", "C"], [is_digesting, "C", "B"]])
 # parent(michael, sawyer).
 # parent(A, B) :- child(B, A).
 parent.add(["michael", "sawyer"])
-parent.add(["A", "B"], [[child, "B", "A"]])
+# parent.add(["A", "B"], [[child, "B", "A"]])
+parent.add(["A", "B"], [child("B", "A")])
+
 
 
 # father(A, B) :- male(A), parent(A, B).
@@ -142,6 +144,8 @@ listTest.add([["bob", "carol", "ted", "alice"]])
 
 # inboth(A, B, X) :- member(X, A), member(X, B).
 inboth.add(["A", "B", "X"], [[member, "X", "A"], [member, "X", "B"]])
+# inboth.add(["A", "B", "X"], [[member("X", "A")], [member("X", "B")]])
+
 
 # increment_all([], X) :- X = [].
 # increment_all([H|T], X) :- Y is H + 1, increment_all(T, Z), X = [Y|Z].
@@ -152,8 +156,12 @@ increment_all.add([[], "X"], ["X = []"])
 
 ### All tests below succeed! ###
 
+# success = male("X")
+# print(male("X"))
+
 # ?- inboth([green, red, orange], [apple, orange, pear], orange).
 # success = solve([inboth, ["green", "red", "orange"], ["apple", "orange", "pear"], "orange"])
+# success = inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")
 
 # ?- inboth([1, 2, 3, 4], [2, 5, 6, 1], X).
 # success = solve([inboth, ["1", "2", "3", "4"], ["2", "5", "6", "1"], "X"])
@@ -171,9 +179,11 @@ increment_all.add([[], "X"], ["X = []"])
 
 # # ?- child(X, Y).
 # success = solve([child, "X", "Y"])
+# success = child("X", "Y")
 
 # # ?- parent(X, Y).
 # success = solve([parent, "X", "Y"])
+success = parent("X", "Y")
 
 # # ?- father(X, Y).
 # success = solve([father, "X", "Y"])
@@ -245,13 +255,13 @@ increment_all.add([[], "X"], ["X = []"])
 ########################## Check results here! ##########################
 
 
-# ### To see all results #####
-# for s in success:
-#     print(s)
-
 ### To see all results #####
-for s in collatz("10", "X"):
+for s in success:
     print(s)
+
+# ### To see all results #####
+# for s in male("X"):
+#     print(s)
 
 
 # ### To see only some results ####
