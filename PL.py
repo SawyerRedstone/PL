@@ -1,34 +1,17 @@
 # The PL Module offers Prolog functionality for Python programmers.
 # Created by Sawyer Redstone.
 
-
-def solve(goal = []):
-    newGoal = stringsToTerms(goal)
-    for success in tryGoal(Goal(newGoal)):
-        yield success
-
-
-# This will take a list, for example [just_ate, "A", "C"], and convert all the strings to Terms.
+# This will take a list, for example ["A", "C"], and convert all the strings to Terms.
 def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already created
     newList = []
     for word in oldList:
         # Represent duplicate strings as the same Term.
         if str(word) in memo:
             nextWord = memo[word]
-        # If the word is a predicate or list, don't change it.
-        elif isinstance(word, Predicate):
-            nextWord = word
         elif isinstance(word, list):
             recursed = stringsToTerms(word, memo)
             memo[str(word)] = ListPL(recursed)
             nextWord = memo[str(word)]
-        # elif "=" in word:
-        #     parts = word.split(" = ") #??????????
-        #     if parts[0]
-        #     # left = stringsToTerms(parts[0])
-        #     # right = stringsToTerms(parts[0])
-        #     # left.children.append(right)
-        #     # right.children.append(left)
         # Anything with a space or digit must be Math.
         elif ' ' in word or word.isdigit():
             parts = word.split()
@@ -48,36 +31,39 @@ def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already cr
     return newList
 
 
-# class Match():        #???
-
-
 class Predicate(): 
     def __init__(self, name): 
         self.name = name            # The name of the predicate
         self.alternatives = {}      # Dict filled with all of the predicate alternatives, with arity as key.
     def __repr__(self):
         return self.name
-    def add(self, args = [], goals = []):
-        """
-        'add' is used to add clauses (fact or rules) for a predicate.
-
-        It is called with a list of the args that appear in the head of the clause being added,
-        followed (optionally) by a list of goals that, if followed, can satisfy the query.
-        """
-        if len(args) in self.alternatives:
-            self.alternatives[len(args)].append(Alt(args, goals))
-        else:
-            self.alternatives[len(args)] = [Alt(args, goals)]
+    def __call__(self, *args):
+        return Goal(self, args)
 
 
 
 # Goals must be completed in order to satisfy a query.
 class Goal():
-    def __init__(self, info):
-        self.pred = info[0]           # The predicate that is being queried.
-        self.args = info[1:]          # Create a list of the goal's arguments.
+    def __init__(self, pred = [], args = []):
+        self.pred = pred           # The predicate that is being queried.
+        self.args = list(args)          # Create a list of the goal's arguments.
     def __str__(self):
         return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
+    def __rshift__(self, others):
+        if len(self.args) in self.pred.alternatives:
+            self.pred.alternatives[len(self.args)].append(Alt(self.args, others))
+        else:
+            self.pred.alternatives[len(self.args)] = [Alt(self.args, others)]
+    def __neg__(self):
+        self.args = stringsToTerms(self.args)
+        for success in tryGoal(self):
+            yield success
+    def __pos__(self):
+        # get args, then use that for >>.
+        # add alts.
+        self >> []
+        # self >> Goal()
+
 
 
 # Alts are individual alternatives that were added to a predicate.
@@ -226,7 +212,7 @@ def tryAlt(query, alt):
     # This makes sure that no terms are duplicates.
     memo = {}       
     altArgs = stringsToTerms(alt.args, memo)
-    altGoals = [Goal(stringsToTerms(goal, memo)) for goal in alt.goals]
+    altGoals = [Goal(goal.pred, stringsToTerms(goal.args, memo)) for goal in alt.goals if goal]
     goalsToTry = altGoals          # A list of goals that must be satisfied for this alt to succeed.
     if not tryUnify(query.args, altArgs):    # If the alt can't be unified, then it fails.
         yield False
@@ -281,7 +267,8 @@ def findVars(args):
 
 # The Prolog is/2 predicate, with a different name because "is" already exists in Python.
 equals = Predicate("equals")
-equals.add(["Q", "Q"])
+# equals.add(["Q", "Q"])
++equals("Q", "Q")
 
 # fail/0. This works differently from other goals, as users do not need to type Goal(fail)
 fail = Predicate("failPredicate")
@@ -292,9 +279,10 @@ write = Predicate("write")
 # member/2
 member = Predicate("member")
 
-# member(X, [X|_]).
-# member(X, [_|T]):- member(X, T).
-member.add(["X", ["X", "|", "_"]])
-member.add(["X", ["_", "|", "T"]], [[member, "X", "T"]])
++member("X", ["X", "|", "_"])
+member("X", ["_", "|", "T"]) >> [member("X", "T")]
 
-setEqual = Predicate("setEqual")
+# once/1
+
+# setEqual = Predicate("setEqual")
+

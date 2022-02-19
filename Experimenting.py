@@ -1,8 +1,7 @@
 # The PL Module offers Prolog functionality for Python programmers.
 # Created by Sawyer Redstone.
 
-
-# This will take a list, for example [just_ate, "A", "C"], and convert all the strings to Terms.
+# This will take a list, for example ["A", "C"], and convert all the strings to Terms.
 def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already created
     newList = []
     for word in oldList:
@@ -51,7 +50,6 @@ class Goal():
     def __str__(self):
         return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
     def __rshift__(self, others):
-        others = list(others)
         if len(self.args) in self.pred.alternatives:
             self.pred.alternatives[len(self.args)].append(Alt(self.args, others))
         else:
@@ -281,9 +279,10 @@ write = Predicate("write")
 # member/2
 member = Predicate("member")
 
-# # member(X, [X|_]).
-# # member(X, [_|T]):- member(X, T).
-# member.add(["X", ["X", "|", "_"]])
-# member.add(["X", ["_", "|", "T"]], [[member, "X", "T"]])
++member("X", ["X", "|", "_"])
+member("X", ["_", "|", "T"]) >> [member("X", "T")]
+
+# once/1
 
 # setEqual = Predicate("setEqual")
+

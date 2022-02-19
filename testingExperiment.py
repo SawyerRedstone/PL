@@ -13,280 +13,192 @@ child = Predicate("child")
 parent = Predicate("parent")
 father = Predicate("father")
 mother = Predicate("mother")
+sibling = Predicate("sibling")
+uncle = Predicate("uncle")
+aunt = Predicate("aunt")
 ancestor = Predicate("ancestor")
-count = Predicate("count")
-just_ate = Predicate("just_ate")
-is_digesting = Predicate("is_digesting")
-always_true = Predicate("always_true")
-write_var = Predicate("write_var")
+first_cousin = Predicate("first_cousin")
 collatz = Predicate("collatz")
-listTest = Predicate("list_test")
 inboth = Predicate("inboth")
 increment_all = Predicate("increment_all")
+just_ate = Predicate("just_ate")
+is_digesting = Predicate("is_digesting")
+
+count = Predicate("count")
+always_true = Predicate("always_true")
 
 # #### facts/rules ####
 
-# male.add(["bob"])
-# male.add(["john"])
-# male.add(["ben"])
-# male.add(["martin"])
-# male.add(["edmund"])
-# male.add(["david"])
-# male.add(["isidore"])
-# male.add(["william"])
-# male.add(["ferdinand"])
-# male.add(["morris"])
-# male.add(["alphonse"])
-# male.add(["jiri"])
++male("bob")
++male("john")
++male("ben")
++male("martin")
++male("edmund")
++male("david")
++male("isidore")
++male("william")
++male("ferdinand")
++male("morris")
++male("alphonse")
++male("jiri")
++female("kathryn")
++female("beatrice")
++female("rachel")
++female("lillian")
++female("alice")
++female("rosa")
++female("marjorie")
++female("emma")
++female("nellie")
++female("eva")
++female("bertha")
++female("fergie")
 
+# A is the child of B
++child("bob", "john")
++child("bob", "kathryn")
 
-# female.add(["kathryn"])
-# female.add(["beatrice"])
-# female.add(["rachel"])
-# female.add(["lillian"])
-# female.add(["alice"])
-# female.add(["rosa"])
-# female.add(["marjorie"])
-# female.add(["emma"])
-# female.add(["nellie"])
-# female.add(["eva"])
-# female.add(["bertha"])
-# female.add(["fergie"])
++child("beatrice", "john")
++child("beatrice", "kathryn")
 
++child("john", "ben")
++child("john", "rachel")
++child("lillian", "ben")
++child("lillian", "rachel")
 
-# child.add(["bob", "john"])
-# child.add(["bob", "kathryn"])
-# child.add(["beatrice", "john"])
-# child.add(["beatrice", "kathryn"])
-# child.add(["john", "ben"])
-# child.add(["john", "rachel"])
-# child.add(["lillian", "ben"])
-# child.add(["lillian", "rachel"])
-# child.add(["kathryn", "rosa"])
-# child.add(["kathryn", "martin"])
-# child.add(["alice", "martin"])
-# child.add(["alice", "rosa"])
-# child.add(["ferdinand", "martin"])
-# child.add(["ferdinand", "fergie"])
-# child.add(["marjorie", "edmund"])
-# child.add(["marjorie", "lillian"])
-# child.add(["david", "lillian"])
-# child.add(["david", "edmund"])
-# child.add(["ben", "isidore"])
-# child.add(["ben", "bertha"])
-# child.add(["william", "isidore"])
-# child.add(["william", "bertha"])
-# child.add(["emma", "isidore"])
-# child.add(["emma", "bertha"])
-# child.add(["morris", "alphonse"])
-# child.add(["morris", "emma"])
-# child.add(["nellie", "alphonse"])
-# child.add(["nellie", "emma"])
-# child.add(["eva", "alphonse"])
-# child.add(["eva", "emma"])
-# child.add(["jiri", "alphonse"])
-# child.add(["jiri", "emma"])
++child("kathryn", "rosa")
++child("kathryn", "martin")
++child("alice", "martin")
++child("alice", "rosa")
++child("ferdinand", "martin")
++child("ferdinand", "fergie")
 
++child("marjorie", "edmund")
++child("marjorie", "lillian")
++child("david", "lillian")
++child("david", "edmund")
 
-# just_ate.add(["deer", "grass"])
-# just_ate.add(["tiger", "deer"])
++child("ben", "isidore")
++child("ben", "bertha")
++child("william", "isidore")
++child("william", "bertha")
++child("emma", "isidore")
++child("emma", "bertha")
 
++child("morris", "alphonse")
++child("morris", "emma")
++child("nellie", "alphonse")
++child("nellie", "emma")
++child("eva", "alphonse")
++child("eva", "emma")
++child("jiri", "alphonse")
++child("jiri", "emma")
 
-# # is_digesting(A, B) :- just_ate(A, B).
-# # is_digesting(A, B) :- just_ate(A, C), is_digesting(C, B).
-# is_digesting.add(["A", "B"], [[just_ate, "A", "B"]])
-# is_digesting.add(["A", "B"], [[just_ate, "A", "C"], [is_digesting, "C", "B"]])
+parent("A", "B") >> [child("B", "A")]
 
+father("A", "B") >> [male("A"), parent("A", "B")]
+mother("A", "B") >> [female("A"), parent("A", "B")]
 
-# # parent(michael, sawyer).
-# # parent(A, B) :- child(B, A).
-# parent.add(["michael", "sawyer"])
-# # parent.add(["A", "B"], [[child, "B", "A"]])
-# parent.add(["A", "B"], [child("B", "A")])
+sibling("A", "B") >> [parent("X", "A"), parent("X", "B"), "A \= B"]
 
+uncle("A", "B") >> [parent("X", "B"), sibling("A", "X"), male("A")]
+aunt("A", "B") >> [parent("X", "B"), sibling("A", "X"), female("A")]
 
+ancestor("A", "B") >> [parent("A", "B")]
+ancestor("A", "B") >> [parent("A", "X"), ancestor("X", "B")]
 
-# # father(A, B) :- male(A), parent(A, B).
-# father.add(["A", "B"], [[male, "A"], [parent, "A", "B"]])
+first_cousin("A", "B") >> [parent("X", "A"), sibling("Y", "X"), parent("Y", "B")]
 
++collatz("N", "N")
+collatz("N0", "N") >> [equals("0", "N0 % 2"), equals("N1", "N0 / 2"), collatz("N1", "N")]
+collatz("N0", "N") >> [equals("1", "N0 % 2"), equals("N1", "3 * N0 + 1"), collatz("N1", "N")]
 
-# # # mother(A, B) :- female(A), parent(A, B).
-# # # mother(lily).
-# # # mother(ella).
-# mother.add(["A", "B"], [[female, "A"], [parent, "A", "B"]])
-# mother.add(["lily"])
-# mother.add(["ella"])
+inboth("A", "B", "X") >> [member("X", "A"), member("X", "B")]
 
-
-# # # ancestor(A, B) :- parent(A, B).
-# # # ancestor(A, B) :- parent(A, C), ancestor(C, B).
-# ancestor.add(["A", "B"], [[parent, "A", "B"]])
-# ancestor.add(["A", "B"], [[parent, "A", "C"], [ancestor, "C", "B"]])
-
-# # # count(A, A).
-# # # count(A, C) :- B is A+1, count(B, C).
-# count.add(["A", "A"])
-# count.add(["A", "C"], [[equals, "B", "A + 1"], [count, "B", "C"]])
-
-# # # write_var(A) :- A is 6 + 2, write(A), fail.
-# write_var.add(["A"], [[equals, "A", "6 + 2"], [write, "A"], [fail]])
-
-# always_true.add()
-
-# # # collatz(A, A).
-# # # collatz(B, A) :- 0 is mod(B, 2), C is B / 2, collatz(C, A).
-# # # collatz(B, A) :- 1 is mod(B, 2), C is 3 * B + 1, collatz(C, A).
-# collatz.add(["A", "A"])
-# collatz.add(["B", "A"], [[equals, "0", "B % 2"], [equals, "C", "B / 2"], [collatz, "C", "A"]])
-# collatz.add(["B", "A"], [[equals, "1", "B % 2"], [equals, "C", "3 * B + 1"], [collatz, "C", "A"]])
-
-# listTest.add([["bob", "carol", "ted", "alice"]])
-
-# # inboth(A, B, X) :- member(X, A), member(X, B).
-# inboth.add(["A", "B", "X"], [[member, "X", "A"], [member, "X", "B"]])
-# # inboth.add(["A", "B", "X"], [[member("X", "A")], [member("X", "B")]])
-
-
-# # increment_all([], X) :- X = [].
-# # increment_all([H|T], X) :- Y is H + 1, increment_all(T, Z), X = [Y|Z].
-# increment_all.add([[], "X"], ["X = []"])
-
-# ##########################################
-
-
-# ### All tests below succeed! ###
-
-# # success = male("X")
-# # print(male("X"))
-
-# # ?- inboth([green, red, orange], [apple, orange, pear], orange).
-# # success = solve([inboth, ["green", "red", "orange"], ["apple", "orange", "pear"], "orange"])
-# # success = inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")
-
-# # ?- inboth([1, 2, 3, 4], [2, 5, 6, 1], X).
-# # success = solve([inboth, ["1", "2", "3", "4"], ["2", "5", "6", "1"], "X"])
-
-# # success = solve([listTest, ["X", "|", "Y"]])
-# # success = solve([listTest, ["bob", "carol", "ted", "ali"]])
-# # success = solve([listTest, ["bob", "carol", "ted", "alice"]])
-
-# # # ?- member(X, [bob, apple, shirt, pip]).
-# # success = solve([member, "X", ["bob", "apple", "shirt", "pip"]])
-
-# # # ?- male(X).
-# # # Becomes:
-# # success = solve([male, "X"])
-
-# # # ?- child(X, Y).
-# # success = solve([child, "X", "Y"])
-# # success = child("X", "Y")
-
-# # # ?- parent(X, Y).
-# # success = solve([parent, "X", "Y"])
-# success = parent("X", "Y")
-
-# # # ?- father(X, Y).
-# # success = solve([father, "X", "Y"])
-
-# # # ?- child(X, ben).
-# # success = solve([child, "X", "ben"])
-
-# # # ?- parent(john, X).
-# # success = solve([parent, "john", "X"])
-
-# # # ?- just_ate(X, Y).
-# # success = solve([just_ate, "X", "Y"])
-
-# # # ?- write(hi)
-# # success = solve([write, "hi"])
-
-# # # ?- write_var(X)
-# # success = solve([write_var, "X"])
-
-# # # ?- X is 2 + 4.
-# # # ?- is(X, 2 + 4).
-# # success = solve([equals, "X", "2 + 4"])
-
-# # # ?- 6 is 2 + 4.
-# # success = solve([equals, "6", "2 + 4"])
-
-# # # ?- 6 is 2 + 8.
-# # success = solve([equals, "6", "2 + 8"])
-
-# # # ?- 6 is 2 + "hi".
-# # success = solve([equals, "X", "2 + hi"])
-
-# ############# Arity of 0 #################
-
-# # # ?- fail.
-# # success = solve([fail])
-
-# # # ?- always_true.
-# # success = solve([always_true])
-
-# ################ Recursion ##################
-
-# # # ?- is_digesting(tiger, grass).
-# # success = solve([is_digesting, "tiger", "grass"])
-
-
-# # # ?- is_digesting(X, Y).
-# # success = solve([is_digesting, "X", "Y"])
-
-
-# # # ?- count(0, X).
-# # success = solve([count, "0", "X"])
-
-# # # ?- ancestor(X, bob).
-# # success = solve([ancestor, "X", "bob"])
-
-# # collatz(10, X).
-# # success = solve([collatz, "10", "X"])
-
-# ######### Different arities for same predicate ###########
-# # success = solve([mother])
-# # success = solve([mother, "X"])
-# # success = solve([mother, "X", "Y"])
-
-# ########## Using the Write goal. #######
-# # success = solve([write, "hi"])
-# # success = solve([write_var, "X"])
-
-# ########################## Check results here! ##########################
+increment_all([], "X") >> ["X = []"]
+increment_all(["H", "|", "T"], "X") >> [equals("Y", "H + 1"), increment_all("T", "Z"), "X = [Y|Z]"]
 
 +just_ate("deer", "grass")
 +just_ate("tiger", "deer")
 
-# success = -just_ate("X", "Y")
-
-# # is_digesting(A, B) :- just_ate(A, B).
-# # is_digesting(A, B) :- just_ate(A, C), is_digesting(C, B).
-
 is_digesting("A", "B") >> [just_ate("A", "B")]
 is_digesting("A", "B") >> [just_ate("A", "C"), is_digesting("C", "B")]
 
-# # # ?- is_digesting(tiger, grass).
++count("A", "A")
+count("A", "C") >> [equals("B", "A + 1"), count("B", "C")]
+
++always_true()
+
+# ##########################################
+
+# ### All tests below succeed! ###
+
+# success = -male("X")
+# success = -child("bob", "X")
+# success = -child("X", "bob")
+# success = -child("X", "john")
+# success = -child("rosa", "isidore")
+# success = -parent("rosa", "kathryn")
+# success = -parent("rosa", "X")
+# success = -father("john", "X")
+# success = -mother("rosa", "X")
+# success = -mother("john", "X")
+# success = -mother("X", "john")
+# success = -ancestor("X", "bob")
+# success = -ancestor("ben", "X")
+# success = -collatz("10", "X")
+# success = -member("X", ["bob", "apple", "shirt", "pip"])
+# success = -inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")
+# success = -inboth(["1", "2", "3", "4"], ["2", "5", "6", "1"], "X")
+# success = -write("hi")
+# success = -equals("X", "2 + 4")
+# success = -equals("6", "2 + 4")
+# success = -equals("6", "2 + 8")
+# success = -equals("X", "2 + hi")    # Maybe print error instead???
+# success = -fail()
 # success = -is_digesting("tiger", "grass")
+# success = -count("0", "X")
+success = -always_true()
 
 
-# # # ?- is_digesting(X, Y).
-# # success = solve([is_digesting, "X", "Y"])
-success = -is_digesting("X", "Y")
+
+
+
+
+
+
+#### Test queries below FAIL ####  ???
+
+# child(X, emma), male(X).
+# child(alice, rosa), female(alice).
+# solve = -sibling("john", "X")
+# solve = -first_cousin("david", "X")
+# solve = -first_cousin("jiri", "X")
+# solve = -increment_all(["12", "99", "4", "-7"], "X")
+# solve = -merge(["1", "4", "5", "10", "11", "13"], ["3", "4", "1000"], "X")
+
+
+
+
+
+
+
+
 
 
 
 ### To see all results #####
-for s in success:
+for s in success:   # Can also be '-success' to reduce typing '-' elsewhere.
     print(s)
 
-# # ### To see all results #####
-# # for s in male("X"):
-# #     print(s)
+# ### To see all results #####
+# for s in male("X"):
+#     print(s)
 
 
-# # ### To see only some results ####
-# # for _ in range(5):
-# #     print(next(success))
+# ### To see only some results ####
+# for _ in range(5):
+#     print(next(success))
 
 # # #### Alternatives for specific cases ####
 # # for i in solve([parent, "X", "Y"]):
