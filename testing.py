@@ -147,7 +147,7 @@ count("A", "C") >> [equals("B", "A + 1"), count("B", "C")]
 # success = -ancestor("X", "bob")
 # success = -ancestor("ben", "X")
 # success = -collatz("10", "X")
-success = -member("X", ["bob", "apple", "shirt", "pip"])
+# success = -member("X", ["bob", "apple", "shirt", "pip"])
 # success = -inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")
 # success = -inboth(["1", "2", "3", "4"], ["2", "5", "6", "1"], "X")
 # success = -write("hi")
@@ -167,10 +167,10 @@ success = -member("X", ["bob", "apple", "shirt", "pip"])
 
 # increment_all([], X) :- X = [].
 # increment_all([H|T], X) :- Y is H + 1, increment_all(T, Z), X = [Y|Z].
-# increment_all([], "X") >> [setEqual("X", [])]
-# increment_all(["H", "|", "T"], "X") >> [equals("Y", "H + 1"), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
+increment_all([], "X") >> [setEqual("X", [])]
+increment_all(["H", "|", "T"], "X") >> [equals("Y", "H + 1"), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
 
-# success = -increment_all(["12", "99", "4", "-7"], "X")
+success = -increment_all(["12", "99", "4", "-7"], "X")
 
 
 # +test(["a", "b", "c"])

@@ -9,6 +9,8 @@ def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already cr
         if str(word) in memo:
             nextWord = memo[str(word)]
         elif isinstance(word, list):
+            if "|" not in word:
+                word.append("[]")
             recursed = stringsToTerms(word, memo)
             memo[str(word)] = Const(recursed)       # Const can hold a list.
             nextWord = memo[str(word)]
@@ -79,43 +81,26 @@ class Alt():
 # This function tries to unify the query and alt args, and returns a bool of its success.
 def tryUnify(queryArgs, altArgs):
     for index, (queryArg, altArg) in enumerate(zip(queryArgs, altArgs)):    # Loop through the query and alt arguments.
-        # if queryArg.value == "|" and altArg.value == "|":
-        #     return queryArgs[-1].unifyWith(altArg[-1])
-        # elif queryArg.value == "|":
-        #     # return queryArgs[-1].unifyWith(Const(altArgs[index:]))
-        #     if queryArgs[-1].unifyWith(Const(altArgs[index:])):     # Need to empty these from altArgs!!???
-        #         tail = queryArgs.pop()
-        #         queryArgs.pop()
-        #         queryArgs.extend(tail.value)
-        #         # del altArgs[index:]
-        #     else:
-        #         return False
-        # elif altArg.value == "|":
-        #     # return Const(queryArgs[index:]).unifyWith(altArgs[-1])
-        #     if Const(queryArgs[index:]).unifyWith(altArgs[-1]):
-        #         tail = altArgs.pop()
-        #         altArgs.pop()
-        #         altArgs.extend(tail.value)
-        #         # del queryArgs[index:]
-        #     else:
-        #         return False
-        if queryArg.value == "|" or altArg.value == "|":
-            if not queryArg.value == "|":
-                queryArg = Const(queryArgs[index:])
-                altArg = altArgs[-1]
-            if not altArg.value == "|":
-                altArg.value = Const(altArgs[index:])
-                queryArg.value = queryArgs[-1]
-            # Otherwise, both must have |.
+        if queryArg.value == "|" and altArg.value == "|":
+            return queryArgs[-1].unifyWith(altArg[-1])
+        elif queryArg.value == "|":
+            # return queryArgs[-1].unifyWith(Const(altArgs[index:]))
+            if queryArgs[-1].unifyWith(Const(altArgs[index:])):     # Need to empty these from altArgs!!???
+                tail = queryArgs.pop()
+                queryArgs.pop()
+                queryArgs.extend(tail.value)
+                # del altArgs[index:]
             else:
-                queryArg = queryArgs[-1]
-                altArg = altArgs[-1]
-                
-            # if queryArg.value == "|":
-            #     queryArg.value = queryArgs[-1]
-            # if altArg.value == "|":
-            #     altArg.value = altArgs[-1]
-            return queryArg.unifyWith(altArg)   # No, unify with list, not just one value. ???
+                return False
+        elif altArg.value == "|":
+            # return Const(queryArgs[index:]).unifyWith(altArgs[-1])
+            if Const(queryArgs[index:]).unifyWith(altArgs[-1]):
+                tail = altArgs.pop()
+                altArgs.pop()
+                altArgs.extend(tail.value)
+                # del queryArgs[index:]
+            else:
+                return False
         # Check if unification is possible before unifying.
         if isinstance(queryArg.value, list) and isinstance(altArg.value, list):
             tryUnify(queryArg.value, altArg.value)
