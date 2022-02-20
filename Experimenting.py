@@ -10,24 +10,9 @@ def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already cr
         if str(word) in memo:
             nextWord = memo[str(word)]
         elif isinstance(word, list):
-            # if "|" in word: # ???
-            #     right = word.pop()
-            #     word.pop()
-            #     memo[right] = Var(right)
-            #     newList.append(memo[right])
-                
             recursed = stringsToTerms(word, memo)
-            # memo[str(word)] = Const(recursed)       # Const can hold a list.
-            # nextWord = memo[str(word)]
-            if "|" in word: # ???
-                right = recursed.pop()
-                memo[right] = Var(right)
-                recursed.pop()
-                newList.append(Const(recursed))     # Consts can hold lists.
-                nextWord = memo[right]
-            else:
-                nextWord = Const(recursed)
-
+            memo[str(word)] = Const(recursed)       # Const can hold a list.
+            nextWord = memo[str(word)]
         # Anything with a space Math.
         elif ' ' in word:
             parts = word.split()
@@ -124,14 +109,19 @@ class Alt():
 # This function tries to unify the query and alt args, and returns a bool of its success.
 def tryUnify(queryArgs, altArgs):
     for index, (queryArg, altArg) in enumerate(zip(queryArgs, altArgs)):    # Loop through the query and alt arguments.
-        # if queryArg.value == "|":
-        #     # return queryArgs[-1].unifyWith(Const(altArgs[index:]))
-        #     # if queryArgs[-1].unifyWith(Const(altArgs[index:])):
+        # if queryArg.value == '|' and altArg.value == '|':
+        #     queryArg = queryArgs[-1]
+        #     altArg = altArgs[-1]
+        # elif queryArg.value == "|":
         #     queryArg = queryArgs[-1]
         #     altArg = Const(altArgs[index:])
-        # if altArg.value == "|":
+        # elif altArg.value == "|":
         #     altArg = altArgs[-1]
         #     queryArg = Const(queryArgs[index:])
+        if queryArg.value == '|' or altArg.value == '|':
+            if queryArg.value == "|":
+                queryArg.value = 
+            break
 
         # Check if unification is possible before unifying.
         if isinstance(queryArg.value, list) and isinstance(altArg.value, list):
@@ -141,6 +131,9 @@ def tryUnify(queryArgs, altArgs):
             return False
         queryArg.unifyWith(altArg)
     return True                                 # If it reaches this point, they can be unified.   
+
+# # Just a list, but with methods to unify.
+# class ListPL():
 
 
 # Variables and Constants are Terms.
@@ -313,7 +306,6 @@ write = Predicate("write")
 member = Predicate("member")
 
 +member("X", ["X", "|", "_"])
-# member("X", ["X"], "_")
 member("X", ["_", "|", "T"]) >> [member("X", "T")]
 
 # once/1
