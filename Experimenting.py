@@ -2,29 +2,46 @@
 # Created by Sawyer Redstone.
 
 # This will take a list, for example ["A", "C"], and convert all the strings to Terms.
+
 def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already created
     newList = []
     for word in oldList:
         # Represent duplicate strings as the same Term.
         if str(word) in memo:
-            nextWord = memo[word]
-        elif isinstance(word, list):
-            recursed = stringsToTerms(word, memo)
-            memo[str(word)] = ListPL(recursed)
             nextWord = memo[str(word)]
-        # Anything with a space or digit must be Math.
-        elif ' ' in word or word.isdigit():
+        elif isinstance(word, list):
+            # if "|" in word: # ???
+            #     right = word.pop()
+            #     word.pop()
+            #     memo[right] = Var(right)
+            #     newList.append(memo[right])
+                
+            recursed = stringsToTerms(word, memo)
+            # memo[str(word)] = Const(recursed)       # Const can hold a list.
+            # nextWord = memo[str(word)]
+            if "|" in word: # ???
+                right = recursed.pop()
+                memo[right] = Var(right)
+                recursed.pop()
+                newList.append(Const(recursed))     # Consts can hold lists.
+                nextWord = memo[right]
+            else:
+                nextWord = Const(recursed)
+
+        # Anything with a space Math.
+        elif ' ' in word:
             parts = word.split()
             parts = [memo[part] if part in memo else part for part in parts]
             memo[word] = Math(word, parts)
             nextWord = memo[word]
-        # Otherwise, if the first letter is uppercase, it is a Var.
-        # elif word[0].isupper():     
+        # If the first letter is uppercase or _, it is a Var.
         elif word[0].isupper() or word[0] == "_":    # Does _ work???
+            word = str(word)
             memo[word] = Var(word)
             nextWord = memo[word]
         # All other strings are Consts.
-        else:                       
+        else:
+            word = str(word)
             memo[word] = Const(word)
             nextWord = memo[word]
         newList.append(nextWord)
@@ -54,15 +71,14 @@ class Goal():
             self.pred.alternatives[len(self.args)].append(Alt(self.args, others))
         else:
             self.pred.alternatives[len(self.args)] = [Alt(self.args, others)]
+    # '+' for putting info IN, AKA adding facts.
+    def __pos__(self):
+        self >> []
+    # '-' for getting info OUT, AKA making queries.
     def __neg__(self):
         self.args = stringsToTerms(self.args)
         for success in tryGoal(self):
             yield success
-    def __pos__(self):
-        # get args, then use that for >>.
-        # add alts.
-        self >> []
-        # self >> Goal()
 
 
 
@@ -76,11 +92,52 @@ class Alt():
     def __repr__(self):
         return repr(self.name + " = " + str(self.value))
 
+# # This function tries to unify the query and alt args, and returns a bool of its success.
+# def tryUnify(queryArgs, altArgs):
+#     for index, (queryArg, altArg) in enumerate(zip(queryArgs, altArgs)):    # Loop through the query and alt arguments.
+#         if queryArg.value == "|":
+#             # return queryArgs[-1].unifyWith(Const(altArgs[index:]))
+#             if queryArgs[-1].unifyWith(Const(altArgs[index:])):
+#                 tail = queryArgs.pop()
+#                 queryArgs.pop()
+#                 queryArgs.extend(tail.value)
+#             else:
+#                 return False
+#         if altArg.value == "|":
+#             # return Const(queryArgs[index:]).unifyWith(altArgs[-1])
+#             if Const(queryArgs[index:]).unifyWith(altArgs[-1]):
+#                 tail = altArgs.pop()
+#                 altArgs.pop()
+#                 altArgs.extend(tail.value)
+#             else:
+#                 return False
+#         # Check if unification is possible before unifying.
+#         if isinstance(queryArg.value, list) and isinstance(altArg.value, list):
+#             tryUnify(queryArg.value, altArg.value)
+#         if queryArg != altArg:                  # Is this a problem if the fail occures in middle of unifying???
+#             return False
+#         queryArg.unifyWith(altArg)
+#     return True                                 # If it reaches this point, they can be unified.   
+
+
+
 # This function tries to unify the query and alt args, and returns a bool of its success.
 def tryUnify(queryArgs, altArgs):
-    for queryArg, altArg in zip(queryArgs, altArgs):    # Loop through the query and alt arguments.
+    for index, (queryArg, altArg) in enumerate(zip(queryArgs, altArgs)):    # Loop through the query and alt arguments.
+        # if queryArg.value == "|":
+        #     # return queryArgs[-1].unifyWith(Const(altArgs[index:]))
+        #     # if queryArgs[-1].unifyWith(Const(altArgs[index:])):
+        #     queryArg = queryArgs[-1]
+        #     altArg = Const(altArgs[index:])
+        # if altArg.value == "|":
+        #     altArg = altArgs[-1]
+        #     queryArg = Const(queryArgs[index:])
+
         # Check if unification is possible before unifying.
-        if queryArg != altArg:                  # Is this a problem if the fail occures in middle of unifying???
+        if isinstance(queryArg.value, list) and isinstance(altArg.value, list):
+            if not tryUnify(queryArg.value, altArg.value):
+                return False
+        elif queryArg != altArg:                  # Is this a problem if the fail occures in middle of unifying???
             return False
         queryArg.unifyWith(altArg)
     return True                                 # If it reaches this point, they can be unified.   
@@ -94,6 +151,8 @@ class Term():
         self.children = []                  # The children are the variables that will change if this term has a value.
     # This checks if they *can* be equal.
     def __eq__(self, other):
+        # if isinstance(self.value, list) and isinstance(other.value, list):
+            # ???
         return self.value == other.value or not self or not other
     def __bool__(self):
         return self.value != "Undefined"    # A term is false it if has no value.
@@ -144,33 +203,6 @@ class Math(Term):        # This is a number or mathematical expression.
         return ('%f' % result).rstrip('0').rstrip('.')  # Strip trailing 0s.
 
 
-class ListPL(Term):
-    def __init__(self, lst):
-        self.head = lst[0]
-        if len(lst) == 1:               # There is only one item in the list.
-            self.tail = Const("[]")
-        elif lst[1].value == "|":       # The tail comes after the "|".
-            self.tail = lst[-1]         # This makes the tail be equal to the tail variable.
-            # self.tail = ListPL(lst[-1:])  #???
-        else:                           # The rest of the list is all the tail.
-            self.tail = ListPL(lst[1:])
-        super().__init__(name = "List", value = lst)
-    def __len__(self):
-        return len(self.value)
-    def __eq__(self, other):
-        if isinstance(other, ListPL):
-            return self.head == other.head and self.tail == other.tail
-        return super().__eq__(other)
-    def unifyWith(self, altArg):
-        if isinstance(altArg, ListPL):
-            return self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail)
-        return super().unifyWith(altArg)
-    def __repr__(self):
-        return str(self.value)
-
-
-
-
 def tryGoal(goal):
     # Keep copy of original goal args. This is not a deep copy, so changed values will remain changed here.
     # This allows Vars that are temporary changed to Consts to return back to their Var form.
@@ -181,10 +213,7 @@ def tryGoal(goal):
         # To ensure the value does not get reset, the variable must be changed to a Const.
         for argIndex, arg in enumerate(goal.args):
             if isinstance(arg, Var) and arg.value != "Undefined":
-                if isinstance(arg.value, list):
-                    goal.args[argIndex] = ListPL(arg.value)
-                else:
-                    goal.args[argIndex] = Const(arg.value)
+                goal.args[argIndex] = Const(arg.value)
         # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
         for alt in alts:
             altAttempts = tryAlt(goal, alt)
@@ -201,6 +230,9 @@ def tryGoal(goal):
     elif goal.pred == write and len(goal.args) == 1:
             print(goal.args[0].value)
             yield True
+    elif goal.pred == setEqual:     # ???
+        if tryUnify([goal.args[0]], [goal.args[1]]):
+            yield findVars(goal.args) or True
     # After trying all alts, reset any Vars that were turned into Consts.
     goal.args = originalArgs
     yield False               # If all the alts failed, then the goal failed.
@@ -255,7 +287,8 @@ def changePath(arg, newValue):
 def findVars(args):
     result = []
     for arg in args:
-        if isinstance(arg, ListPL):
+        if isinstance(arg.value, list):
+        # if isinstance(arg, list):     # ???
             result.extend(findVars(arg.value))
         elif isinstance(arg, Var) and arg.name[0] != "_":
             result.append(arg)
@@ -280,9 +313,10 @@ write = Predicate("write")
 member = Predicate("member")
 
 +member("X", ["X", "|", "_"])
+# member("X", ["X"], "_")
 member("X", ["_", "|", "T"]) >> [member("X", "T")]
 
 # once/1
 
-# setEqual = Predicate("setEqual")
+setEqual = Predicate("setEqual")
 

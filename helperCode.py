@@ -25,5 +25,8 @@
 # H = exec("X + 3")
 # print(H)
 
+lst = [1, 2, 3, "|", 5]
 
-print(-[1, 2])
+# test = lst[1:] if lst[1:] else "banana"
+
+print(lst[:-2])

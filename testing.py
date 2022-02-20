@@ -1,7 +1,7 @@
 # This file is used for internal testing.
 
-from PL import *
-# from Experimenting import *
+# from PL import *
+from Experimenting import *
 
 
 ################### Testing #####################
@@ -26,6 +26,8 @@ is_digesting = Predicate("is_digesting")
 
 count = Predicate("count")
 always_true = Predicate("always_true")
+
+test = Predicate("Test")
 
 # #### facts/rules ####
 
@@ -115,9 +117,6 @@ collatz("N0", "N") >> [equals("1", "N0 % 2"), equals("N1", "3 * N0 + 1"), collat
 
 inboth("A", "B", "X") >> [member("X", "A"), member("X", "B")]
 
-increment_all([], "X") >> ["X = []"]
-increment_all(["H", "|", "T"], "X") >> [equals("Y", "H + 1"), increment_all("T", "Z"), "X = [Y|Z]"]
-
 +just_ate("deer", "grass")
 +just_ate("tiger", "deer")
 
@@ -128,6 +127,7 @@ is_digesting("A", "B") >> [just_ate("A", "C"), is_digesting("C", "B")]
 count("A", "C") >> [equals("B", "A + 1"), count("B", "C")]
 
 +always_true()
+
 
 # ##########################################
 
@@ -147,7 +147,7 @@ count("A", "C") >> [equals("B", "A + 1"), count("B", "C")]
 # success = -ancestor("X", "bob")
 # success = -ancestor("ben", "X")
 # success = -collatz("10", "X")
-# success = -member("X", ["bob", "apple", "shirt", "pip"])
+success = -member("X", ["bob", "apple", "shirt", "pip"])
 # success = -inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")
 # success = -inboth(["1", "2", "3", "4"], ["2", "5", "6", "1"], "X")
 # success = -write("hi")
@@ -158,24 +158,36 @@ count("A", "C") >> [equals("B", "A + 1"), count("B", "C")]
 # success = -fail()
 # success = -is_digesting("tiger", "grass")
 # success = -count("0", "X")
-success = -always_true()
+# success = -always_true()
+# success = -setEqual("X", [])
 
 
 
+### Testing Zone ###
 
+# increment_all([], X) :- X = [].
+# increment_all([H|T], X) :- Y is H + 1, increment_all(T, Z), X = [Y|Z].
+# increment_all([], "X") >> [setEqual("X", [])]
+# increment_all(["H", "|", "T"], "X") >> [equals("Y", "H + 1"), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
+
+# success = -increment_all(["12", "99", "4", "-7"], "X")
+
+
+# +test(["a", "b", "c"])
+# success = -test(["X", "Y", "Z"])
 
 
 
 
 #### Test queries below FAIL ####  ???
 
+# success = -sibling("john", "X")
+# success = -first_cousin("david", "X")
+# success = -first_cousin("jiri", "X")
+# success = -merge(["1", "4", "5", "10", "11", "13"], ["3", "4", "1000"], "X")
 # child(X, emma), male(X).
+# success = -(child("X", "emma") & male("X"))   <- ugly, but maybe this???
 # child(alice, rosa), female(alice).
-# solve = -sibling("john", "X")
-# solve = -first_cousin("david", "X")
-# solve = -first_cousin("jiri", "X")
-# solve = -increment_all(["12", "99", "4", "-7"], "X")
-# solve = -merge(["1", "4", "5", "10", "11", "13"], ["3", "4", "1000"], "X")
 
 
 

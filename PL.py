@@ -7,24 +7,25 @@ def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already cr
     for word in oldList:
         # Represent duplicate strings as the same Term.
         if str(word) in memo:
-            nextWord = memo[word]
+            nextWord = memo[str(word)]
         elif isinstance(word, list):
             recursed = stringsToTerms(word, memo)
             memo[str(word)] = ListPL(recursed)
             nextWord = memo[str(word)]
-        # Anything with a space or digit must be Math.
-        elif ' ' in word or word.isdigit():
+        # Anything with a space Math.
+        elif ' ' in word:
             parts = word.split()
             parts = [memo[part] if part in memo else part for part in parts]
             memo[word] = Math(word, parts)
             nextWord = memo[word]
-        # Otherwise, if the first letter is uppercase, it is a Var.
-        # elif word[0].isupper():     
+        # If the first letter is uppercase or _, it is a Var.
         elif word[0].isupper() or word[0] == "_":    # Does _ work???
+            word = str(word)
             memo[word] = Var(word)
             nextWord = memo[word]
         # All other strings are Consts.
-        else:                       
+        else:
+            word = str(word)
             memo[word] = Const(word)
             nextWord = memo[word]
         newList.append(nextWord)
@@ -54,15 +55,14 @@ class Goal():
             self.pred.alternatives[len(self.args)].append(Alt(self.args, others))
         else:
             self.pred.alternatives[len(self.args)] = [Alt(self.args, others)]
+    # '+' for putting info IN, AKA adding facts.
+    def __pos__(self):
+        self >> []
+    # '-' for getting info OUT, AKA making queries.
     def __neg__(self):
         self.args = stringsToTerms(self.args)
         for success in tryGoal(self):
             yield success
-    def __pos__(self):
-        # get args, then use that for >>.
-        # add alts.
-        self >> []
-        # self >> Goal()
 
 
 
@@ -145,28 +145,80 @@ class Math(Term):        # This is a number or mathematical expression.
 
 
 class ListPL(Term):
-    def __init__(self, lst):
-        self.head = lst[0]
-        if len(lst) == 1:               # There is only one item in the list.
-            self.tail = Const("[]")
-        elif lst[1].value == "|":       # The tail comes after the "|".
-            self.tail = lst[-1]         # This makes the tail be equal to the tail variable.
-            # self.tail = ListPL(lst[-1:])  #???
-        else:                           # The rest of the list is all the tail.
-            self.tail = ListPL(lst[1:])
-        super().__init__(name = "List", value = lst)
-    def __len__(self):
-        return len(self.value)
-    def __eq__(self, other):
-        if isinstance(other, ListPL):
-            return self.head == other.head and self.tail == other.tail
-        return super().__eq__(other)
+    # Tail is a ListPL.
+    def __init__(self, lst, tail = "[]"):
+        self.lst = lst
+        self.tail = ListPL(lst[1:], ListPL(lst[1:])) if lst[1:] else "[]"
+        if len(lst) == 0:
+            self.head = Const("[]")
+        else:
+            self.head = lst[0]
+        if self.head == Const("|"):
+            self.head = lst[-1]
+        super().__init__(name = "List", value = self.head.value)
     def unifyWith(self, altArg):
+        # return self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail)
         if isinstance(altArg, ListPL):
             return self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail)
         return super().unifyWith(altArg)
     def __repr__(self):
-        return str(self.value)
+        return str(self.lst)
+
+
+
+# class ListPL(Term):
+#     # Lst is a ListPL?
+#     def __init__(self, lst, tail = "[]"):
+#         self.lst = lst
+#         # self.value = lst
+#         # self.tail = ListPL(lst[1:]) if lst[1:] else Const("[]")
+#         self.tail = ListPL(lst[1:]) if lst[1:] else "[]"
+#         if len(lst) == 0:
+#             self.head = Const("[]")
+#         else:
+#             self.head = lst[0]
+#         if self.head == Const("|"):
+#             self.head = lst[-1]
+#             # self.value = "[]"
+#             # self.value = 
+#         # super().__init__(name = "List", value = self.value)
+#         super().__init__(name = "List", value = self.tail)
+#         #super().__new__(name = "List", value = self.lst)
+#     def unifyWith(self, altArg):
+#         # return self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail)
+#         if isinstance(altArg, ListPL):
+#             return self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail)
+#         return super().unifyWith(altArg)
+#     def __repr__(self):
+#         return str(self.lst)
+
+
+# class ListPL(Term):
+#     def __init__(self, lst):
+#         if len(lst) == 0:
+#             self.head = Const("[]")
+#         else:
+#             self.head = lst[0]
+#             if len(lst) == 1:               # There is only one item in the list.
+#                 self.tail = Const("[]")
+#             elif lst[1].value == "|":       # The tail comes after the "|".
+#                 self.tail = lst[-1]         # This makes the tail be equal to the tail variable.
+#             else:                           # The rest of the list is all the tail.
+#                 self.tail = ListPL(lst[1:])
+#         super().__init__(name = "List", value = lst)
+#         # super().__init__(name = "List", value = self.tail)
+#     def __len__(self):
+#         return len(self.value)
+#     def __eq__(self, other):
+#         if isinstance(other, ListPL):
+#             return self.head == other.head and self.tail == other.tail
+#         return super().__eq__(other)
+#     def unifyWith(self, altArg):
+#         if isinstance(altArg, ListPL):
+#             return self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail)
+#         return super().unifyWith(altArg)
+#     def __repr__(self):
+#         return str(self.value)
 
 
 
@@ -201,6 +253,9 @@ def tryGoal(goal):
     elif goal.pred == write and len(goal.args) == 1:
             print(goal.args[0].value)
             yield True
+    elif goal.pred == setEqual:     # ???
+        if tryUnify([goal.args[0]], [goal.args[1]]):
+            yield findVars(goal.args) or True
     # After trying all alts, reset any Vars that were turned into Consts.
     goal.args = originalArgs
     yield False               # If all the alts failed, then the goal failed.
@@ -284,5 +339,5 @@ member("X", ["_", "|", "T"]) >> [member("X", "T")]
 
 # once/1
 
-# setEqual = Predicate("setEqual")
+setEqual = Predicate("setEqual")
 
