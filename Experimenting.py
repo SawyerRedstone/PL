@@ -2,7 +2,6 @@
 # Created by Sawyer Redstone.
 
 # This will take a list, for example ["A", "C"], and convert all the strings to Terms.
-
 def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already created
     newList = []
     for word in oldList:
@@ -77,63 +76,53 @@ class Alt():
     def __repr__(self):
         return repr(self.name + " = " + str(self.value))
 
-# # This function tries to unify the query and alt args, and returns a bool of its success.
-# def tryUnify(queryArgs, altArgs):
-#     for index, (queryArg, altArg) in enumerate(zip(queryArgs, altArgs)):    # Loop through the query and alt arguments.
-#         if queryArg.value == "|":
-#             # return queryArgs[-1].unifyWith(Const(altArgs[index:]))
-#             if queryArgs[-1].unifyWith(Const(altArgs[index:])):
-#                 tail = queryArgs.pop()
-#                 queryArgs.pop()
-#                 queryArgs.extend(tail.value)
-#             else:
-#                 return False
-#         if altArg.value == "|":
-#             # return Const(queryArgs[index:]).unifyWith(altArgs[-1])
-#             if Const(queryArgs[index:]).unifyWith(altArgs[-1]):
-#                 tail = altArgs.pop()
-#                 altArgs.pop()
-#                 altArgs.extend(tail.value)
-#             else:
-#                 return False
-#         # Check if unification is possible before unifying.
-#         if isinstance(queryArg.value, list) and isinstance(altArg.value, list):
-#             tryUnify(queryArg.value, altArg.value)
-#         if queryArg != altArg:                  # Is this a problem if the fail occures in middle of unifying???
-#             return False
-#         queryArg.unifyWith(altArg)
-#     return True                                 # If it reaches this point, they can be unified.   
-
-
-
 # This function tries to unify the query and alt args, and returns a bool of its success.
 def tryUnify(queryArgs, altArgs):
     for index, (queryArg, altArg) in enumerate(zip(queryArgs, altArgs)):    # Loop through the query and alt arguments.
-        # if queryArg.value == '|' and altArg.value == '|':
-        #     queryArg = queryArgs[-1]
-        #     altArg = altArgs[-1]
+        # if queryArg.value == "|" and altArg.value == "|":
+        #     return queryArgs[-1].unifyWith(altArg[-1])
         # elif queryArg.value == "|":
-        #     queryArg = queryArgs[-1]
-        #     altArg = Const(altArgs[index:])
+        #     # return queryArgs[-1].unifyWith(Const(altArgs[index:]))
+        #     if queryArgs[-1].unifyWith(Const(altArgs[index:])):     # Need to empty these from altArgs!!???
+        #         tail = queryArgs.pop()
+        #         queryArgs.pop()
+        #         queryArgs.extend(tail.value)
+        #         # del altArgs[index:]
+        #     else:
+        #         return False
         # elif altArg.value == "|":
-        #     altArg = altArgs[-1]
-        #     queryArg = Const(queryArgs[index:])
-        if queryArg.value == '|' or altArg.value == '|':
-            if queryArg.value == "|":
-                queryArg.value = 
-            break
-
+        #     # return Const(queryArgs[index:]).unifyWith(altArgs[-1])
+        #     if Const(queryArgs[index:]).unifyWith(altArgs[-1]):
+        #         tail = altArgs.pop()
+        #         altArgs.pop()
+        #         altArgs.extend(tail.value)
+        #         # del queryArgs[index:]
+        #     else:
+        #         return False
+        if queryArg.value == "|" or altArg.value == "|":
+            if not queryArg.value == "|":
+                queryArg = Const(queryArgs[index:])
+                altArg = altArgs[-1]
+            if not altArg.value == "|":
+                altArg.value = Const(altArgs[index:])
+                queryArg.value = queryArgs[-1]
+            # Otherwise, both must have |.
+            else:
+                queryArg = queryArgs[-1]
+                altArg = altArgs[-1]
+                
+            # if queryArg.value == "|":
+            #     queryArg.value = queryArgs[-1]
+            # if altArg.value == "|":
+            #     altArg.value = altArgs[-1]
+            return queryArg.unifyWith(altArg)   # No, unify with list, not just one value. ???
         # Check if unification is possible before unifying.
         if isinstance(queryArg.value, list) and isinstance(altArg.value, list):
-            if not tryUnify(queryArg.value, altArg.value):
-                return False
-        elif queryArg != altArg:                  # Is this a problem if the fail occures in middle of unifying???
+            tryUnify(queryArg.value, altArg.value)
+        if queryArg != altArg:                  # Is this a problem if the fail occures in middle of unifying???
             return False
         queryArg.unifyWith(altArg)
     return True                                 # If it reaches this point, they can be unified.   
-
-# # Just a list, but with methods to unify.
-# class ListPL():
 
 
 # Variables and Constants are Terms.

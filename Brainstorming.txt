@@ -41,3 +41,10 @@ Var([Const("1"), Const("4"), Var("X")])
 Const([]) is list terminator.
 
 If values are lists, compare/unify each item in them. If item is |, instead make Var after it equal remainder of other list.
+
+_____
+ListPLs are made up of a list and an end var.
+The end var is the var after |.
+if no | in the list, end is a const([])
+
+to unify ListPLs, first unify the list, then unify the end.
