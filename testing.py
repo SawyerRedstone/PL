@@ -1,7 +1,7 @@
 # This file is used for internal testing.
 
-# from PL import *
-from Experimenting import *
+from PL import *
+# from Experimenting import *
 
 
 ################### Testing #####################
@@ -23,11 +23,10 @@ inboth = Predicate("inboth")
 increment_all = Predicate("increment_all")
 just_ate = Predicate("just_ate")
 is_digesting = Predicate("is_digesting")
-
 count = Predicate("count")
 always_true = Predicate("always_true")
-
-test = Predicate("Test")
+basicList = Predicate("basicList")
+merge = Predicate("merge")
 
 # #### facts/rules ####
 
@@ -59,34 +58,28 @@ test = Predicate("Test")
 # A is the child of B
 +child("bob", "john")
 +child("bob", "kathryn")
-
 +child("beatrice", "john")
 +child("beatrice", "kathryn")
-
 +child("john", "ben")
 +child("john", "rachel")
 +child("lillian", "ben")
 +child("lillian", "rachel")
-
 +child("kathryn", "rosa")
 +child("kathryn", "martin")
 +child("alice", "martin")
 +child("alice", "rosa")
 +child("ferdinand", "martin")
 +child("ferdinand", "fergie")
-
 +child("marjorie", "edmund")
 +child("marjorie", "lillian")
 +child("david", "lillian")
 +child("david", "edmund")
-
 +child("ben", "isidore")
 +child("ben", "bertha")
 +child("william", "isidore")
 +child("william", "bertha")
 +child("emma", "isidore")
 +child("emma", "bertha")
-
 +child("morris", "alphonse")
 +child("morris", "emma")
 +child("nellie", "alphonse")
@@ -128,6 +121,15 @@ count("A", "C") >> [equals("B", "A + 1"), count("B", "C")]
 
 +always_true()
 
+increment_all([], "X") >> [setEqual("X", [])]
+increment_all(["H", "|", "T"], "X") >> [equals("Y", "H + 1"), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
+
++basicList(["a", "b", "c"])
+
++merge("A", [], "A")
++merge([], "B", "B")
+merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> ["H1 < H2", merge("T1", ["H2", "|", "T2"], "Z"), setEqual("X", ["H1", "|", "Z"])]
+merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> ["H1 >= H2", merge(["H1", "|", "T1"], "T2", "Z"), setEqual("X", ["H2", "|", "Z"])]
 
 # ##########################################
 
@@ -160,21 +162,16 @@ count("A", "C") >> [equals("B", "A + 1"), count("B", "C")]
 # success = -count("0", "X")
 # success = -always_true()
 # success = -setEqual("X", [])
+# success = -increment_all(["12", "99", "4", "-7"], "X")
+# success = -basicList(["X", "Y", "Z"])
 
 
 
 ### Testing Zone ###
 
-# increment_all([], X) :- X = [].
-# increment_all([H|T], X) :- Y is H + 1, increment_all(T, Z), X = [Y|Z].
-increment_all([], "X") >> [setEqual("X", [])]
-increment_all(["H", "|", "T"], "X") >> [equals("Y", "H + 1"), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
-
-success = -increment_all(["12", "99", "4", "-7"], "X")
 
 
-# +test(["a", "b", "c"])
-# success = -test(["X", "Y", "Z"])
+
 
 
 
@@ -184,7 +181,7 @@ success = -increment_all(["12", "99", "4", "-7"], "X")
 # success = -sibling("john", "X")
 # success = -first_cousin("david", "X")
 # success = -first_cousin("jiri", "X")
-# success = -merge(["1", "4", "5", "10", "11", "13"], ["3", "4", "1000"], "X")
+success = -merge(["1", "4", "5", "10", "11", "13"], ["3", "4", "1000"], "X")
 # child(X, emma), male(X).
 # success = -(child("X", "emma") & male("X"))   <- ugly, but maybe this???
 # child(alice, rosa), female(alice).
