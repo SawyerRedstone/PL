@@ -1,3 +1,4 @@
+import re
 # # Variables and Constants are Terms.
 # class Term():
 #     def __init__(self, name, value):
@@ -25,8 +26,17 @@
 # H = exec("X + 3")
 # print(H)
 
-lst = [1]
+# How to split and keep delimeters.
+# 1: To keep delimeter, put () around what you are searching for.
+# 2: To split on multiple things, use |.
+# str = "X =\= 4"
+str = "5 is 4"
 
-# test = lst[1:] if lst[1:] else "banana"
+# Remove spaces.
+# str = str.replace(" ", "")
 
-print(lst[-2])
+# lst = re.split(r'(=:=| is |=\\=|<|=<|>|>=)', str)
+lst = re.split(r'( is )', str)
+print(lst)
+
+

@@ -20,31 +20,23 @@ parent(A, B) :- child(B, A).
 
 parent("A", "B") >> child("B", "A")
 
---------
-
-ListPL isn't a type of Term, it is a type of value?? Values can be type ListPL
-
-if value is a listPL, 
-
-Or List turns into a Const/Var (head) and a ListPL (Tail).
-
-Or ListPL 
-
---------
+------------
 
 '+' for putting info IN.
 '-' for taking info OUT.
 
-___
-Var([Const("1"), Const("4"), Var("X")])
+---------
 
-Const([]) is list terminator.
+evaluate(X, is, Y)
+evaluate(X, >, Y)
+evaluate(X, =, Y)
+--------
 
-If values are lists, compare/unify each item in them. If item is |, instead make Var after it equal remainder of other list.
+What if evaluate is a special type of goal that takes strings:
 
-_____
-ListPLs are made up of a list and an end var.
-The end var is the var after |.
-if no | in the list, end is a const([])
+evaluate("X is Y")
 
-to unify ListPLs, first unify the list, then unify the end.
+This will become Math(). In the math init:
+Try splitting on =:=, is, =\=, <, =<, >, and >=. 
+if that succeeds, mustEval = True
+otherwise, mustEval = False.

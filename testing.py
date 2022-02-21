@@ -181,7 +181,7 @@ merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> ["H1 >= H2", merge(["H1", "|
 # success = -sibling("john", "X")
 # success = -first_cousin("david", "X")
 # success = -first_cousin("jiri", "X")
-success = -merge(["1", "4", "5", "10", "11", "13"], ["3", "4", "1000"], "X")
+# success = -merge(["1", "4", "5", "10", "11", "13"], ["3", "4", "1000"], "X")
 # child(X, emma), male(X).
 # success = -(child("X", "emma") & male("X"))   <- ugly, but maybe this???
 # child(alice, rosa), female(alice).
@@ -200,26 +200,18 @@ success = -merge(["1", "4", "5", "10", "11", "13"], ["3", "4", "1000"], "X")
 for s in success:   # Can also be '-success' to reduce typing '-' elsewhere.
     print(s)
 
-# ### To see all results #####
-# for s in male("X"):
+# #### Alternatives for specific cases ####
+# for s in -male("X"):
 #     print(s)
 
+# print(next(success))
+# print(next(success))
 
 # ### To see only some results ####
 # for _ in range(5):
 #     print(next(success))
 
-# # #### Alternatives for specific cases ####
-# # for i in solve([parent, "X", "Y"]):
-# #     print(i)
 
-# # success = solve([parent, "X", "Y"])
-# # print(next(success))
-# # print(next(success))
-
-
-# just_ate.add(["deer", "grass"])
-# just_ate.add(["tiger", "deer"])
 
 
 

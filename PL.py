@@ -285,16 +285,13 @@ def findVars(args):
 
 # The Prolog is/2 predicate, with a different name because "is" already exists in Python.
 equals = Predicate("equals")
-# equals.add(["Q", "Q"])
 +equals("Q", "Q")
 
 # fail/0. This works differently from other goals, as users do not need to type Goal(fail)
 fail = Predicate("failPredicate")
 
-# write/1
 write = Predicate("write")
 
-# member/2
 member = Predicate("member")
 
 +member("X", ["X", "|", "_"])
@@ -302,4 +299,11 @@ member("X", ["_", "|", "T"]) >> [member("X", "T")]
 
 # once/1
 
-setEqual = Predicate("setEqual")
+setEqual = Predicate("setEqual")    #???
+
+# # Use this for all comparisons, such as >, =, 
+# compare = Predicate("compare")
+
+evaluate = Predicate("evaluate")
+
+
