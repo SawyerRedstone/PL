@@ -9,3 +9,5 @@ Maybe make the IS predicate a built in predicate in logic.py. That way, whenever
 To add cut (!), maybe just make a bool 'cut = false'. 
 
 Vars and consts etc. should be inputted by the user as strings, and the inner code converts them into Vars and Consts.
+
+overload __or__ so that "[1, 2, 3] | X" can be used for list tails. Maybe all lists have "| []" if there isn't already a tail?
