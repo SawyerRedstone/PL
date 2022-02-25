@@ -116,8 +116,8 @@ inboth("A", "B", "X") >> [member("X", "A"), member("X", "B")]
 is_digesting("A", "B") >> [just_ate("A", "B")]
 is_digesting("A", "B") >> [just_ate("A", "C"), is_digesting("C", "B")]
 
-+count("A", "A")
-count("A", "C") >> [equals("B", "A + 1"), count("B", "C")]
+# +count("A", "A")
+# count("A", "C") >> [equals("B", "A" |plus| 1), count("B", "C")]
 
 +always_true()
 
@@ -154,12 +154,15 @@ merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> ["H1 >= H2", merge(["H1", "|
 # success = -inboth(["1", "2", "3", "4"], ["2", "5", "6", "1"], "X")
 # success = -write("hi")
 # success = -equals("X", "2 + 4")
+
+
 # success = -equals("6", "2 + 4")
 # success = -equals("6", "2 + 8")
 # success = -equals("X", "2 + hi")    # Maybe print error instead???
 # success = -fail()
 # success = -is_digesting("tiger", "grass")
-# success = -count("0", "X")
+# success = -is_digesting("X", "Y")
+# success = -count(0, "X")
 # success = -always_true()
 # success = -setEqual("X", [])
 # success = -increment_all(["12", "99", "4", "-7"], "X")
@@ -170,6 +173,8 @@ merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> ["H1 >= H2", merge(["H1", "|
 ### Testing Zone ###
 
 
+success = -equals("X", Const(2) |plus| Const(4) |plus| Const(5))
+# success = -equals("X", Const(2) |plus| Const(4))
 
 
 

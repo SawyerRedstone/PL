@@ -2,30 +2,23 @@
 # Created by Sawyer Redstone.
 
 
-# This will take a list, for example ["A", "C"], and convert all the strings to Terms.
-def stringsToTerms(oldList, memo = {}):     # Memo is a dict of terms already created
-    newList = []
-    for word in oldList:
-        # If this term has not yet been created, create it.
-        if str(word) not in memo:
-            if isinstance(word, list):
-                # Recursively turn all strings in list into terms.
-                word = stringsToTerms(word, memo)
-                memo[str(word)] = Term.create(word)
-            # Anything with a space must be Math.
-            elif ' ' in word:
-                parts = word.split()
-                parts = [memo[part] if part in memo else part for part in parts]
-                memo[str(word)] = Math(word, parts)
-            # Otherwise, if the first letter is uppercase, it is a Var.
-            elif word[0].isupper() or word[0] == "_":    # Does _ work???
-                memo[str(word)] = Var(word)
-            # Otherwise, it is a Const or List.
-            else:
-                memo[str(word)] = Term.create(word)
-        nextWord = memo[str(word)]
-        newList.append(nextWord)
-    return newList
+# Take a list, string, or int, and convert it to type Term.
+def create(term, memo = {}): # ??? Later make math use Create on addened.
+    if str(term) in memo:
+        return memo[str(term)]
+    if isinstance(term, int) or isinstance(term, float):   # Numbers are constants.
+        memo[str(term)] = Const(term)
+    elif isinstance(term, Math):
+        memo[str(term)] = term
+    elif isinstance(term, list):
+        # If the list is empty, it is a Const; otherwise it is a ListPL.
+        memo[str(term)] = ListPL([create(item, memo) for item in term]) if term else Const(term)
+    elif term[0].isupper() or term[0] == "_":    # Does _ work???
+        memo[str(term)] = Var(term)
+    # Otherwise, it is a Const.
+    else:
+        memo[str(term)] = Const(term)
+    return memo[str(term)]
 
 class Predicate(): 
     def __init__(self, name): 
@@ -42,22 +35,25 @@ class Predicate():
 class Goal():
     def __init__(self, pred = [], args = []):
         self.pred = pred           # The predicate that is being queried.
-        self.args = list(args)          # Create a list of the goal's arguments.
+        self.args = list(args)     # Create a list of the goal's arguments.
     def __str__(self):
         return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
+    # Add rules as: head >> [goal1, goal2]
     def __rshift__(self, others):
         if len(self.args) in self.pred.alternatives:
             self.pred.alternatives[len(self.args)].append(Alt(self.args, others))
         else:
             self.pred.alternatives[len(self.args)] = [Alt(self.args, others)]
+    # '-' for getting info OUT (Queries).
+    def __pos__(self):
+        self >> []      # Treat a fact as a rule with no goals.
+    # '+' for putting info IN (facts). 
     def __neg__(self):
-        self.args = stringsToTerms(self.args)
+        memo = {}
+        self.args = [create(arg, memo) for arg in self.args]
+        # self.args = stringsToTerms(self.args)
         for success in tryGoal(self):
             yield success
-    def __pos__(self):
-        # get args, then use that for >>.
-        # add alts.
-        self >> []
 
 
 # Alts are individual alternatives that were added to a predicate.
@@ -69,6 +65,7 @@ class Alt():
         return "altArgs: " + str(self.args) + "\naltGoals: " + str(self.goals) + "\n"
     def __repr__(self):
         return repr(self.name + " = " + str(self.value))
+
 
 # This function tries to unify the query and alt args, and returns a bool of its success.
 def tryUnify(queryArgs, altArgs):
@@ -87,7 +84,7 @@ class Term():
         self.value = value
         self.children = []                  # The children are the variables that will change if this term has a value.
     @staticmethod
-    def create(word):
+    def changeType(word):
         if isinstance(word, list):
             if word == []:
                 return Const(word)
@@ -121,7 +118,6 @@ class Var(Term):
         super().__init__(name = name, value = value)    # Initialize the Var. 
 
 
-
 class Const(Term):  # A constant, aka an atom.
     def __init__(self, value):
         super().__init__(name = "Const", value = value)
@@ -129,26 +125,79 @@ class Const(Term):  # A constant, aka an atom.
         return str(self.value)
 
 
-class Math(Term):        # This is a number or mathematical expression.
-    def __init__(self, name, terms):
-        self.terms = terms
-        super().__init__(name = name, value = "Undefined")
-    # Find their value and check if equal.
+# # To use math, write the operation surrounded with |.
+# # For example, '3 + 4' would be written as '3 |plus| 4'.
+# class Infix:
+#     def __init__(self, function):
+#         self.function = function
+#     def __ror__(self, other):
+#         # other = create(other)
+#         return Infix(lambda x, self=self, other=other: self.function(other, x))
+#     def __or__(self, other):
+#         # other = create(other)
+#         # return Math(self.function, self, other)
+#         return Math(self.function, other)
+
+
+
+# class Math(Term):
+#     def __init__(self, function, left, right):      # check if left and right are mixed up. ???
+#         self.function = function
+#         # self.addend = create(addend)
+#         self.left = left
+#         self.right = right
+#         super().__init__(name = "Math", value = "Undefined")
+#     def doMath(self):
+#         try:
+#             self.left.function(self.right)
+#         except:
+#             # doMath()
+#             pass
+#         # return self.function(self.addend.value)
+#     def __eq__(self, other):
+#         self.value = self.doMath()
+#         return super().__eq__(other)
+
+
+
+# To use math, write the operation surrounded with |.
+# For example, '3 + 4' would be written as '3 |plus| 4'.
+class Infix:
+    def __init__(self, function):
+        self.function = function
+    def __ror__(self, other):
+        # return Math((lambda x, self=self, other=other: self.function(other, x)), other)
+        # return Math(self.function, other)
+        return Infix(lambda x, self=self, other=other: self.function(other.value, x.value))
+    def __or__(self, other):
+        # other = create(other)
+        # return Math(self.function, self, other)
+        return Math(self.function, other)
+        # return self.function(other)
+
+
+# def addMe(x, y):
+#     Math(x, y, function)
+
+class Math(Term):
+    def __init__(self, function, addend):
+        self.function = function
+        # self.addend = create(addend)
+        self.addend = addend
+        super().__init__(name = "Math", value = "Undefined")
+    def doMath(self):
+        if isinstance(self.addend, Math):
+            self.addend.value = self.addend.doMath()
+        self.value = self.function(self.addend.value)
+        return self.value
     def __eq__(self, other):
-        try:
-            self.value = str(self)
-            if isinstance(other, Math):
-                other.value = str(other)
-            return super().__eq__(other)
-        # If the math doesn't make sense, return False.
-        except:
-            return False
-    def __str__(self):
-        # First turn each term into its value form.
-        self.terms = [str(term) for term in self.terms]
-        # Then evalute and return the results.
-        result = float(eval("".join(self.terms)))
-        return ('%f' % result).rstrip('0').rstrip('.')  # Strip trailing 0s.
+        self.doMath()
+        return super().__eq__(other)
+
+# plus = Infix(lambda x, y: x.value + y.value)
+plus = Infix(lambda x, y: x + y)
+
+
 
 
 # This flattens a list with "|"
@@ -157,13 +206,13 @@ def flatten(lst):
         tail = lst.pop()
         lst.pop()
         lst.extend(flatten(tail.value))
-    return [Term.create(term.value) for term  in lst]
+    return [Term.changeType(term.value) for term in lst]
 
 
 class ListPL(Term):
     def __init__(self, lst):
         self.head = lst[0]
-        self.tail = Term.create(lst[1:])
+        self.tail = Term.changeType(lst[1:])
         super().__init__(name = "List", value = lst)
     def __len__(self):
         return len(self.value)
@@ -176,7 +225,7 @@ class ListPL(Term):
             if self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail):
                 for term in enumerate(self.tail.value):
                     if term:
-                        Term.create(term)
+                        Term.changeType(term)
                 return True
             return False
             # return self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail)
@@ -197,7 +246,7 @@ def tryGoal(goal):
         # To ensure the value does not get reset, the variable must be changed to a Const.
         for argIndex, arg in enumerate(goal.args):
             if isinstance(arg, Var) and arg.value != "Undefined":
-                goal.args[argIndex] = Term.create(arg.value)
+                goal.args[argIndex] = Term.changeType(arg.value)
         # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
         for alt in alts:
             altAttempts = tryAlt(goal, alt)
@@ -227,8 +276,8 @@ def tryAlt(query, alt):
     # Memo is a dictionary of all terms in this alt.
     # This makes sure that no terms are duplicates.
     memo = {}       
-    altArgs = stringsToTerms(alt.args, memo)
-    altGoals = [Goal(goal.pred, stringsToTerms(goal.args, memo)) for goal in alt.goals if goal]
+    altArgs = [create(arg, memo) for arg in alt.args]
+    altGoals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) for goal in alt.goals if goal]
     goalsToTry = altGoals          # A list of goals that must be satisfied for this alt to succeed.
     if not tryUnify(query.args, altArgs):    # If the alt can't be unified, then it fails.
         yield False
@@ -281,7 +330,7 @@ def findVars(args):
 
 
 
-# #### Built-in Predicates ####
+# #### Built-in Features ####
 
 # The Prolog is/2 predicate, with a different name because "is" already exists in Python.
 equals = Predicate("equals")
@@ -305,5 +354,6 @@ setEqual = Predicate("setEqual")    #???
 # compare = Predicate("compare")
 
 evaluate = Predicate("evaluate")
+
 
 
