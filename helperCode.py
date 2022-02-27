@@ -1,47 +1,29 @@
-# import re
-# # # Variables and Constants are Terms.
-# # class Term():
-# #     def __init__(self, name, value):
-# #         self.name = name
-# #         self.value = value
-# #         self.children = []                  # The children are the variables that will change if this term has a value.
-# #     # This checks if they *can* be equal.
-# #     def __eq__(self, other):
-# #         return self.value == other.value or not self or not other
-# #     def __bool__(self):
-# #         return self.value != "Undefined"    # A term is false it if has no value.
-# #     def __repr__(self):
-# #         return repr(self.name + " = " + str(self.value))    
-# #     def __str__(self):
-# #         return str(self.value)
-# #     def __hash__(self):
-# #         return hash(repr(self))
-    
-        
-# # class Var(Term):
-# #     def __init__(self, name, value = "Undefined"):
-# #         super().__init__(name = name, value = value)    # Initialize the Var.
+import operator
 
-# # X = 4
-# # H = exec("X + 3")
-# # print(H)
+class Infix:
+    def __init__(self, function):
+        self.function = function
+    def __ror__(self, other):
+        return Infix(lambda x, self=self, other=other: self.function(other, x))
+    def __or__(self, other):
+        return self.function(other)
+    def __rlshift__(self, other):
+        return Infix(lambda x, self=self, other=other: self.function(other, x))
+    def __rshift__(self, other):
+        return self.function(other)
+    def __call__(self, value1, value2):
+        return self.function(value1, value2)
 
-# # How to split and keep delimeters.
-# # 1: To keep delimeter, put () around what you are searching for.
-# # 2: To split on multiple things, use |.
-# # str = "X =\= 4"
-# str = "5 is 4"
 
-# # Remove spaces.
-# # str = str.replace(" ", "")
+plus = Infix(lambda x,y: x+y)
+times = Infix(lambda x,y: x*y)
+# plus = Infix(operator.add)
+# times = Infix(operator.mul)
 
-# # lst = re.split(r'(=:=| is |=\\=|<|=<|>|>=)', str)
-# lst = re.split(r'( is )', str)
-# print(lst)
 
-x = []
+print(2 |plus| (4 |times| 5))
 
-if x:
-    print("hi")
-else:
-    print("bye")
+# __or__ returns result of Math, so maybe should return Math instead.
+# plus is type Infix. Infixes are basically functions???
+
+

@@ -116,8 +116,8 @@ inboth("A", "B", "X") >> [member("X", "A"), member("X", "B")]
 is_digesting("A", "B") >> [just_ate("A", "B")]
 is_digesting("A", "B") >> [just_ate("A", "C"), is_digesting("C", "B")]
 
-# +count("A", "A")
-# count("A", "C") >> [equals("B", "A" |plus| 1), count("B", "C")]
++count("A", "A")
+count("A", "C") >> [equals("B", "A" |plus| 1), count("B", "C")]
 
 +always_true()
 
@@ -137,6 +137,7 @@ merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> ["H1 >= H2", merge(["H1", "|
 
 # success = -male("X")
 # success = -child("bob", "X")
+# success = -child("X", "Y")
 # success = -child("X", "bob")
 # success = -child("X", "john")
 # success = -child("rosa", "isidore")
@@ -162,7 +163,7 @@ merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> ["H1 >= H2", merge(["H1", "|
 # success = -fail()
 # success = -is_digesting("tiger", "grass")
 # success = -is_digesting("X", "Y")
-# success = -count(0, "X")
+success = -count(0, "X")
 # success = -always_true()
 # success = -setEqual("X", [])
 # success = -increment_all(["12", "99", "4", "-7"], "X")
@@ -173,8 +174,11 @@ merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> ["H1 >= H2", merge(["H1", "|
 ### Testing Zone ###
 
 
-success = -equals("X", Const(2) |plus| Const(4) |plus| Const(5))
-# success = -equals("X", Const(2) |plus| Const(4))
+# success = -equals("X", 2 |plus| (4 |times| 5))
+# success = -equals("X", 2 |plus| 4 |times| 5)
+# success = -equals(4, 2 |plus| "X" |plus| 5)     # is/equals pred can't have vars on right side.
+
+
 
 
 
@@ -201,9 +205,9 @@ success = -equals("X", Const(2) |plus| Const(4) |plus| Const(5))
 
 
 
-### To see all results #####
-for s in success:   # Can also be '-success' to reduce typing '-' elsewhere.
-    print(s)
+# ### To see all results #####
+# for s in success:   # Can also be '-success' to reduce typing '-' elsewhere.
+#     print(s)
 
 # #### Alternatives for specific cases ####
 # for s in -male("X"):
@@ -212,9 +216,9 @@ for s in success:   # Can also be '-success' to reduce typing '-' elsewhere.
 # print(next(success))
 # print(next(success))
 
-# ### To see only some results ####
-# for _ in range(5):
-#     print(next(success))
+### To see only some results ####
+for _ in range(5):
+    print(next(success))
 
 
 

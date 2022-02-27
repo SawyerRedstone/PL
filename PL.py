@@ -10,6 +10,11 @@ def create(term, memo = {}): # ??? Later make math use Create on addened.
         memo[str(term)] = Const(term)
     elif isinstance(term, Math):
         memo[str(term)] = term
+        for item in term.memo:
+            if item in memo:
+                term.memo[item] = memo[item]
+            else:
+                term.memo[item] = create(item, memo)
     elif isinstance(term, list):
         # If the list is empty, it is a Const; otherwise it is a ListPL.
         memo[str(term)] = ListPL([create(item, memo) for item in term]) if term else Const(term)
@@ -127,75 +132,99 @@ class Const(Term):  # A constant, aka an atom.
 
 # # To use math, write the operation surrounded with |.
 # # For example, '3 + 4' would be written as '3 |plus| 4'.
+# class Math(Term):
+#     def __init__(self, firstAddend, infix, memo = {}):
+#         self.name = "Math"
+#         self.value = "Undefined"
+#         self.mathOrder = [firstAddend, infix]
+#         self.addend = firstAddend
+#         self.memo = memo
+#         # The memo holds addend names. Later the value becomes the term with that name.
+#         self.memo[firstAddend] = "Undefined"    
+#         super().__init__(name = "Math", value = "Undefined")
+#     def __or__(self, other):
+#         self.mathOrder.append(other)
+#         if isinstance(other, str) or isinstance(other, int):
+#             self.memo[other] = "Undefined"
+#         return self
+#     def doMath(self):
+#         result = self.memo[self.addend].value
+#         for index, item in enumerate(self.mathOrder):
+#             if isinstance(item, Infix):
+#                 # Turn the new value into its Term equivalent.
+#                 newAddend = self.memo[self.mathOrder[index+1]]
+#                 result = item.function(result, newAddend.value)
+#         self.value = result
+#     def __eq__(self, other):
+#         self.doMath()
+#         return super().__eq__(other)
+
+
 # class Infix:
 #     def __init__(self, function):
 #         self.function = function
 #     def __ror__(self, other):
-#         # other = create(other)
-#         return Infix(lambda x, self=self, other=other: self.function(other, x))
-#     def __or__(self, other):
-#         # other = create(other)
-#         # return Math(self.function, self, other)
-#         return Math(self.function, other)
+#         return Math(other, self)
+
+# plus = Infix(lambda x, y: x + y)
+# times = Infix(lambda x, y: x * y)
 
 
-
-# class Math(Term):
-#     def __init__(self, function, left, right):      # check if left and right are mixed up. ???
-#         self.function = function
-#         # self.addend = create(addend)
-#         self.left = left
-#         self.right = right
-#         super().__init__(name = "Math", value = "Undefined")
-#     def doMath(self):
-#         try:
-#             self.left.function(self.right)
-#         except:
-#             # doMath()
-#             pass
-#         # return self.function(self.addend.value)
-#     def __eq__(self, other):
-#         self.value = self.doMath()
-#         return super().__eq__(other)
-
-
-
-# To use math, write the operation surrounded with |.
+# To use math, write the operation surrounded with |. 
 # For example, '3 + 4' would be written as '3 |plus| 4'.
-class Infix:
-    def __init__(self, function):
-        self.function = function
-    def __ror__(self, other):
-        # return Math((lambda x, self=self, other=other: self.function(other, x)), other)
-        # return Math(self.function, other)
-        return Infix(lambda x, self=self, other=other: self.function(other.value, x.value))
-    def __or__(self, other):
-        # other = create(other)
-        # return Math(self.function, self, other)
-        return Math(self.function, other)
-        # return self.function(other)
-
-
-# def addMe(x, y):
-#     Math(x, y, function)
-
+# (Idea from: https://code.activestate.com/recipes/384122/)
 class Math(Term):
-    def __init__(self, function, addend):
+    def __init__(self, function, memo = {}):
+        self.name = "Math"
+        self.value = "Undefined"
+        self.mathOrder = []
+        self.addend = ""
         self.function = function
-        # self.addend = create(addend)
-        self.addend = addend
+        # The memo holds addend names. Later the value becomes the term with that name.
+        self.memo = memo
         super().__init__(name = "Math", value = "Undefined")
+    def __ror__(self, other):
+        self.memo[other] = "Undefined"    
+        self.mathOrder = [other, self.function]
+        return self
+    def __or__(self, other):
+        if isinstance(other, str) or isinstance(other, int):
+        # if isinstance(other, int):
+            self.mathOrder.append(other)
+            self.memo[other] = "Undefined"
+        # Otherwise it must be math, so append its function.
+        else:
+            self.mathOrder.append(other.function)
+        return self
     def doMath(self):
-        if isinstance(self.addend, Math):
-            self.addend.value = self.addend.doMath()
-        self.value = self.function(self.addend.value)
-        return self.value
+        result = self.mathOrder[0]
+        for index, item in enumerate(self.mathOrder):
+            if callable(item):
+                # Turn the new value into its Term equivalent.
+                try:
+                    newAddend = self.memo[self.mathOrder[index+1]].value
+                except:
+                    newAddend = self.mathOrder[index+1].doMath()
+                result = item(result, newAddend)
+        self.value = result
+        return result
+    # def doMath(self):
+    #     result = self.mathOrder[0]
+    #     for index, item in enumerate(self.mathOrder):
+    #         if isinstance(item, Math):
+    #             # Turn the new value into its Term equivalent.
+    #             newAddend = self.memo[self.mathOrder[index+1]]
+    #             result = item.function(result, newAddend.value)
+    #     self.value = result
     def __eq__(self, other):
         self.doMath()
         return super().__eq__(other)
 
-# plus = Infix(lambda x, y: x.value + y.value)
-plus = Infix(lambda x, y: x + y)
+
+plus = Math(lambda x, y: x + y)
+times = Math(lambda x, y: x * y)
+# print((2 |times| 6 |plus| 3 |plus| 4).doMath())     # Testing ???
+
 
 
 
