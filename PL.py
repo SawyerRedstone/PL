@@ -130,58 +130,18 @@ class Const(Term):  # A constant, aka an atom.
         return str(self.value)
 
 
-# # To use math, write the operation surrounded with |.
-# # For example, '3 + 4' would be written as '3 |plus| 4'.
-# class Math(Term):
-#     def __init__(self, firstAddend, infix, memo = {}):
-#         self.name = "Math"
-#         self.value = "Undefined"
-#         self.mathOrder = [firstAddend, infix]
-#         self.addend = firstAddend
-#         self.memo = memo
-#         # The memo holds addend names. Later the value becomes the term with that name.
-#         self.memo[firstAddend] = "Undefined"    
-#         super().__init__(name = "Math", value = "Undefined")
-#     def __or__(self, other):
-#         self.mathOrder.append(other)
-#         if isinstance(other, str) or isinstance(other, int):
-#             self.memo[other] = "Undefined"
-#         return self
-#     def doMath(self):
-#         result = self.memo[self.addend].value
-#         for index, item in enumerate(self.mathOrder):
-#             if isinstance(item, Infix):
-#                 # Turn the new value into its Term equivalent.
-#                 newAddend = self.memo[self.mathOrder[index+1]]
-#                 result = item.function(result, newAddend.value)
-#         self.value = result
-#     def __eq__(self, other):
-#         self.doMath()
-#         return super().__eq__(other)
-
-
-# class Infix:
-#     def __init__(self, function):
-#         self.function = function
-#     def __ror__(self, other):
-#         return Math(other, self)
-
-# plus = Infix(lambda x, y: x + y)
-# times = Infix(lambda x, y: x * y)
-
-
 # To use math, write the operation surrounded with |. 
 # For example, '3 + 4' would be written as '3 |plus| 4'.
 # (Idea from: https://code.activestate.com/recipes/384122/)
 class Math(Term):
-    def __init__(self, function, memo = {}):
+    def __init__(self, function):
         self.name = "Math"
         self.value = "Undefined"
         self.mathOrder = []
         self.addend = ""
         self.function = function
         # The memo holds addend names. Later the value becomes the term with that name.
-        self.memo = memo
+        self.memo = {}
         super().__init__(name = "Math", value = "Undefined")
     def __ror__(self, other):
         self.memo[other] = "Undefined"    
@@ -208,21 +168,15 @@ class Math(Term):
                 result = item(result, newAddend)
         self.value = result
         return result
-    # def doMath(self):
-    #     result = self.mathOrder[0]
-    #     for index, item in enumerate(self.mathOrder):
-    #         if isinstance(item, Math):
-    #             # Turn the new value into its Term equivalent.
-    #             newAddend = self.memo[self.mathOrder[index+1]]
-    #             result = item.function(result, newAddend.value)
-    #     self.value = result
     def __eq__(self, other):
         self.doMath()
         return super().__eq__(other)
     def __str__(self):
         return str(self.mathOrder)
+    def __repr__(self):
+        return str(self)
 
-
+# Keep in mind, all math with plus will be the same term, since Plus is a Math.
 plus = Math(lambda x, y: x + y)
 times = Math(lambda x, y: x * y)
 # print((2 |times| 6 |plus| 3 |plus| 4).doMath())     # Testing ???
