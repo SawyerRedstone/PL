@@ -197,7 +197,7 @@ class Math(Term):
             self.mathOrder.append(other.function)
         return self
     def doMath(self):
-        result = self.mathOrder[0]
+        result = self.memo[self.mathOrder[0]].value
         for index, item in enumerate(self.mathOrder):
             if callable(item):
                 # Turn the new value into its Term equivalent.
@@ -219,6 +219,8 @@ class Math(Term):
     def __eq__(self, other):
         self.doMath()
         return super().__eq__(other)
+    def __str__(self):
+        return str(self.mathOrder)
 
 
 plus = Math(lambda x, y: x + y)
