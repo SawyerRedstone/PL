@@ -116,6 +116,11 @@ class Term():
             altArg.value = self.value
         changePath(altArg, altArg.value)  # Set all unified terms to new value.   
         return True
+    def doMath(self):
+        if isinstance(self.value, int) or isinstance(self.value, float):
+            return self.value
+        else:
+            raise
     
         
 class Var(Term):
@@ -148,24 +153,37 @@ class Math(Term):
         self.mathOrder = [other, self.function]
         return self
     def __or__(self, other):
+        self.memo[other] = "Undefined"
         if isinstance(other, str) or isinstance(other, int):
-        # if isinstance(other, int):
             self.mathOrder.append(other)
-            self.memo[other] = "Undefined"
         # Otherwise it must be math, so append its function.
         else:
-            self.mathOrder.append(other.function)
+            self.memo.update(other.memo)
+            # [3, +] isn't enough to be a full math equation.
+            if len(other.mathOrder) < 3:    
+                self.mathOrder.extend([other, other.function])
+            # Otherwise, this math is already evaluable.
+            else:
+                self.mathOrder.append(other)
+
+
         return self
     def doMath(self):
-        result = self.memo[self.mathOrder[0]].value
+        # result = 0
+        # result = self.memo[self.mathOrder[0]].value
+        result = self.memo[self.mathOrder[0]].doMath()
+
         for index, item in enumerate(self.mathOrder):
             if callable(item):
                 # Turn the new value into its Term equivalent.
-                try:
-                    newAddend = self.memo[self.mathOrder[index+1]].value
-                except:
-                    newAddend = self.mathOrder[index+1].doMath()
+                # try:
+                #     newAddend = self.memo[self.mathOrder[index+1]].value
+                # except:
+                #     newAddend = self.mathOrder[index+1].doMath()
+                newAddend = self.memo[self.mathOrder[index+1]].doMath()
                 result = item(result, newAddend)
+            # if isinstance(item, Math):
+            #     item = 
         self.value = result
         return result
     def __eq__(self, other):
@@ -175,8 +193,10 @@ class Math(Term):
         return str(self.mathOrder)
     def __repr__(self):
         return str(self)
+    def __hash__(self):
+        return hash(tuple(self.mathOrder))
 
-# Keep in mind, all math with plus will be the same term, since Plus is a Math.
+# Keep in mind, all plus share a memo, since Plus is a Math term, so using it more updates the term.
 plus = Math(lambda x, y: x + y)
 times = Math(lambda x, y: x * y)
 # print((2 |times| 6 |plus| 3 |plus| 4).doMath())     # Testing ???

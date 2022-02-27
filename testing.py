@@ -172,8 +172,8 @@ merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> ["H1 >= H2", merge(["H1", "|
 ### Testing Zone ###
 
 
-# success = -equals("X", 7 |plus| (4 |times| 5))
-success = -equals("X", 2 |plus| 4 |times| 5)
+success = -equals("X", 2 |plus| (4 |times| 5))
+# success = -equals("X", 2 |plus| 4 |times| 5)
 # success = -equals(4, 2 |plus| "X" |plus| 5)     # is/equals pred can't have vars on right side.
 
 
