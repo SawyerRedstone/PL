@@ -158,46 +158,18 @@ class Math(Term):
         newMath.mathList = [other, self.function]
         return newMath
     def __or__(self, other):
-        if isinstance(other, str) or isinstance(other, int):
-            self.mathList.append(other)
-        # Otherwise it must be math, so append its function.
-        else:
-            # if other is times or other is div:
-            #     print("Hello!")
-            
-            # [3, +] isn't enough to be a full math equation.
-            if len(other.mathList) < 3:
-                self.mathList.extend([other, other.function])
-            # Otherwise, this math is already evaluable.
-            else:
-                self.mathList.append(other)
+        # # Check if other is built-in. (Add other built-in here! ???)
+        if other is plus:
+            other = other.function
+        if self.mathList[-1] is times:
+            op = self.mathList.pop()
+            addend = self.mathList.pop()
+            newMath = addend | op | other
+            self.mathList.append(newMath)
+        #     newMath = other | self.mathList.pop()
+        #     other = 
+        self.mathList.append(other)
         return self
-    # def __or__(self, other):
-        # if isinstance(other, str) or isinstance(other, int):
-        #     self.mathList.append(other)
-        # # Otherwise it must be math, so append its function.
-        # else:
-        #     # [3, +] isn't enough to be a full math equation.
-        #     if len(other.mathList) < 3:
-        #         if other is times or other is div:
-        #             left = self.mathList.pop()
-        #             # newOther = left | other
-        #             newOther = Math(other.function)
-        #             newOther.mathList = [left].extend(newOther.mathList)
-        #             # # other.mathList.append(left)
-        #             self.mathList.extend([newOther, newOther.function])
-                    
-        #             # self.mathList.append(left | other)
-        #             # other.mathList.append(left)
-        #             # self.mathList.append(other)
-        #             # other.mathList = [left].extend(other.mathList)
-
-        #         else:
-        #             self.mathList.extend([other, other.function])
-        #     # Otherwise, this math is already evaluable.
-        #     else:
-        #         self.mathList.append(other)
-        # return self
     def doMath(self):
         result = self.mathList[0].doMath()
         for index, item in enumerate(self.mathList):
@@ -212,7 +184,7 @@ class Math(Term):
     def __str__(self):
         return self.name + ": " + str(self.mathList)
     def __repr__(self):
-        return self.name + ": " + str(self)
+        return str(self)
     def __hash__(self):
         return hash(tuple(self.mathList))
 
