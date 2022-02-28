@@ -9,12 +9,19 @@ def create(term, memo = {}): # ??? Later make math use Create on addened.
     if isinstance(term, int) or isinstance(term, float):   # Numbers are constants.
         memo[str(term)] = Const(term)
     elif isinstance(term, Math):
+        # memo[str(term)] = term
+        # for item in term.memo:
+        #     if str(item) in memo:
+        #         term.memo[item] = memo[str(item)]
+        #     else:
+        #         term.memo[item] = create(item, memo)
         memo[str(term)] = term
-        for item in term.memo:
-            if item in memo:
-                term.memo[item] = memo[item]
-            else:
-                term.memo[item] = create(item, memo)
+        for index, item in enumerate(term.mathList):
+            if str(item) in memo:
+                term.mathList[index] = memo[str(item)]
+            elif not callable(item):
+                term.mathList[index] = create(item, memo)
+
     elif isinstance(term, list):
         # If the list is empty, it is a Const; otherwise it is a ListPL.
         memo[str(term)] = ListPL([create(item, memo) for item in term]) if term else Const(term)
@@ -139,67 +146,95 @@ class Const(Term):  # A constant, aka an atom.
 # For example, '3 + 4' would be written as '3 |plus| 4'.
 # (Idea from: https://code.activestate.com/recipes/384122/)
 class Math(Term):
-    def __init__(self, function):
-        self.name = "Math"
+    def __init__(self, name, function):
+        self.name = name
         self.value = "Undefined"
-        self.mathOrder = []
-        self.addend = ""
+        self.mathList = []
         self.function = function
-        # The memo holds addend names. Later the value becomes the term with that name.
-        self.memo = {}
-        super().__init__(name = "Math", value = "Undefined")
+        super().__init__(name = self.name, value = "Undefined")
     def __ror__(self, other):
-        self.memo[other] = "Undefined"    
-        self.mathOrder = [other, self.function]
-        return self
+        # Make a new Math object so built-in objects won't change.
+        newMath = Math("newbie", self.function)
+        newMath.mathList = [other, self.function]
+        return newMath
     def __or__(self, other):
-        self.memo[other] = "Undefined"
         if isinstance(other, str) or isinstance(other, int):
-            self.mathOrder.append(other)
+            self.mathList.append(other)
         # Otherwise it must be math, so append its function.
         else:
-            self.memo.update(other.memo)
+            # if other is times or other is div:
+            #     print("Hello!")
+            
             # [3, +] isn't enough to be a full math equation.
-            if len(other.mathOrder) < 3:    
-                self.mathOrder.extend([other, other.function])
+            if len(other.mathList) < 3:
+                self.mathList.extend([other, other.function])
             # Otherwise, this math is already evaluable.
             else:
-                self.mathOrder.append(other)
-
-
+                self.mathList.append(other)
         return self
-    def doMath(self):
-        # result = 0
-        # result = self.memo[self.mathOrder[0]].value
-        result = self.memo[self.mathOrder[0]].doMath()
+    # def __or__(self, other):
+        # if isinstance(other, str) or isinstance(other, int):
+        #     self.mathList.append(other)
+        # # Otherwise it must be math, so append its function.
+        # else:
+        #     # [3, +] isn't enough to be a full math equation.
+        #     if len(other.mathList) < 3:
+        #         if other is times or other is div:
+        #             left = self.mathList.pop()
+        #             # newOther = left | other
+        #             newOther = Math(other.function)
+        #             newOther.mathList = [left].extend(newOther.mathList)
+        #             # # other.mathList.append(left)
+        #             self.mathList.extend([newOther, newOther.function])
+                    
+        #             # self.mathList.append(left | other)
+        #             # other.mathList.append(left)
+        #             # self.mathList.append(other)
+        #             # other.mathList = [left].extend(other.mathList)
 
-        for index, item in enumerate(self.mathOrder):
+        #         else:
+        #             self.mathList.extend([other, other.function])
+        #     # Otherwise, this math is already evaluable.
+        #     else:
+        #         self.mathList.append(other)
+        # return self
+    def doMath(self):
+        result = self.mathList[0].doMath()
+        for index, item in enumerate(self.mathList):
             if callable(item):
-                # Turn the new value into its Term equivalent.
-                # try:
-                #     newAddend = self.memo[self.mathOrder[index+1]].value
-                # except:
-                #     newAddend = self.mathOrder[index+1].doMath()
-                newAddend = self.memo[self.mathOrder[index+1]].doMath()
-                result = item(result, newAddend)
-            # if isinstance(item, Math):
-            #     item = 
+                addend = self.mathList[index+1].doMath()
+                result = item(result, addend)
         self.value = result
         return result
     def __eq__(self, other):
         self.doMath()
         return super().__eq__(other)
     def __str__(self):
-        return str(self.mathOrder)
+        return self.name + ": " + str(self.mathList)
     def __repr__(self):
-        return str(self)
+        return self.name + ": " + str(self)
     def __hash__(self):
-        return hash(tuple(self.mathOrder))
+        return hash(tuple(self.mathList))
 
-# Keep in mind, all plus share a memo, since Plus is a Math term, so using it more updates the term.
-plus = Math(lambda x, y: x + y)
-times = Math(lambda x, y: x * y)
-# print((2 |times| 6 |plus| 3 |plus| 4).doMath())     # Testing ???
+
+plus = Math("plus", lambda x, y: x + y)
+times = Math("times", lambda x, y: x * y)
+div = Math("div", lambda x, y: x / y)
+mod = Math("mod", lambda x, y: x % y)
+
+
+
+# # ADD INFIX CLASS!
+# class Infix:
+#     def __new__(self, funct):
+#         return Math(funct)
+
+
+# # Keep in mind, all plus share a memo, since Plus is a Math term, so using it more updates the term.
+# plus = Infix(lambda x, y: x + y)
+# times = Infix(lambda x, y: x * y)
+# div = Infix(lambda x, y: x / y)
+# mod = Infix(lambda x, y: x % y)
 
 
 

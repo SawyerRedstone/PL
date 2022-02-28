@@ -21,7 +21,8 @@ times = Infix(lambda x,y: x*y)
 # times = Infix(operator.mul)
 
 
-print(2 |plus| (4 |times| 5))
+# print(2 |plus| (4 |times| 5))
+# print(2 |times| 4 |plus| 5)
 
 # __or__ returns result of Math, so maybe should return Math instead.
 # plus is type Infix. Infixes are basically functions???
