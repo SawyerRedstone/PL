@@ -166,17 +166,21 @@ merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> ["H1 >= H2", merge(["H1", "|
 # success = -setEqual("X", [])
 # success = -increment_all(["12", "99", "4", "-7"], "X")
 # success = -basicList(["X", "Y", "Z"])
+# success = -equals("X", 2 |plus| (4 |times| 5))
+# success = -equals("X", 2 |plus| 4 |times| 5)
+# success = -equals("X", 2 |times| 4 |plus| 5)
+# success = -equals("X", 2 |times| 4 |times| 5 |plus| 2)
+# success = -equals("X", 4 |minus| 3)
+# success = -equals(4, 2 |plus| "X" |plus| 5)     # is/equals pred can't have vars on right side.
+success = -append([1, 2, 3], ["a", "b"], "X")
 
 
 
 ### Testing Zone ###
 
 
-# success = -equals("X", 2 |plus| (4 |times| 5))
-# success = -equals("X", 2 |plus| 4 |times| 5)
-# success = -equals("X", 2 |times| 4 |plus| 5)
 
-# success = -equals(4, 2 |plus| "X" |plus| 5)     # is/equals pred can't have vars on right side.
+
 
 
 

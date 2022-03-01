@@ -9,12 +9,6 @@ def create(term, memo = {}): # ??? Later make math use Create on addened.
     if isinstance(term, int) or isinstance(term, float):   # Numbers are constants.
         memo[str(term)] = Const(term)
     elif isinstance(term, Math):
-        # memo[str(term)] = term
-        # for item in term.memo:
-        #     if str(item) in memo:
-        #         term.memo[item] = memo[str(item)]
-        #     else:
-        #         term.memo[item] = create(item, memo)
         memo[str(term)] = term
         for index, item in enumerate(term.mathList):
             if str(item) in memo:
@@ -56,14 +50,13 @@ class Goal():
             self.pred.alternatives[len(self.args)].append(Alt(self.args, others))
         else:
             self.pred.alternatives[len(self.args)] = [Alt(self.args, others)]
-    # '-' for getting info OUT (Queries).
+    # '+' for putting info IN (facts). 
     def __pos__(self):
         self >> []      # Treat a fact as a rule with no goals.
-    # '+' for putting info IN (facts). 
+    # '-' for getting info OUT (Queries).
     def __neg__(self):
         memo = {}
         self.args = [create(arg, memo) for arg in self.args]
-        # self.args = stringsToTerms(self.args)
         for success in tryGoal(self):
             yield success
 
@@ -158,16 +151,14 @@ class Math(Term):
         newMath.mathList = [other, self.function]
         return newMath
     def __or__(self, other):
-        # # Check if other is built-in. (Add other built-in here! ???)
-        if other is plus:
+        # Check if 'other' is built-in. (Add other built-in here! ???)
+        if other is plus or other is minus:
             other = other.function
-        if self.mathList[-1] is times:
+        if self.mathList[-1] is times or self.mathList[-1] is div:
             op = self.mathList.pop()
             addend = self.mathList.pop()
             newMath = addend | op | other
             self.mathList.append(newMath)
-        #     newMath = other | self.mathList.pop()
-        #     other = 
         self.mathList.append(other)
         return self
     def doMath(self):
@@ -190,26 +181,10 @@ class Math(Term):
 
 
 plus = Math("plus", lambda x, y: x + y)
+minus = Math("plus", lambda x, y: x - y)
 times = Math("times", lambda x, y: x * y)
 div = Math("div", lambda x, y: x / y)
-mod = Math("mod", lambda x, y: x % y)
-
-
-
-# # ADD INFIX CLASS!
-# class Infix:
-#     def __new__(self, funct):
-#         return Math(funct)
-
-
-# # Keep in mind, all plus share a memo, since Plus is a Math term, so using it more updates the term.
-# plus = Infix(lambda x, y: x + y)
-# times = Infix(lambda x, y: x * y)
-# div = Infix(lambda x, y: x / y)
-# mod = Infix(lambda x, y: x % y)
-
-
-
+# mod = Math("mod", lambda x, y: x % y)
 
 
 # This flattens a list with "|"
@@ -348,24 +323,30 @@ def findVars(args):
 equals = Predicate("equals")
 +equals("Q", "Q")
 
-# fail/0. This works differently from other goals, as users do not need to type Goal(fail)
+# fail/0.
 fail = Predicate("failPredicate")
 
 write = Predicate("write")
 
 member = Predicate("member")
-
 +member("X", ["X", "|", "_"])
 member("X", ["_", "|", "T"]) >> [member("X", "T")]
 
-# once/1
+append = Predicate("append")
++append([], "Y", "Y")
+append(["X", "|", "L1"], "L2", ["X", "|", "L3"]) >> [append("L1", "L2", "L3")]
+
+# cut (!) predicate.
+cut = Predicate("cut")
+
+# # once/1
 
 setEqual = Predicate("setEqual")    #???
 
-# # Use this for all comparisons, such as >, =, 
-# compare = Predicate("compare")
+# # # Use this for all comparisons, such as >, =, 
+# # compare = Predicate("compare")
 
-evaluate = Predicate("evaluate")
+# evaluate = Predicate("evaluate")
 
 
 
