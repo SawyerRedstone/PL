@@ -1,5 +1,6 @@
 # This file is used for internal testing.
 
+from urllib.request import ProxyDigestAuthHandler
 from PL import *
 # from Experimenting import *
 
@@ -27,6 +28,9 @@ count = Predicate("count")
 always_true = Predicate("always_true")
 basicList = Predicate("basicList")
 merge = Predicate("merge")
+ismember = Predicate("ismember")
+ismember2 = Predicate("ismember2")
+
 
 # #### facts/rules ####
 
@@ -94,7 +98,7 @@ parent("A", "B") >> [child("B", "A")]
 father("A", "B") >> [male("A"), parent("A", "B")]
 mother("A", "B") >> [female("A"), parent("A", "B")]
 
-sibling("A", "B") >> [parent("X", "A"), parent("X", "B"), "A \= B"]
+sibling("A", "B") >> [parent("X", "A"), parent("X", "B"), notEqual("A", "B")]
 
 uncle("A", "B") >> [parent("X", "B"), sibling("A", "X"), male("A")]
 aunt("A", "B") >> [parent("X", "B"), sibling("A", "X"), female("A")]
@@ -105,8 +109,8 @@ ancestor("A", "B") >> [parent("A", "X"), ancestor("X", "B")]
 first_cousin("A", "B") >> [parent("X", "A"), sibling("Y", "X"), parent("Y", "B")]
 
 +collatz("N", "N")
-collatz("N0", "N") >> [equals("0", "N0 % 2"), equals("N1", "N0 / 2"), collatz("N1", "N")]
-collatz("N0", "N") >> [equals("1", "N0 % 2"), equals("N1", "3 * N0 + 1"), collatz("N1", "N")]
+collatz("N0", "N") >> [is_(0, "N0" |mod| 2), is_("N1", "N0" |div| 2), collatz("N1", "N")]
+collatz("N0", "N") >> [is_(1, "N0" |mod| 2), is_("N1", 3 |times| "N0" |plus| 1), collatz("N1", "N")]
 
 inboth("A", "B", "X") >> [member("X", "A"), member("X", "B")]
 
@@ -117,19 +121,27 @@ is_digesting("A", "B") >> [just_ate("A", "B")]
 is_digesting("A", "B") >> [just_ate("A", "C"), is_digesting("C", "B")]
 
 +count("A", "A")
-count("A", "C") >> [equals("B", "A" |plus| 1), count("B", "C")]
+count("A", "C") >> [is_("B", "A" |plus| 1), count("B", "C")]
 
 +always_true()
 
 increment_all([], "X") >> [setEqual("X", [])]
-increment_all(["H", "|", "T"], "X") >> [equals("Y", "H + 1"), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
+increment_all(["H", "|", "T"], "X") >> [is_("Y", "H + 1"), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
 
 +basicList(["a", "b", "c"])
 
 +merge("A", [], "A")
 +merge([], "B", "B")
-merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> ["H1 < H2", merge("T1", ["H2", "|", "T2"], "Z"), setEqual("X", ["H1", "|", "Z"])]
-merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> ["H1 >= H2", merge(["H1", "|", "T1"], "T2", "Z"), setEqual("X", ["H2", "|", "Z"])]
+merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [lt_("H1", "H2"), merge("T1", ["H2", "|", "T2"], "Z"), setEqual("X", ["H1", "|", "Z"])]
+merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [gte_("H1", "H2"), merge(["H1", "|", "T1"], "T2", "Z"), setEqual("X", ["H2", "|", "Z"])]
+
++ismember("H", ["H", "|", "_"]) 
+ismember("H", ["_", "|", "T"]) >> [ismember("H", "T")]
+
+ismember2("H", ["H", "|", "_"]) >> [cut()]
+ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
+
+
 
 # ##########################################
 
@@ -147,17 +159,24 @@ merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> ["H1 >= H2", merge(["H1", "|
 # success = -mother("rosa", "X")
 # success = -mother("john", "X")
 # success = -mother("X", "john")
+# success = -sibling("john", "X")
+# success = -sibling("X", "ben")
+# success = -sibling("ferdinand", "alice")
+# success = -aunt("X", "john")
+# success = -uncle("X", "john")
+# success = -uncle("william", "X")
 # success = -ancestor("X", "bob")
 # success = -ancestor("ben", "X")
-# success = -collatz("10", "X")
+# success = -first_cousin("david", "X")
+# success = -first_cousin("jiri", "X")
 # success = -member("X", ["bob", "apple", "shirt", "pip"])
 # success = -inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")
 # success = -inboth(["1", "2", "3", "4"], ["2", "5", "6", "1"], "X")
 # success = -write("hi")
-# success = -equals("X", "2 + 4")
-# success = -equals("6", "2 + 4")
-# success = -equals("6", "2 + 8")
-# success = -equals("X", "2 + hi")    # Maybe print error instead???
+# success = -is_("X", "2 + 4")
+# success = -is_("6", "2 + 4")
+# success = -is_("6", "2 + 8")
+# success = -is_("X", "2 + hi")    # Maybe print error instead???
 # success = -fail()
 # success = -is_digesting("tiger", "grass")
 # success = -is_digesting("X", "Y")
@@ -166,19 +185,23 @@ merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> ["H1 >= H2", merge(["H1", "|
 # success = -setEqual("X", [])
 # success = -increment_all(["12", "99", "4", "-7"], "X")
 # success = -basicList(["X", "Y", "Z"])
-# success = -equals("X", 2 |plus| (4 |times| 5))
-# success = -equals("X", 2 |plus| 4 |times| 5)
-# success = -equals("X", 2 |times| 4 |plus| 5)
-# success = -equals("X", 2 |times| 4 |times| 5 |plus| 2)
-# success = -equals("X", 4 |minus| 3)
-# success = -equals(4, 2 |plus| "X" |plus| 5)     # is/equals pred can't have vars on right side.
-success = -append([1, 2, 3], ["a", "b"], "X")
+# success = -is_("X", 2 |plus| (4 |times| 5))
+# success = -is_("X", 2 |plus| 4 |times| 5)
+# success = -is_("X", 2 |times| 4 |plus| 5)
+# success = -is_("X", 2 |times| 4 |times| 5 |plus| 2)
+# success = -is_("X", 4 |minus| 3)
+# success = -is_(4, 2 |plus| "X" |plus| 5)     # is_ pred can't have vars on right side.
+# success = -append([1, 2, 3], ["a", "b"], "X")
+# success = -ismember(1, [1, 2, 3, 1])
+# success = -ismember2("X", [1, 2, 3, 1])
+# success = -merge([1, 4, 5, 10, 11, 13], [3, 4, 1000], "X")
+
 
 
 
 ### Testing Zone ###
 
-
+success = -collatz(10, "X")
 
 
 
@@ -191,10 +214,8 @@ success = -append([1, 2, 3], ["a", "b"], "X")
 
 #### Test queries below FAIL ####  ???
 
-# success = -sibling("john", "X")
 # success = -first_cousin("david", "X")
 # success = -first_cousin("jiri", "X")
-# success = -merge(["1", "4", "5", "10", "11", "13"], ["3", "4", "1000"], "X")
 # child(X, emma), male(X).
 # success = -(child("X", "emma") & male("X"))   <- ugly, but maybe this???
 # child(alice, rosa), female(alice).
@@ -209,9 +230,9 @@ success = -append([1, 2, 3], ["a", "b"], "X")
 
 
 
-### To see all results #####
-for s in success:   # Can also be '-success' to reduce typing '-' elsewhere.
-    print(s)
+# ### To see all results #####
+# for s in success:   # Can also be '-success' to reduce typing '-' elsewhere.
+#     print(s)
 
 # #### Alternatives for specific cases ####
 # for s in -male("X"):
@@ -220,9 +241,9 @@ for s in success:   # Can also be '-success' to reduce typing '-' elsewhere.
 # print(next(success))
 # print(next(success))
 
-# ### To see only some results ####
-# for _ in range(5):
-#     print(next(success))
+### To see only some results ####
+for _ in range(5):
+    print(next(success))
 
 
 

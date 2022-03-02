@@ -1,21 +1,19 @@
 # The PL Module offers Prolog functionality for Python programmers.
 # Created by Sawyer Redstone.
 
+wasCut = False
 
 # Take a list, string, or int, and convert it to type Term.
-def create(term, memo = {}): # ??? Later make math use Create on addened.
+def create(term, memo = {}):
     if str(term) in memo:
         return memo[str(term)]
     if isinstance(term, int) or isinstance(term, float):   # Numbers are constants.
         memo[str(term)] = Const(term)
     elif isinstance(term, Math):
-        memo[str(term)] = term
-        for index, item in enumerate(term.mathList):
-            if str(item) in memo:
-                term.mathList[index] = memo[str(item)]
-            elif not callable(item):
-                term.mathList[index] = create(item, memo)
-
+        # Make new math term so each alt has unchanged starting math.
+        newMath = Math("newMath", term.function)
+        newMath.mathList = [create(item, memo) if not callable(item) else item for item in term.mathList]
+        memo[str(term)] = newMath
     elif isinstance(term, list):
         # If the list is empty, it is a Const; otherwise it is a ListPL.
         memo[str(term)] = ListPL([create(item, memo) for item in term]) if term else Const(term)
@@ -55,10 +53,14 @@ class Goal():
         self >> []      # Treat a fact as a rule with no goals.
     # '-' for getting info OUT (Queries).
     def __neg__(self):
+        global wasCut
         memo = {}
         self.args = [create(arg, memo) for arg in self.args]
         for success in tryGoal(self):
             yield success
+            if wasCut:
+                wasCut = False
+                break
 
 
 # Alts are individual alternatives that were added to a predicate.
@@ -66,6 +68,7 @@ class Alt():
     def __init__(self, args, goals): 
         self.args = args  
         self.goals = goals
+        # self.wasCut = False
     def __str__(self):
         return "altArgs: " + str(self.args) + "\naltGoals: " + str(self.goals) + "\n"
     def __repr__(self):
@@ -154,7 +157,7 @@ class Math(Term):
         # Check if 'other' is built-in. (Add other built-in here! ???)
         if other is plus or other is minus:
             other = other.function
-        if self.mathList[-1] is times or self.mathList[-1] is div:
+        if self.mathList[-1] is times or self.mathList[-1] is div or self.mathList[-1] is mod:
             op = self.mathList.pop()
             addend = self.mathList.pop()
             newMath = addend | op | other
@@ -172,19 +175,24 @@ class Math(Term):
     def __eq__(self, other):
         self.doMath()
         return super().__eq__(other)
+        # self.value = self.doMath()
+        # result = super().__eq__(other)
+        # self.value = "Undefined"
+        # return result
     def __str__(self):
         return self.name + ": " + str(self.mathList)
     def __repr__(self):
         return str(self)
     def __hash__(self):
         return hash(tuple(self.mathList))
-
+    # def clear(self):    # Maybe use this to clear changed values.
+    #     pass
 
 plus = Math("plus", lambda x, y: x + y)
 minus = Math("plus", lambda x, y: x - y)
 times = Math("times", lambda x, y: x * y)
 div = Math("div", lambda x, y: x / y)
-# mod = Math("mod", lambda x, y: x % y)
+mod = Math("mod", lambda x, y: x % y)
 
 
 # This flattens a list with "|"
@@ -244,14 +252,27 @@ def tryGoal(goal):
                     yield findVars(goal.args) or True
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
             for arg in goal.args:
+                # if isinstance(arg, Var) or isinstance(arg, Math):
                 if isinstance(arg, Var):
                     changePath(arg, "Undefined")
+                # elif isinstance(arg, list):   # probably should add this.
     # If no predicate exists with this number of arguments, it may be a built-in predicate.
     elif goal.pred == write and len(goal.args) == 1:
             print(goal.args[0].value)
             yield True
+    elif goal.pred == lt_:
+        yield goal.args[0].value < goal.args[1].value
+    elif goal.pred == gte_:
+        yield goal.args[0].value >= goal.args[1].value
+    elif goal.pred == cut:
+        global wasCut
+        wasCut = True
+        yield True
     elif goal.pred == setEqual:     # ???
         if tryUnify([goal.args[0]], [goal.args[1]]):
+            yield findVars(goal.args) or True
+    elif goal.pred == notEqual:
+        if goal.args[0].value != goal.args[1].value:
             yield findVars(goal.args) or True
     # After trying all alts, reset any Vars that were turned into Consts.
     goal.args = originalArgs
@@ -276,6 +297,7 @@ def tryAlt(query, alt):
 
 
 def tryGoals(goalsToTry):
+    # global wasCut
     goals = [tryGoal(goal) for goal in goalsToTry]  # A list of [tryGoal(goal1), tryGoal(goal2), etc]
     currGoal = 0                                    # This is the index for the goal we are currently trying.
     failed = False
@@ -293,6 +315,9 @@ def tryGoals(goalsToTry):
         if not failed:
             yield True          # If we got here, then all the goals succeeded.
             currGoal -= 1       # Go back a goal to try for another solution.
+        # if wasCut:
+        #     wasCut = False
+        #     break
 
 
 def changePath(arg, newValue):
@@ -320,8 +345,8 @@ def findVars(args):
 # #### Built-in Features ####
 
 # The Prolog is/2 predicate, with a different name because "is" already exists in Python.
-equals = Predicate("equals")
-+equals("Q", "Q")
+is_ = Predicate("is_")
++is_("Q", "Q")
 
 # fail/0.
 fail = Predicate("failPredicate")
@@ -341,12 +366,30 @@ cut = Predicate("cut")
 
 # # once/1
 
-setEqual = Predicate("setEqual")    #???
+setEqual = Predicate("setEqual")
+notEqual = Predicate("notEqual")
 
 # # # Use this for all comparisons, such as >, =, 
 # # compare = Predicate("compare")
 
 # evaluate = Predicate("evaluate")
+
+# (\+)/1 predicate.
+not_ = Predicate("isNot")
+
+not_("A") >> ["A", cut(), fail()]
++not_("_")
+
+# </2 predicate.
+lt_ = Predicate("less than")
+lte_ = Predicate("less than or equal")
+gt_ = Predicate("greater than")
+gte_ = Predicate("greater than or equal")
+
+
+# between = Predicate("between")    # ???
+
+
 
 
 
