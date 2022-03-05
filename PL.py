@@ -18,8 +18,7 @@ def create(term, memo = {}):
         # If the list is empty, it is a Const; otherwise it is a ListPL.
         memo[str(term)] = ListPL([create(item, memo) for item in term]) if term else Const(term)
     elif isinstance(term, Goal):
-        memo[str(term)] = term  #???
-        ###########
+        memo[str(term)] = Goal(term.pred, [create(item, memo) for item in term.args])
     elif term[0].isupper() or term[0] == "_":    # Does _ work???
         memo[str(term)] = Var(term)
     # Otherwise, it is a Const.
@@ -43,7 +42,7 @@ class Goal():           # Maybe make this a Const subclass???
     def __init__(self, pred = [], args = []):
         self.pred = pred            # The predicate that is being queried.
         self.args = list(args)      # Create a list of the goal's arguments.
-        self.value = str(self)      # This allows goals to unify with others.
+        # self.value = str(self)      # This allows goals to unify with others.
     def __str__(self):
         return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
     # Add rules as: head >> [goal1, goal2]
@@ -279,6 +278,9 @@ def tryGoal(goal):
     elif goal.pred == notEqual:
         if goal.args[0].value != goal.args[1].value:
             yield findVars(goal.args) or True
+    elif goal.pred == not_: #???
+        # print(tryGoal(goal.args[0]))
+        yield not next(tryGoal(goal.args[0]))
     # After trying all alts, reset any Vars that were turned into Consts.
     goal.args = originalArgs
     yield False               # If all the alts failed, then the goal failed.
@@ -290,7 +292,7 @@ def tryAlt(query, alt):
     # This makes sure that no terms are duplicates.
     memo = {}       
     altArgs = [create(arg, memo) for arg in alt.args]
-    altGoals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) if isinstance(goal, Goal) else goal for goal in alt.goals]
+    altGoals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) for goal in alt.goals]
     goalsToTry = altGoals          # A list of goals that must be satisfied for this alt to succeed.
     if not tryUnify(query.args, altArgs):    # If the alt can't be unified, then it fails.
         yield False
@@ -379,8 +381,8 @@ notEqual = Predicate("notEqual")
 
 # evaluate = Predicate("evaluate")
 
-# # (\+)/1 predicate.
-# not_ = Predicate("isNot")
+# (\+)/1 predicate.
+not_ = Predicate("not_")
 # not_("A") >> ["A", cut(), fail()]
 # +not_("_")
 

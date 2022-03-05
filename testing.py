@@ -139,8 +139,8 @@ ismember("H", ["_", "|", "T"]) >> [ismember("H", "T")]
 ismember2("H", ["H", "|", "_"]) >> [cut()]
 ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 
-# +all_diff([])
-# all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]
++all_diff([])
+all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]    # Problem is member args are never created. ???
 
 
 # ##########################################
@@ -199,6 +199,8 @@ ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 # success = -between(1, 5, "K")
 # success = -lt_(1, 1 |plus| 2)
 # success = -lt_(1 |plus| 2, 1)
+# success = -all_diff(["a", "b", "c"])
+success = -all_diff(["a", "b", "c", "b"])
 
 
 
@@ -216,8 +218,6 @@ ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 # success = -query(child("X", "emma"), male("X"))
 # child(alice, rosa), female(alice).
 # success = -not_(fail())
-# success = -all_diff(["a", "b", "c"])
-# success = -all_diff(["a", "b", "c", "b"])
 
 
 
