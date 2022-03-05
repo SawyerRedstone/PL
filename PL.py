@@ -17,6 +17,9 @@ def create(term, memo = {}):
     elif isinstance(term, list):
         # If the list is empty, it is a Const; otherwise it is a ListPL.
         memo[str(term)] = ListPL([create(item, memo) for item in term]) if term else Const(term)
+    elif isinstance(term, Goal):
+        memo[str(term)] = term  #???
+        ###########
     elif term[0].isupper() or term[0] == "_":    # Does _ work???
         memo[str(term)] = Var(term)
     # Otherwise, it is a Const.
@@ -35,32 +38,33 @@ class Predicate():
 
 
 
-# Goals must be completed in order to satisfy a query.
-class Goal():
-    def __init__(self, pred = [], args = []):
-        self.pred = pred           # The predicate that is being queried.
-        self.args = list(args)     # Create a list of the goal's arguments.
-    def __str__(self):
-        return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
-    # Add rules as: head >> [goal1, goal2]
-    def __rshift__(self, others):
-        if len(self.args) in self.pred.alternatives:
-            self.pred.alternatives[len(self.args)].append(Alt(self.args, others))
-        else:
-            self.pred.alternatives[len(self.args)] = [Alt(self.args, others)]
-    # '+' for putting info IN (facts). 
-    def __pos__(self):
-        self >> []      # Treat a fact as a rule with no goals.
-    # '-' for getting info OUT (Queries).
-    def __neg__(self):
-        global wasCut
-        memo = {}
-        self.args = [create(arg, memo) for arg in self.args]
-        for success in tryGoal(self):
-            yield success
-            if wasCut:
-                wasCut = False
-                break
+# # Goals must be completed in order to satisfy a query.
+# class Goal():           # Maybe make this a Const subclass???
+#     def __init__(self, pred = [], args = []):
+#         self.pred = pred            # The predicate that is being queried.
+#         self.args = list(args)      # Create a list of the goal's arguments.
+#         self.value = str(self)      # This allows goals to unify with others.
+#     def __str__(self):
+#         return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
+#     # Add rules as: head >> [goal1, goal2]
+#     def __rshift__(self, others):
+#         if len(self.args) in self.pred.alternatives:
+#             self.pred.alternatives[len(self.args)].append(Alt(self.args, others))
+#         else:
+#             self.pred.alternatives[len(self.args)] = [Alt(self.args, others)]
+#     # '+' for putting info IN (facts). 
+#     def __pos__(self):
+#         self >> []      # Treat a fact as a rule with no goals.
+#     # '-' for getting info OUT (Queries).
+#     def __neg__(self):
+#         global wasCut
+#         memo = {}
+#         self.args = [create(arg, memo) for arg in self.args]
+#         for success in tryGoal(self):
+#             yield success
+#             if wasCut:
+#                 wasCut = False
+#                 break
 
 
 # Alts are individual alternatives that were added to a predicate.
@@ -123,7 +127,7 @@ class Term():
         if isinstance(self.value, int) or isinstance(self.value, float):
             return self.value
         else:
-            raise
+            raise "Something here isn't a number..."    # Fix this later. ???
     
         
 class Var(Term):
@@ -136,6 +140,39 @@ class Const(Term):  # A constant, aka an atom.
         super().__init__(name = "Const", value = value)
     def __repr__(self):
         return str(self.value)
+
+
+
+# Goals must be completed in order to satisfy a query.
+class Goal(Const):           # Maybe make this a Const subclass???
+    def __init__(self, pred = [], args = []):
+        self.pred = pred            # The predicate that is being queried.
+        self.args = list(args)      # Create a list of the goal's arguments.
+        super().__init__(value = str(self))
+        # super().__init__(value = self)
+
+        # self.value = str(self)      # This allows goals to unify with others.
+    def __str__(self):
+        return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
+    # Add rules as: head >> [goal1, goal2]
+    def __rshift__(self, others):
+        if len(self.args) in self.pred.alternatives:
+            self.pred.alternatives[len(self.args)].append(Alt(self.args, others))
+        else:
+            self.pred.alternatives[len(self.args)] = [Alt(self.args, others)]
+    # '+' for putting info IN (facts). 
+    def __pos__(self):
+        self >> []      # Treat a fact as a rule with no goals.
+    # '-' for getting info OUT (Queries).
+    def __neg__(self):
+        global wasCut
+        memo = {}
+        self.args = [create(arg, memo) for arg in self.args]
+        for success in tryGoal(self):
+            yield success
+            if wasCut:
+                wasCut = False
+                break
 
 
 # To use math, write the operation surrounded with |. 
@@ -174,11 +211,8 @@ class Math(Term):
         return result
     def __eq__(self, other):
         self.doMath()
+        # other.doMath()    # ???
         return super().__eq__(other)
-        # self.value = self.doMath()
-        # result = super().__eq__(other)
-        # self.value = "Undefined"
-        # return result
     def __str__(self):
         return self.name + ": " + str(self.mathList)
     def __repr__(self):
@@ -261,9 +295,13 @@ def tryGoal(goal):
             print(goal.args[0].value)
             yield True
     elif goal.pred == lt_:
-        yield goal.args[0].value < goal.args[1].value
-    elif goal.pred == gte_:
-        yield goal.args[0].value >= goal.args[1].value
+        yield goal.args[0].doMath() < goal.args[1].doMath()
+    elif goal.pred == le_:
+        yield goal.args[0].doMath() <= goal.args[1].doMath()
+    elif goal.pred == gt_:
+        yield goal.args[0].doMath() > goal.args[1].doMath()
+    elif goal.pred == ge_:
+        yield goal.args[0].doMath() >= goal.args[1].doMath()
     elif goal.pred == cut:
         global wasCut
         wasCut = True
@@ -285,7 +323,7 @@ def tryAlt(query, alt):
     # This makes sure that no terms are duplicates.
     memo = {}       
     altArgs = [create(arg, memo) for arg in alt.args]
-    altGoals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) for goal in alt.goals if goal]
+    altGoals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) if isinstance(goal, Goal) else goal for goal in alt.goals]
     goalsToTry = altGoals          # A list of goals that must be satisfied for this alt to succeed.
     if not tryUnify(query.args, altArgs):    # If the alt can't be unified, then it fails.
         yield False
@@ -298,12 +336,17 @@ def tryAlt(query, alt):
 
 def tryGoals(goalsToTry):
     # global wasCut
-    goals = [tryGoal(goal) for goal in goalsToTry]  # A list of [tryGoal(goal1), tryGoal(goal2), etc]
+    goals = [tryGoal(goal) if isinstance(goal, Goal) else create(goal) for goal in goalsToTry]  # A list of [tryGoal(goal1), tryGoal(goal2), etc]
+    # goals = [tryGoal(goal.value) if isinstance(goal, Goal) else create(goal) for goal in goalsToTry]  # A list of [tryGoal(goal1), tryGoal(goal2), etc]
+
     currGoal = 0                                    # This is the index for the goal we are currently trying.
     failed = False
     while not failed:
         while 0 <= currGoal < len(goals):           # The goals succeed it currGoal reaches the end.
-            currGoalArgs = next(goals[currGoal])    # Try the goal at the current index.
+            try:
+                currGoalArgs = next(goals[currGoal])   # Try the goal at the current index.
+            except:
+                 currGoalArgs = goals[currGoal]
             if currGoalArgs:                        # This goal succeeded and args have been instantiated.
                 currGoal += 1
             else:
@@ -382,12 +425,14 @@ not_("A") >> ["A", cut(), fail()]
 
 # </2 predicate.
 lt_ = Predicate("less than")
-lte_ = Predicate("less than or equal")
+le_ = Predicate("less than or equal")
 gt_ = Predicate("greater than")
-gte_ = Predicate("greater than or equal")
+ge_ = Predicate("greater than or equal")
 
 
-# between = Predicate("between")    # ???
+between = Predicate("between")
+between("N", "M", "K") >> [le_("N", "M"), setEqual("K", "N")]
+between("N", "M", "K") >> [lt_("N", "M"), is_("N1", "N" |plus| 1), between("N1", "M", "K")]
 
 
 

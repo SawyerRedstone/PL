@@ -30,6 +30,8 @@ basicList = Predicate("basicList")
 merge = Predicate("merge")
 ismember = Predicate("ismember")
 ismember2 = Predicate("ismember2")
+all_diff = Predicate("all_diff")
+round = Predicate("round")
 
 
 # #### facts/rules ####
@@ -126,14 +128,14 @@ count("A", "C") >> [is_("B", "A" |plus| 1), count("B", "C")]
 +always_true()
 
 increment_all([], "X") >> [setEqual("X", [])]
-increment_all(["H", "|", "T"], "X") >> [is_("Y", "H + 1"), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
+increment_all(["H", "|", "T"], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
 
 +basicList(["a", "b", "c"])
 
 +merge("A", [], "A")
 +merge([], "B", "B")
 merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [lt_("H1", "H2"), merge("T1", ["H2", "|", "T2"], "Z"), setEqual("X", ["H1", "|", "Z"])]
-merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [gte_("H1", "H2"), merge(["H1", "|", "T1"], "T2", "Z"), setEqual("X", ["H2", "|", "Z"])]
+merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [ge_("H1", "H2"), merge(["H1", "|", "T1"], "T2", "Z"), setEqual("X", ["H2", "|", "Z"])]
 
 +ismember("H", ["H", "|", "_"]) 
 ismember("H", ["_", "|", "T"]) >> [ismember("H", "T")]
@@ -141,7 +143,10 @@ ismember("H", ["_", "|", "T"]) >> [ismember("H", "T")]
 ismember2("H", ["H", "|", "_"]) >> [cut()]
 ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 
++all_diff([])
+all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]
 
++round("sphere")
 
 # ##########################################
 
@@ -171,19 +176,19 @@ ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 # success = -first_cousin("jiri", "X")
 # success = -member("X", ["bob", "apple", "shirt", "pip"])
 # success = -inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")
-# success = -inboth(["1", "2", "3", "4"], ["2", "5", "6", "1"], "X")
+# success = -inboth([1, 2, 3, 4], [2, 5, 6, 1], "X")
 # success = -write("hi")
-# success = -is_("X", "2 + 4")
-# success = -is_("6", "2 + 4")
-# success = -is_("6", "2 + 8")
-# success = -is_("X", "2 + hi")    # Maybe print error instead???
+# success = -is_("X", 2 |plus| 4)
+# success = -is_(6, 2 |plus| 4)
+# success = -is_(6, 2 |plus| 8)
+# success = -is_("X", 2 |plus| "hi")    # Change error later. ???
 # success = -fail()
 # success = -is_digesting("tiger", "grass")
 # success = -is_digesting("X", "Y")
 # success = -count(0, "X")
 # success = -always_true()
 # success = -setEqual("X", [])
-# success = -increment_all(["12", "99", "4", "-7"], "X")
+# success = -increment_all([12, 99, 4, -7], "X")
 # success = -basicList(["X", "Y", "Z"])
 # success = -is_("X", 2 |plus| (4 |times| 5))
 # success = -is_("X", 2 |plus| 4 |times| 5)
@@ -195,29 +200,30 @@ ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 # success = -ismember(1, [1, 2, 3, 1])
 # success = -ismember2("X", [1, 2, 3, 1])
 # success = -merge([1, 4, 5, 10, 11, 13], [3, 4, 1000], "X")
+# success = -collatz(10, "X")
+# success = -between(1, 5, "K")
+# success = -lt_(1, 1 |plus| 2)
+# success = -lt_(1 |plus| 2, 1)
+# success = -not_(fail())
+# success = -not_(round("earth"))
 
 
 
 
 ### Testing Zone ###
 
-success = -collatz(10, "X")
 
+# success = -all_diff(["a", "b", "c"])
 
-
-
-
-
-
-
+success = -all_diff(["a", "b", "c", "b"])
 
 
 #### Test queries below FAIL ####  ???
 
-# success = -first_cousin("david", "X")
-# success = -first_cousin("jiri", "X")
+
 # child(X, emma), male(X).
 # success = -(child("X", "emma") & male("X"))   <- ugly, but maybe this???
+# success = -query(child("X", "emma"), male("X"))
 # child(alice, rosa), female(alice).
 
 
@@ -230,9 +236,9 @@ success = -collatz(10, "X")
 
 
 
-# ### To see all results #####
-# for s in success:   # Can also be '-success' to reduce typing '-' elsewhere.
-#     print(s)
+### To see all results #####
+for s in success:   # Can also be '-success' to reduce typing '-' elsewhere.
+    print(s)
 
 # #### Alternatives for specific cases ####
 # for s in -male("X"):
@@ -241,9 +247,9 @@ success = -collatz(10, "X")
 # print(next(success))
 # print(next(success))
 
-### To see only some results ####
-for _ in range(5):
-    print(next(success))
+# ### To see only some results ####
+# for _ in range(5):
+#     print(next(success))
 
 
 
