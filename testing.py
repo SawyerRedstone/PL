@@ -1,6 +1,4 @@
 # This file is used for internal testing.
-
-from urllib.request import ProxyDigestAuthHandler
 from PL import *
 # from Experimenting import *
 
@@ -31,8 +29,6 @@ merge = Predicate("merge")
 ismember = Predicate("ismember")
 ismember2 = Predicate("ismember2")
 all_diff = Predicate("all_diff")
-round = Predicate("round")
-
 
 # #### facts/rules ####
 
@@ -143,10 +139,9 @@ ismember("H", ["_", "|", "T"]) >> [ismember("H", "T")]
 ismember2("H", ["H", "|", "_"]) >> [cut()]
 ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 
-+all_diff([])
-all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]
+# +all_diff([])
+# all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]
 
-+round("sphere")
 
 # ##########################################
 
@@ -204,8 +199,6 @@ all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]
 # success = -between(1, 5, "K")
 # success = -lt_(1, 1 |plus| 2)
 # success = -lt_(1 |plus| 2, 1)
-# success = -not_(fail())
-# success = -not_(round("earth"))
 
 
 
@@ -213,9 +206,6 @@ all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]
 ### Testing Zone ###
 
 
-# success = -all_diff(["a", "b", "c"])
-
-success = -all_diff(["a", "b", "c", "b"])
 
 
 #### Test queries below FAIL ####  ???
@@ -225,6 +215,9 @@ success = -all_diff(["a", "b", "c", "b"])
 # success = -(child("X", "emma") & male("X"))   <- ugly, but maybe this???
 # success = -query(child("X", "emma"), male("X"))
 # child(alice, rosa), female(alice).
+# success = -not_(fail())
+# success = -all_diff(["a", "b", "c"])
+# success = -all_diff(["a", "b", "c", "b"])
 
 
 
