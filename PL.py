@@ -1,6 +1,9 @@
 # The PL Module offers Prolog functionality for Python programmers.
 # Created by Sawyer Redstone.
 
+from sre_constants import SUCCESS
+
+
 wasCut = False
 
 # Take a list, string, or int, and convert it to type Term.
@@ -48,14 +51,21 @@ class Query():
         memo = {}       
         goals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) for goal in goals]
         success = tryGoals(goals)
-        for s in success:
+        for s in success:       # For infinite results, this never ends.    #???
             args = {}
             for argName in memo:
                 if isinstance(memo[argName], Var):
                     args[argName] = Var(argName, memo[argName].value)
-            self.successes.append(args)
+            if len(args) > 0:
+                self.successes.append(args)
+            else:
+                self.successes.append(True)
+        if self.successes == []:
+            self.successes.append(False)
     def __iter__(self):
         return iter(self.successes)
+    def get(self, amount):
+        return self.successes[:amount]
 
 
 # Goals must be completed in order to satisfy a query.
@@ -103,7 +113,7 @@ class Alt():
 def tryUnify(queryArgs, altArgs):
     for queryArg, altArg in zip(queryArgs, altArgs):    # Loop through the query and alt arguments.
         # Check if unification is possible before unifying.
-        if queryArg != altArg:                  # Is this a problem if the fail occures in middle of unifying???
+        if queryArg != altArg:
             return False
         queryArg.unifyWith(altArg)
     return True                                 # If it reaches this point, they can be unified.   
@@ -345,6 +355,7 @@ def tryGoals(goalsToTry):
         # if wasCut:
         #     wasCut = False
         #     break
+    # yield False
 
 
 def changePath(arg, newValue):

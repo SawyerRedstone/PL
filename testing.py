@@ -147,69 +147,68 @@ all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]    # Proble
 
 # ### All tests below succeed! ###
 
-# success = -male("X")
-# success = -child("bob", "X")
-# success = -child("X", "Y")
-# success = -child("X", "bob")
-# success = -child("X", "john")
-# success = -child("rosa", "isidore")
-# success = -parent("rosa", "kathryn")
-# success = -parent("rosa", "X")
-# success = -father("john", "X")
-# success = -mother("rosa", "X")
-# success = -mother("john", "X")
-# success = -mother("X", "john")
-# success = -sibling("john", "X")
-# success = -sibling("X", "ben")
-# success = -sibling("ferdinand", "alice")
-# success = -aunt("X", "john")
-# success = -uncle("X", "john")
-# success = -uncle("william", "X")
-# success = -ancestor("X", "bob")
-# success = -ancestor("ben", "X")
-# success = -first_cousin("david", "X")
-# success = -first_cousin("jiri", "X")
-# success = -member("X", ["bob", "apple", "shirt", "pip"])
-# success = -inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")
-# success = -inboth([1, 2, 3, 4], [2, 5, 6, 1], "X")
-# success = -write("hi")
-# success = -is_("X", 2 |plus| 4)
-# success = -is_(6, 2 |plus| 4)
-# success = -is_(6, 2 |plus| 8)
-# success = -is_("X", 2 |plus| "hi")    # Change error later. ???
-# success = -fail()
-# success = -is_digesting("tiger", "grass")
-# success = -is_digesting("X", "Y")
-# success = -count(0, "X")
-# success = -always_true()
-# success = -setEqual("X", [])
-# success = -increment_all([12, 99, 4, -7], "X")
-# success = -basicList(["X", "Y", "Z"])
-# success = -is_("X", 2 |plus| (4 |times| 5))
-# success = -is_("X", 2 |plus| 4 |times| 5)
-# success = -is_("X", 2 |times| 4 |plus| 5)
-# success = -is_("X", 2 |times| 4 |times| 5 |plus| 2)
-# success = -is_("X", 4 |minus| 3)
-# success = -is_(4, 2 |plus| "X" |plus| 5)     # is_ pred can't have vars on right side.
-# success = -append([1, 2, 3], ["a", "b"], "X")
-# success = -ismember(1, [1, 2, 3, 1])
-# success = -ismember2("X", [1, 2, 3, 1])
-# success = -merge([1, 4, 5, 10, 11, 13], [3, 4, 1000], "X")
-# success = -collatz(10, "X")
-# success = -between(1, 5, "K")
-# success = -lt_(1, 1 |plus| 2)
-# success = -lt_(1 |plus| 2, 1)
-# success = -all_diff(["a", "b", "c"])
-# success = -all_diff(["a", "b", "c", "b"])
+# query << [male("X")]
+# query << [child("bob", "X")]
+# query << [child("X", "Y")]
+# query << [child("X", "bob")]
+# query << [child("X", "john")]
+# query << [child("X", "emma"), male("X")]
+# query << [child("alice", "rosa"), female("alice")]
+# query << [child("rosa", "isidore")]
+# query << [parent("rosa", "kathryn")]
+# query << [parent("rosa", "X")]
+# query << [father("john", "X")]
+# query << [mother("rosa", "X")]
+# query << [mother("john", "X")]
+# query << [mother("X", "john")]
+# query << [sibling("john", "X")]
+# query << [sibling("X", "ben")]
+# query << [sibling("ferdinand", "alice")]
+# query << [aunt("X", "john")]
+# query << [uncle("X", "john")]
+# query << [uncle("william", "X")]
+# query << [ancestor("X", "bob")]
+# query << [ancestor("ben", "X")]
+# query << [first_cousin("david", "X")]
+# query << [first_cousin("jiri", "X")]
+query << [collatz(10, "X")]
+# query << [member("X", ["bob", "apple", "shirt", "pip"])]
+# query << [inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")]
+# query << [inboth([1, 2, 3, 4], [2, 5, 6, 1], "X")]
+# query << [write("hi")]
+# query << [is_("X", 2 |plus| 4)]
+# query << [is_(6, 2 |plus| 4)]
+# query << [is_(6, 2 |plus| 8)]
+# query << [is_("X", 2 |plus| "hi")]    # Change error later. ???
+# query << [fail()]
+# query << [is_digesting("tiger", "grass")]
+# query << [is_digesting("X", "Y")]
+# query << [count(0, "X")]
+# query << [always_true()]
+# query << [setEqual("X", [])]
+# query << [increment_all([12, 99, 4, -7], "X")]
+# query << [basicList(["X", "Y", "Z"])]
+# query << [is_("X", 2 |plus| (4 |times| 5))]
+# query << [is_("X", 2 |plus| 4 |times| 5)]
+# query << [is_("X", 2 |times| 4 |plus| 5)]
+# query << [is_("X", 2 |times| 4 |times| 5 |plus| 2)]
+# query << [is_("X", 4 |minus| 3)]
+# query << [is_(4, 2 |plus| "X" |plus| 5)]     # is_ pred can't have vars on right side.
+# query << [append([1, 2, 3], ["a", "b"], "X")]
+# query << [ismember(1, [1, 2, 3, 1])]
+# query << [ismember2("X", [1, 2, 3, 1])]
+# query << [merge([1, 4, 5, 10, 11, 13], [3, 4, 1000], "X")]
+# query << [between(1, 5, "K")]
+# query << [lt_(1, 1 |plus| 2)]
+# query << [lt_(1 |plus| 2, 1)]
+# query << [all_diff(["a", "b", "c"])]
+# query << [all_diff(["a", "b", "c", "b"])]
 
 
 
 
 ### Testing Zone ###
 
-
-query << [male("X")]
-# query << [child("X", "emma"), male("X")]
 
 
 #### Test queries below FAIL ####  ???
@@ -221,35 +220,15 @@ query << [male("X")]
 
 
 
-
-
-
-
-
-
-
-
 # ### To see all results #####
-# for s in success:   # Can also be '-success' to reduce typing '-' elsewhere.
+# for s in query:   # Can also be '-success' to reduce typing '-' elsewhere.
 #     print(s)
-#     # print(s["X"])
+#    # If you want to use the results, you can do something like this:
+#    # X = s["X"]
+#    # print(X)
 
-for s in query:   # Can also be '-success' to reduce typing '-' elsewhere.
-    print(s)
-    # print(s["X"])
-
-
-# #### Alternatives for specific cases ####
-# for s in -male("X"):
-#     print(s)
-
-# print(next(success))
-# print(next(success))
-
-# ### To see only some results ####
-# for _ in range(5):
-#     print(next(success))
-
+### To see only some results ####
+print(query.get(1))
 
 
 
