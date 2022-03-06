@@ -26,6 +26,7 @@ def create(term, memo = {}):
         memo[str(term)] = Const(term)
     return memo[str(term)]
 
+
 class Predicate(): 
     def __init__(self, name): 
         self.name = name            # The name of the predicate
@@ -36,13 +37,32 @@ class Predicate():
         return Goal(self, args)
 
 
+# Use query << [list of goals] for queries.
+class Query():
+    def __init__(self): 
+        self.goals = []
+        self.successes = []
+    def __lshift__(self, goals): 
+        # Memo is a dictionary of all args in the goals.
+        # This makes sure that no terms are duplicates.
+        memo = {}       
+        goals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) for goal in goals]
+        success = tryGoals(goals)
+        for s in success:
+            args = {}
+            for argName in memo:
+                if isinstance(memo[argName], Var):
+                    args[argName] = Var(argName, memo[argName].value)
+            self.successes.append(args)
+    def __iter__(self):
+        return iter(self.successes)
+
 
 # Goals must be completed in order to satisfy a query.
-class Goal():           # Maybe make this a Const subclass???
+class Goal():
     def __init__(self, pred = [], args = []):
         self.pred = pred            # The predicate that is being queried.
         self.args = list(args)      # Create a list of the goal's arguments.
-        # self.value = str(self)      # This allows goals to unify with others.
     def __str__(self):
         return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
     # Add rules as: head >> [goal1, goal2]
@@ -64,6 +84,7 @@ class Goal():           # Maybe make this a Const subclass???
             if wasCut:
                 wasCut = False
                 break
+
 
 
 # Alts are individual alternatives that were added to a predicate.
@@ -110,8 +131,8 @@ class Term():
     def __bool__(self):
         return self.value != "Undefined"    # A term is false it if has no value.
     def __repr__(self):
-        # return str(self.value)
-        return repr(self.name + " = " + str(self.value))  
+        return str(self.value)
+        # return repr(self.name + " = " + str(self.value))  
     def __str__(self):
         return str(self.value)
     def __hash__(self):
@@ -137,8 +158,8 @@ class Var(Term):
 class Const(Term):  # A constant, aka an atom.
     def __init__(self, value):
         super().__init__(name = "Const", value = value)
-    def __repr__(self):
-        return str(self.value)
+    # def __repr__(self):
+    #     return str(self.value)
 
 
 # To use math, write the operation surrounded with |. 
@@ -185,8 +206,7 @@ class Math(Term):
         return str(self)
     def __hash__(self):
         return hash(tuple(self.mathList))
-    # def clear(self):    # Maybe use this to clear changed values.
-    #     pass
+
 
 plus = Math("plus", lambda x, y: x + y)
 minus = Math("plus", lambda x, y: x - y)
@@ -398,6 +418,6 @@ between("N", "M", "K") >> [le_("N", "M"), setEqual("K", "N")]
 between("N", "M", "K") >> [lt_("N", "M"), is_("N1", "N" |plus| 1), between("N1", "M", "K")]
 
 
-
+query = Query()
 
 

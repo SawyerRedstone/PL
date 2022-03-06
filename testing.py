@@ -200,7 +200,7 @@ all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]    # Proble
 # success = -lt_(1, 1 |plus| 2)
 # success = -lt_(1 |plus| 2, 1)
 # success = -all_diff(["a", "b", "c"])
-success = -all_diff(["a", "b", "c", "b"])
+# success = -all_diff(["a", "b", "c", "b"])
 
 
 
@@ -208,14 +208,14 @@ success = -all_diff(["a", "b", "c", "b"])
 ### Testing Zone ###
 
 
+query << [male("X")]
+# query << [child("X", "emma"), male("X")]
 
 
 #### Test queries below FAIL ####  ???
 
 
 # child(X, emma), male(X).
-# success = -(child("X", "emma") & male("X"))   <- ugly, but maybe this???
-# success = -query(child("X", "emma"), male("X"))
 # child(alice, rosa), female(alice).
 # success = -not_(fail())
 
@@ -229,9 +229,15 @@ success = -all_diff(["a", "b", "c", "b"])
 
 
 
-### To see all results #####
-for s in success:   # Can also be '-success' to reduce typing '-' elsewhere.
+# ### To see all results #####
+# for s in success:   # Can also be '-success' to reduce typing '-' elsewhere.
+#     print(s)
+#     # print(s["X"])
+
+for s in query:   # Can also be '-success' to reduce typing '-' elsewhere.
     print(s)
+    # print(s["X"])
+
 
 # #### Alternatives for specific cases ####
 # for s in -male("X"):
