@@ -171,9 +171,9 @@ all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]    # Proble
 # query << [ancestor("ben", "X")]
 # query << [first_cousin("david", "X")]
 # query << [first_cousin("jiri", "X")]
-query << [collatz(10, "X")]
+# query(9) << [collatz(10, "X")]          # To see only some results, use query(number_of_results).
 # query << [member("X", ["bob", "apple", "shirt", "pip"])]
-# query << [inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")]
+query << [inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")]
 # query << [inboth([1, 2, 3, 4], [2, 5, 6, 1], "X")]
 # query << [write("hi")]
 # query << [is_("X", 2 |plus| 4)]
@@ -220,16 +220,15 @@ query << [collatz(10, "X")]
 
 
 
-# ### To see all results #####
-# for s in query:   # Can also be '-success' to reduce typing '-' elsewhere.
-#     print(s)
-#    # If you want to use the results, you can do something like this:
-#    # X = s["X"]
-#    # print(X)
+### To see results ###
+for s in query:   # Can also be '-success' to reduce typing '-' elsewhere.
+    print(s)
+   # If you want to use the results, you can do something like this:
+   # X = s["X"]
+   # print(X)
 
-### To see only some results ####
-print(query.get(1))
-
+# The query can be indexed to find a specific result.
+# print(query[5])
 
 
 

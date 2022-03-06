@@ -1,8 +1,7 @@
 # The PL Module offers Prolog functionality for Python programmers.
 # Created by Sawyer Redstone.
 
-from sre_constants import SUCCESS
-
+import itertools
 
 wasCut = False
 
@@ -14,7 +13,7 @@ def create(term, memo = {}):
         memo[str(term)] = Const(term)
     elif isinstance(term, Math):
         # Make new math term so each alt has unchanged starting math.
-        newMath = Math("newMath", term.function)
+        newMath = Math(term.function)
         newMath.mathList = [create(item, memo) if not callable(item) else item for item in term.mathList]
         memo[str(term)] = newMath
     elif isinstance(term, list):
@@ -39,19 +38,20 @@ class Predicate():
     def __call__(self, *args):
         return Goal(self, args)
 
-
+# Query is an iterator.
 # Use query << [list of goals] for queries.
 class Query():
     def __init__(self): 
         self.goals = []
         self.successes = []
+        self.size = None
     def __lshift__(self, goals): 
         # Memo is a dictionary of all args in the goals.
         # This makes sure that no terms are duplicates.
         memo = {}       
         goals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) for goal in goals]
         success = tryGoals(goals)
-        for s in success:       # For infinite results, this never ends.    #???
+        for s in itertools.islice(success, self.size):       # For infinite results, this never ends.    #???
             args = {}
             for argName in memo:
                 if isinstance(memo[argName], Var):
@@ -62,10 +62,15 @@ class Query():
                 self.successes.append(True)
         if self.successes == []:
             self.successes.append(False)
+        self.size = None
     def __iter__(self):
         return iter(self.successes)
-    def get(self, amount):
-        return self.successes[:amount]
+    # query(3) makes the query only show 3 results.
+    def __call__(self, num):
+        self.size = num
+        return self
+    def __getitem__(self, num):
+        return self.successes[num]
 
 
 # Goals must be completed in order to satisfy a query.
@@ -153,11 +158,6 @@ class Term():
             altArg.value = self.value
         changePath(altArg, altArg.value)  # Set all unified terms to new value.   
         return True
-    def doMath(self):
-        if isinstance(self.value, int) or isinstance(self.value, float):
-            return self.value
-        else:
-            raise "Something here isn't a number..."    # Fix this later. ???
     
         
 class Var(Term):
@@ -168,23 +168,19 @@ class Var(Term):
 class Const(Term):  # A constant, aka an atom.
     def __init__(self, value):
         super().__init__(name = "Const", value = value)
-    # def __repr__(self):
-    #     return str(self.value)
 
 
 # To use math, write the operation surrounded with |. 
 # For example, '3 + 4' would be written as '3 |plus| 4'.
 # (Idea from: https://code.activestate.com/recipes/384122/)
 class Math(Term):
-    def __init__(self, name, function):
-        self.name = name
-        self.value = "Undefined"
+    def __init__(self, function):
         self.mathList = []
         self.function = function
-        super().__init__(name = self.name, value = "Undefined")
+        self.children = []     # The children are the variables that will change if this term has a value.
     def __ror__(self, other):
         # Make a new Math object so built-in objects won't change.
-        newMath = Math("newbie", self.function)
+        newMath = Math(self.function)
         newMath.mathList = [other, self.function]
         return newMath
     def __or__(self, other):
@@ -198,31 +194,28 @@ class Math(Term):
             self.mathList.append(newMath)
         self.mathList.append(other)
         return self
-    def doMath(self):
-        result = self.mathList[0].doMath()
+    # This gives the object the .value attribute.
+    @property
+    def value(self):
+        result = self.mathList[0].value
         for index, item in enumerate(self.mathList):
             if callable(item):
-                addend = self.mathList[index+1].doMath()
+                addend = self.mathList[index+1].value
                 result = item(result, addend)
-        self.value = result
         return result
-    def __eq__(self, other):
-        self.doMath()
-        # other.doMath()    # ???
-        return super().__eq__(other)
     def __str__(self):
-        return self.name + ": " + str(self.mathList)
+        return str(self.mathList)
     def __repr__(self):
         return str(self)
     def __hash__(self):
         return hash(tuple(self.mathList))
 
 
-plus = Math("plus", lambda x, y: x + y)
-minus = Math("plus", lambda x, y: x - y)
-times = Math("times", lambda x, y: x * y)
-div = Math("div", lambda x, y: x / y)
-mod = Math("mod", lambda x, y: x % y)
+plus = Math(lambda x, y: x + y)
+minus = Math(lambda x, y: x - y)
+times = Math(lambda x, y: x * y)
+div = Math(lambda x, y: x / y)
+mod = Math(lambda x, y: x % y)
 
 
 # This flattens a list with "|"
@@ -291,13 +284,13 @@ def tryGoal(goal):
             print(goal.args[0].value)
             yield True
     elif goal.pred == lt_:
-        yield goal.args[0].doMath() < goal.args[1].doMath()
+        yield goal.args[0].value < goal.args[1].value
     elif goal.pred == le_:
-        yield goal.args[0].doMath() <= goal.args[1].doMath()
+        yield goal.args[0].value <= goal.args[1].value
     elif goal.pred == gt_:
-        yield goal.args[0].doMath() > goal.args[1].doMath()
+        yield goal.args[0].value > goal.args[1].value
     elif goal.pred == ge_:
-        yield goal.args[0].doMath() >= goal.args[1].doMath()
+        yield goal.args[0].value >= goal.args[1].value
     elif goal.pred == cut:
         global wasCut
         wasCut = True
@@ -359,11 +352,12 @@ def tryGoals(goalsToTry):
 
 
 def changePath(arg, newValue):
-    if isinstance(arg, Term):
+    # if isinstance(arg, Term):
+    if isinstance(arg, Var):
         arg.value = newValue
-        for child in arg.children:
-            # if child value already is new value, maybe don't need to change child's path? Try later! ???
-            changePath(child, newValue)         # Change each parent to the new value.
+    for child in arg.children:
+        # if child value already is new value, maybe don't need to change child's path? Try later! ???
+        changePath(child, newValue)         # Change each parent to the new value.
 
 
 # Returns a list of all Vars found in a list.
