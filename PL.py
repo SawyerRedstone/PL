@@ -51,10 +51,12 @@ class Query():
         memo = {}       
         goals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) for goal in goals]
         success = tryGoals(goals)
-        for s in itertools.islice(success, self.size):       # For infinite results, this never ends.    #???
+        # loop through the generator self.size times, or until end if size is not specified.
+        for _ in itertools.islice(success, self.size):
             args = {}
             for argName in memo:
                 if isinstance(memo[argName], Var):
+                    # args[argName] = memo[argName].value
                     args[argName] = Var(argName, memo[argName].value)
             if len(args) > 0:
                 self.successes.append(args)
@@ -62,7 +64,8 @@ class Query():
                 self.successes.append(True)
         if self.successes == []:
             self.successes.append(False)
-        self.size = None
+        # Reset the size for future queries, in the case where multiple queries are made at once.
+        self.size = None        
     def __iter__(self):
         return iter(self.successes)
     # query(3) makes the query only show 3 results.
@@ -162,8 +165,11 @@ class Term():
         
 class Var(Term):
     def __init__(self, name, value = "Undefined"):
-        super().__init__(name = name, value = value)    # Initialize the Var. 
-
+        self.name = name
+        self.value = value
+        super().__init__(name = self.name, value = self.value)    # Initialize the Var. 
+    # def __repr__(self):
+    #     return repr(self.name + " = " + str(self.value))
 
 class Const(Term):  # A constant, aka an atom.
     def __init__(self, value):
@@ -275,10 +281,9 @@ def tryGoal(goal):
                     yield findVars(goal.args) or True
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
             for arg in goal.args:
-                # if isinstance(arg, Var) or isinstance(arg, Math):
                 if isinstance(arg, Var):
                     changePath(arg, "Undefined")
-                # elif isinstance(arg, list):   # probably should add this.
+                # elif isinstance(arg, list):   # probably should add this. ???
     # If no predicate exists with this number of arguments, it may be a built-in predicate.
     elif goal.pred == write and len(goal.args) == 1:
             print(goal.args[0].value)
@@ -301,9 +306,10 @@ def tryGoal(goal):
     elif goal.pred == notEqual:
         if goal.args[0].value != goal.args[1].value:
             yield findVars(goal.args) or True
-    elif goal.pred == not_: #???
-        # print(tryGoal(goal.args[0]))
+    elif goal.pred == not_:
         yield not next(tryGoal(goal.args[0]))
+    elif goal.pred == len_:       # ???
+        yield len(goal.args[0].value) == goal.args[1].value
     # After trying all alts, reset any Vars that were turned into Consts.
     goal.args = originalArgs
     yield False               # If all the alts failed, then the goal failed.
@@ -389,9 +395,10 @@ member = Predicate("member")
 +member("X", ["X", "|", "_"])
 member("X", ["_", "|", "T"]) >> [member("X", "T")]
 
-append = Predicate("append")
-+append([], "Y", "Y")
-append(["X", "|", "L1"], "L2", ["X", "|", "L3"]) >> [append("L1", "L2", "L3")]
+append_ = Predicate("append_")
++append_([], "X", "X")
+append_(["H", "|", "T"], "X", ["H", "|", "S"]) >> [append_("T", "X", "S")]
+
 
 # cut (!) predicate.
 cut = Predicate("cut")
@@ -421,6 +428,8 @@ ge_ = Predicate("greater than or equal")
 between = Predicate("between")
 between("N", "M", "K") >> [le_("N", "M"), setEqual("K", "N")]
 between("N", "M", "K") >> [lt_("N", "M"), is_("N1", "N" |plus| 1), between("N1", "M", "K")]
+
+len_ = Predicate("len_")
 
 
 query = Query()
