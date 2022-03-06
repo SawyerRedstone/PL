@@ -1,7 +1,6 @@
 # This file is used for internal testing.
-
-# from PL import *
-from Experimenting import *
+from PL import *
+# from Experimenting import *
 
 
 ################### Testing #####################
@@ -27,143 +26,195 @@ count = Predicate("count")
 always_true = Predicate("always_true")
 basicList = Predicate("basicList")
 merge = Predicate("merge")
+ismember = Predicate("ismember")
+ismember2 = Predicate("ismember2")
+all_diff = Predicate("all_diff")
+splitAt = Predicate("splitAt")
 
 # #### facts/rules ####
 
-+male(C.bob)
-+male(C.john)
-+male(C.ben)
-+male(C.martin)
-+male(C.edmund)
-+male(C.david)
-+male(C.isidore)
-+male(C.william)
-+male(C.ferdinand)
-+male(C.morris)
-+male(C.alphonse)
-+male(C.jiri)
-+female(C.kathryn)
-+female(C.beatrice)
-+female(C.rachel)
-+female(C.lillian)
-+female(C.alice)
-+female(C.rosa)
-+female(C.marjorie)
-+female(C.emma)
-+female(C.nellie)
-+female(C.eva)
-+female(C.bertha)
-+female(C.fergie)
++male("bob")
++male("john")
++male("ben")
++male("martin")
++male("edmund")
++male("david")
++male("isidore")
++male("william")
++male("ferdinand")
++male("morris")
++male("alphonse")
++male("jiri")
++female("kathryn")
++female("beatrice")
++female("rachel")
++female("lillian")
++female("alice")
++female("rosa")
++female("marjorie")
++female("emma")
++female("nellie")
++female("eva")
++female("bertha")
++female("fergie")
 
 # A is the child of B
-+child(C.bob, C.john)
-+child(C.bob, C.kathryn)
-+child(C.beatrice, C.john)
-+child(C.beatrice, C.kathryn)
-+child(C.john, C.ben)
-+child(C.john, C.rachel)
-+child(C.lillian, C.ben)
-+child(C.lillian, C.rachel)
-+child(C.kathryn, C.rosa)
-+child(C.kathryn, C.martin)
-+child(C.alice, C.martin)
-+child(C.alice, C.rosa)
-+child(C.ferdinand, C.martin)
-+child(C.ferdinand, C.fergie)
-+child(C.marjorie, C.edmund)
-+child(C.marjorie, C.lillian)
-+child(C.david, C.lillian)
-+child(C.david, C.edmund)
-+child(C.ben, C.isidore)
-+child(C.ben, C.bertha)
-+child(C.william, C.isidore)
-+child(C.william, C.bertha)
-+child(C.emma, C.isidore)
-+child(C.emma, C.bertha)
-+child(C.morris, C.alphonse)
-+child(C.morris, C.emma)
-+child(C.nellie, C.alphonse)
-+child(C.nellie, C.emma)
-+child(C.eva, C.alphonse)
-+child(C.eva, C.emma)
-+child(C.jiri, C.alphonse)
-+child(C.jiri, C.emma)
++child("bob", "john")
++child("bob", "kathryn")
++child("beatrice", "john")
++child("beatrice", "kathryn")
++child("john", "ben")
++child("john", "rachel")
++child("lillian", "ben")
++child("lillian", "rachel")
++child("kathryn", "rosa")
++child("kathryn", "martin")
++child("alice", "martin")
++child("alice", "rosa")
++child("ferdinand", "martin")
++child("ferdinand", "fergie")
++child("marjorie", "edmund")
++child("marjorie", "lillian")
++child("david", "lillian")
++child("david", "edmund")
++child("ben", "isidore")
++child("ben", "bertha")
++child("william", "isidore")
++child("william", "bertha")
++child("emma", "isidore")
++child("emma", "bertha")
++child("morris", "alphonse")
++child("morris", "emma")
++child("nellie", "alphonse")
++child("nellie", "emma")
++child("eva", "alphonse")
++child("eva", "emma")
++child("jiri", "alphonse")
++child("jiri", "emma")
 
-parent(V.A, V.B) >> [child(V.B, V.A)]
+parent("A", "B") >> [child("B", "A")]
 
-father(V.A, V.B) >> [male(V.A), parent(V.A, V.B)]
-mother(V.A, V.B) >> [female(V.A), parent(V.A, V.B)]
+father("A", "B") >> [male("A"), parent("A", "B")]
+mother("A", "B") >> [female("A"), parent("A", "B")]
 
-# sibling(V.A, V.B) >> [parent(V.X, V.A), parent(V.X, V.B), V.A \= V.B]
+sibling("A", "B") >> [parent("X", "A"), parent("X", "B"), notEqual("A", "B")]
 
-# uncle(V.A, V.B) >> [parent(V.X, V.B), sibling(V.A, V.X), male(V.A)]
-# aunt(V.A, V.B) >> [parent(V.X, V.B), sibling(V.A, V.X), female(V.A)]
+uncle("A", "B") >> [parent("X", "B"), sibling("A", "X"), male("A")]
+aunt("A", "B") >> [parent("X", "B"), sibling("A", "X"), female("A")]
 
-ancestor(V.A, V.B) >> [parent(V.A, V.B)]
-ancestor(V.A, V.B) >> [parent(V.A, V.X), ancestor(V.X, V.B)]
+ancestor("A", "B") >> [parent("A", "B")]
+ancestor("A", "B") >> [parent("A", "X"), ancestor("X", "B")]
 
-# first_cousin(V.A, V.B) >> [parent(V.X, V.A), sibling(V.Y, V.X), parent(V.Y, V.B)]
+first_cousin("A", "B") >> [parent("X", "A"), sibling("Y", "X"), parent("Y", "B")]
 
-# +collatz(V.N, V.N)
-# collatz(V.N0, V.N) >> [equals(0, V.N0 % 2), equals(V.N1, V.N0 / 2), collatz(V.N1, V.N)]
-# collatz(V.N0, V.N) >> [equals(1, V.N0 % 2), equals(V.N1, 3 * V.N0 + 1), collatz(V.N1, V.N)]
++collatz("N", "N")
+collatz("N0", "N") >> [is_(0, "N0" |mod| 2), is_("N1", "N0" |div| 2), collatz("N1", "N")]
+collatz("N0", "N") >> [is_(1, "N0" |mod| 2), is_("N1", 3 |times| "N0" |plus| 1), collatz("N1", "N")]
 
-# inboth(V.A, V.B, V.X) >> [member(V.X, V.A), member(V.X, V.B)]
+inboth("A", "B", "X") >> [member("X", "A"), member("X", "B")]
 
-+just_ate(C.deer, C.grass)
-+just_ate(C.tiger, C.deer)
++just_ate("deer", "grass")
++just_ate("tiger", "deer")
 
-is_digesting(V.A, V.B) >> [just_ate(V.A, V.B)]
-is_digesting(V.A, V.B) >> [just_ate(V.A, V.C), is_digesting(V.C, V.B)]
+is_digesting("A", "B") >> [just_ate("A", "B")]
+is_digesting("A", "B") >> [just_ate("A", "C"), is_digesting("C", "B")]
 
-# +count(V.A, V.A)
-# count(V.A, V.C) >> [equals(V.B, V.A + 1), count(V.B, V.C)]
++count("A", "A")
+count("A", "C") >> [is_("B", "A" |plus| 1), count("B", "C")]
 
 +always_true()
 
-# increment_all([], V.X) >> [setEqual(V.X, [])]
-# increment_all([V.H, "|", V.T], V.X) >> [equals(V.Y, V.H + 1), increment_all(V.T, V.Z), setEqual(V.X, [V.Y, "|", V.Z])]
+increment_all([], "X") >> [setEqual("X", [])]
+increment_all(["H", "|", "T"], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
 
-# +basicList([C.a, C.b, C.c])
++basicList(["a", "b", "c"])
 
-# +merge("A, [], "A)
-# +merge([], "B, "B)
-# merge(["H1, "|, "T1"], ["H2, "|, "T2"], "X) >> ["H1 < H2, merge("T1, ["H2, "|, "T2"], "Z), setEqual("X, ["H1, "|, "Z"])]
-# merge(["H1, "|, "T1"], ["H2, "|, "T2"], "X) >> ["H1 >= H2, merge(["H1, "|, "T1"], "T2, "Z), setEqual("X, ["H2, "|, "Z"])]
++merge("A", [], "A")
++merge([], "B", "B")
+merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [lt_("H1", "H2"), merge("T1", ["H2", "|", "T2"], "Z"), setEqual("X", ["H1", "|", "Z"])]
+merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [ge_("H1", "H2"), merge(["H1", "|", "T1"], "T2", "Z"), setEqual("X", ["H2", "|", "Z"])]
+
++ismember("H", ["H", "|", "_"]) 
+ismember("H", ["_", "|", "T"]) >> [ismember("H", "T")]
+
+ismember2("H", ["H", "|", "_"]) >> [cut()]
+ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
+
++all_diff([])
+all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]    # Problem is member args are never created. ???
+
+splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "SecondPart", "List"), len_("FirstPart", "Pos")]
+# splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "SecondPart", "List")]
+
 
 # ##########################################
 
 # ### All tests below succeed! ###
 
-success = -male(V.X)
-success = -child(C.bob, V.X)
-success = -child(V.X, C.bob)
-success = -child(V.X, C.john)
-success = -child(C.rosa, C.isidore)
-success = -parent(C.rosa, C.kathryn)
-# success = -parent("rosa, "X)
-# success = -father("john, "X)
-# success = -mother("rosa, "X)
-# success = -mother("john, "X)
-# success = -mother("X, "john)
-# success = -ancestor("X, "bob)
-# success = -ancestor("ben, "X)
-# success = -collatz("10, "X)
-# success = -member("X, ["bob, "apple, "shirt, "pip"])
-# success = -inboth(["green, "red, "orange"], ["apple, "orange, "pear"], "orange)
-# success = -inboth(["1, "2, "3, "4"], ["2, "5, "6, "1"], "X)
-# success = -write("hi)
-# success = -equals("X, "2 + 4)
-# success = -equals("6, "2 + 4)
-# success = -equals("6, "2 + 8)
-# success = -equals("X, "2 + hi)    # Maybe print error instead???
-# success = -fail()
-# success = -is_digesting("tiger, "grass)
-# success = -count(0, V.X)
-# success = -always_true()
-# success = -setEqual("X, [])
-# success = -increment_all(["12, "99, "4, "-7"], "X)
-# success = -basicList(["X, "Y, "Z"])
+# query << [male("X")]
+# query << [child("bob", "X")]
+# query << [child("X", "Y")]
+# query << [child("X", "bob")]
+# query << [child("X", "john")]
+# query << [child("X", "emma"), male("X")]
+# query << [child("alice", "rosa"), female("alice")]
+# query << [child("rosa", "isidore")]
+# query << [parent("rosa", "kathryn")]
+# query << [parent("rosa", "X")]
+# query << [father("john", "X")]
+# query << [mother("rosa", "X")]
+# query << [mother("john", "X")]
+# query << [mother("X", "john")]
+# query << [sibling("john", "X")]
+# query << [sibling("X", "ben")]
+# query << [sibling("ferdinand", "alice")]
+# query << [aunt("X", "john")]
+# query << [uncle("X", "john")]
+# query << [uncle("william", "X")]
+# query << [ancestor("X", "bob")]
+# query << [ancestor("ben", "X")]
+# query << [first_cousin("david", "X")]
+# query << [first_cousin("jiri", "X")]
+# query(9) << [collatz(10, "X")]          # To see only some results, use query(number_of_results).
+# query << [member("X", ["bob", "apple", "shirt", "pip"])]
+# query << [inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")]
+# query << [inboth([1, 2, 3, 4], [2, 5, 6, 1], "X")]
+# query << [increment_all([12, 99, 4, -7], "X")]
+# query << [merge([1, 4, 5, 10, 11, 13], [3, 4, 1000], "X")]
+# query << [all_diff(["a", "b", "c"])]
+# query << [all_diff(["a", "b", "c", "b"])]
+# query << [between(1, 3, "X"), between(1, 3, "Y"), between(1, 3, "Z"), all_diff(["X", "Y", "Z"])]
+# query << [not_(member("X", ["a", "b", "c"])), setEqual("X", "f")]
+# query << [setEqual("X", ["q", "y", "z", "w"]), not_(len_("X", 4))]
+# query << [setEqual("X", 3 |plus| 4), not_(setEqual("X", 99))]
+# query << [setEqual("X", "f"), not_(member("X", ["a", "b", "c"]))]
+
+
+# query << [write("hi")]
+# query << [is_("X", 2 |plus| 4)]
+# query << [is_(6, 2 |plus| 4)]
+# query << [is_(6, 2 |plus| 8)]
+# query << [is_("X", 2 |plus| "hi")]    # Change error later. ???
+# query << [fail()]
+# query << [is_digesting("tiger", "grass")]
+# query << [is_digesting("X", "Y")]
+# query << [count(0, "X")]
+# query << [always_true()]
+# query << [setEqual("X", [])]
+# query << [basicList(["X", "Y", "Z"])]
+# query << [is_("X", 2 |plus| (4 |times| 5))]
+# query << [is_("X", 2 |plus| 4 |times| 5)]
+# query << [is_("X", 2 |times| 4 |plus| 5)]
+# query << [is_("X", 2 |times| 4 |times| 5 |plus| 2)]
+# query << [is_("X", 4 |minus| 3)]
+# query << [is_(4, 2 |plus| "X" |plus| 5)]     # is_ pred can't have vars on right side.
+# query << [append([1, 2, 3], ["a", "b"], "X")]
+# query << [ismember(1, [1, 2, 3, 1])]
+# query << [ismember2("X", [1, 2, 3, 1])]
+# query << [between(1, 5, "K")]
+# query << [lt_(1, 1 |plus| 2)]
+# query << [lt_(1 |plus| 2, 1)]
+
 
 
 
@@ -171,44 +222,22 @@ success = -parent(C.rosa, C.kathryn)
 
 
 
-
-
-
-
-
 #### Test queries below FAIL ####  ???
 
-# success = -sibling("john, "X)
-# success = -first_cousin("david, "X)
-# success = -first_cousin("jiri, "X)
-# success = -merge(["1, "4, "5, "10, "11, "13"], ["3, "4, "1000"], "X)
-# child(X, emma), male(X).
-# success = -(child("X, "emma) & male("X))   <- ugly, but maybe this???
-# child(alice, rosa), female(alice).
+query << [append_("X", "Y", [1, 2, 3, 4, 5])]
+# query << [splitAt(3, ["a", "b", "c", "d", "e", "f", "g", "h"], "A", "B")]
 
 
 
-
-
-
-
-
-
-
-
-### To see all results #####
-for s in success:   # Can also be '-success' to reduce typing '-' elsewhere.
+### To see results ###
+for s in query:   # Can also be '-success' to reduce typing '-' elsewhere.
     print(s)
+   # If you want to use the results, you can do something like this:
+   # X = s["X"]
+   # print(X)
 
-# #### Alternatives for specific cases ####
-# for s in -male("X):
-#     print(s)
+# The query can be indexed to find a specific result.
+# print(query[5])
 
-# print(next(success))
-# print(next(success))
-
-# ### To see only some results ####
-# for _ in range(5):
-#     print(next(success))
 
 

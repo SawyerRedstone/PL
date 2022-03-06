@@ -16,6 +16,13 @@ def create(term, memo = {}):
         newMath = Math(term.function)
         newMath.mathList = [create(item, memo) if not callable(item) else item for item in term.mathList]
         memo[str(term)] = newMath
+    elif isinstance(term, Tail):
+        if term.name in memo:
+            term.match = memo[term.name]        # Don't change term, change the copy! ???
+        else:
+            memo[term.name] = Var(term.name)
+            term.match = memo[term.name]
+        memo[str(term)] = Tail(term.name)
     elif isinstance(term, list):
         # If the list is empty, it is a Const; otherwise it is a ListPL.
         memo[str(term)] = ListPL([create(item, memo) for item in term]) if term else Const(term)
@@ -138,9 +145,13 @@ class Term():
         if isinstance(word, list):
             if word == []:
                 return Const(word)
-            elif word[0].value == "|":
-                return word[-1]
+            # elif word[0].value == "|":
+            #     return word[-1]
+            elif isinstance(word[0], Tail):
+                return word[0].match
             return ListPL(word)
+        if isinstance(word, Tail):  # ???
+            return word.match
         # All other values are Consts.
         return Const(word)
     # This checks if they *can* be equal.
@@ -170,6 +181,14 @@ class Var(Term):
         super().__init__(name = self.name, value = self.value)    # Initialize the Var. 
     # def __repr__(self):
     #     return repr(self.name + " = " + str(self.value))
+
+# Tails are a special Var with a value that is always a list.
+class Tail(Var):
+    def __init__(self, name):
+        self.match = None   # This is a Var with the same name.
+        super().__init__(name = name)
+    def __str__(self):
+        return "Tail: " + self.name
 
 class Const(Term):  # A constant, aka an atom.
     def __init__(self, value):
@@ -431,7 +450,7 @@ between("N", "M", "K") >> [lt_("N", "M"), is_("N1", "N" |plus| 1), between("N1",
 
 len_ = Predicate("len_")
 
-
+# Use to make queries.
 query = Query()
 
 

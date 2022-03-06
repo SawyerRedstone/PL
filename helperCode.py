@@ -27,4 +27,5 @@ times = Infix(lambda x,y: x*y)
 # __or__ returns result of Math, so maybe should return Math instead.
 # plus is type Infix. Infixes are basically functions???
 
-
+lst = []
+print(lst[-1])

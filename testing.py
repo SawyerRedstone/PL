@@ -124,8 +124,11 @@ count("A", "C") >> [is_("B", "A" |plus| 1), count("B", "C")]
 
 +always_true()
 
+# increment_all([], "X") >> [setEqual("X", [])]
+# increment_all(["H", "|", "T"], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
+
 increment_all([], "X") >> [setEqual("X", [])]
-increment_all(["H", "|", "T"], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
+increment_all(["H", Tail("T")], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", Tail("Z")])]
 
 +basicList(["a", "b", "c"])
 
@@ -179,7 +182,7 @@ splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "Seco
 # query << [member("X", ["bob", "apple", "shirt", "pip"])]
 # query << [inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")]
 # query << [inboth([1, 2, 3, 4], [2, 5, 6, 1], "X")]
-# query << [increment_all([12, 99, 4, -7], "X")]
+query << [increment_all([12, 99, 4, -7], "X")]
 # query << [merge([1, 4, 5, 10, 11, 13], [3, 4, 1000], "X")]
 # query << [all_diff(["a", "b", "c"])]
 # query << [all_diff(["a", "b", "c", "b"])]
@@ -224,7 +227,7 @@ splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "Seco
 
 #### Test queries below FAIL ####  ???
 
-query << [append_("X", "Y", [1, 2, 3, 4, 5])]
+# query << [append_("X", "Y", [1, 2, 3, 4, 5])]
 # query << [splitAt(3, ["a", "b", "c", "d", "e", "f", "g", "h"], "A", "B")]
 
 
