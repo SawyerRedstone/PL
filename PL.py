@@ -30,8 +30,8 @@ def create(term, memo = {}):
     return memo[str(term)]
 
 
-class Predicate(): 
-    def __init__(self, name): 
+class Predicate():
+    def __init__(self, name):
         self.name = name            # The name of the predicate
         self.alternatives = {}      # Dict filled with all of the predicate alternatives, with arity as key.
     def __repr__(self):
@@ -42,14 +42,14 @@ class Predicate():
 # Query is an iterator.
 # Use query << [list of goals] for queries.
 class Query():
-    def __init__(self): 
+    def __init__(self):
         self.goals = []
         self.successes = []
         self.size = None
-    def __lshift__(self, goals): 
+    def __lshift__(self, goals):
         # Memo is a dictionary of all args in the goals.
         # This makes sure that no terms are duplicates.
-        memo = {}       
+        memo = {}
         goals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) for goal in goals]
         success = tryGoals(goals)
         # loop through the generator self.size times, or until end if size is not specified.
@@ -57,24 +57,16 @@ class Query():
             args = {}
             for argName in memo:
                 if isinstance(memo[argName], Var):
-                    # print(memo[argName].value)
-                    # newLst = [term.value for term in memo[argName].value]
                     args[argName] = str(flatten(memo[argName].value))
-                    # args[argName] = flatten(memo[argName].value)
-                    # args[argName] = Var(argName, memo[argName].value)
             if len(args) > 0:
-                self.successes.append(str(args))
-                # print("TEST: " + str(args))    # For debugging. ??? For some reason, this works???
+                self.successes.append(args)
             else:
                 self.successes.append(True)
         if self.successes == []:
             self.successes.append(False)
         # Reset the size for future queries, in the case where multiple queries are made at once.
-        self.size = None        
+        self.size = None
     def __iter__(self):
-        # for key, item in enumerate(self.successes):
-        #     if isinstance(item, list):
-        #         self.successes[key] = flatten(item)
         return iter(self.successes)
     # query(3) makes the query only show 3 results.
     def __call__(self, num):
@@ -97,7 +89,7 @@ class Goal():
             self.pred.alternatives[len(self.args)].append(Alt(self.args, others))
         else:
             self.pred.alternatives[len(self.args)] = [Alt(self.args, others)]
-    # '+' for putting info IN (facts). 
+    # '+' for putting info IN (facts).
     def __pos__(self):
         self >> []      # Treat a fact as a rule with no goals.
     # '-' for getting info OUT (Queries).
@@ -115,8 +107,8 @@ class Goal():
 
 # Alts are individual alternatives that were added to a predicate.
 class Alt():
-    def __init__(self, args, goals): 
-        self.args = args  
+    def __init__(self, args, goals):
+        self.args = args
         self.goals = goals
         # self.wasCut = False
     def __str__(self):
@@ -132,7 +124,7 @@ def tryUnify(queryArgs, altArgs):
         if queryArg != altArg:
             return False
         queryArg.unifyWith(altArg)
-    return True                                 # If it reaches this point, they can be unified.   
+    return True                                 # If it reaches this point, they can be unified.
 
 
 # Variables and Constants are Terms.
@@ -157,35 +149,24 @@ class Term():
     def __bool__(self):
         return self.value != "Undefined"    # A term is false it if has no value.
     def __repr__(self):
-        # if isinstance(self.value, list):
-        #     return str(flatten(self.value))
         return str(self.value)
-        # return repr(self.name + " = " + str(self.value))  
     def __str__(self):
-        # if isinstance(self.value, list):
-        #     print("Testing: " + self.name + " = " + str(flatten(self.value)))
-        #     return self.name + " = " + str(flatten(self.value))    # ???
         return str(self.value)
     def __hash__(self):
         return hash(repr(self))
-    def unifyWith(self, altArg):                               
+    def unifyWith(self, altArg):
         altArg.children.append(self)                        # The children are the variables we want to find out.
         if self:
             altArg.value = self.value     # Maybe make this equal to a copy of the value, in case the value is a list. ???
-        changePath(altArg, altArg.value)  # Set all unified terms to new value.   
+        changePath(altArg, altArg.value)  # Set all unified terms to new value.
         return True
-    
-        
+
+
 class Var(Term):
     def __init__(self, name, value = "Undefined"):
         self.name = name
         self.value = value
-        super().__init__(name = self.name, value = self.value)    # Initialize the Var. 
-    # def __repr__(self):
-    #     # if isinstance(self.value, list):
-    #     #     # print("Testing: " + self.name + " = " + str(flatten(self.value)))
-    #     #     return repr(self.name + " = " + str(flatten(self.value)))    # ???
-    #     return repr(self.name + " = " + str(self.value))
+        super().__init__(name = self.name, value = self.value)    # Initialize the Var.
 
 
 class Const(Term):  # A constant, aka an atom.
@@ -193,7 +174,7 @@ class Const(Term):  # A constant, aka an atom.
         super().__init__(name = "Const", value = value)
 
 
-# To use math, write the operation surrounded with |. 
+# To use math, write the operation surrounded with |.
 # For example, '3 + 4' would be written as '3 |plus| 4'.
 # (Idea from: https://code.activestate.com/recipes/384122/)
 class Math(Term):
@@ -241,7 +222,7 @@ div = Math(lambda x, y: x / y)
 mod = Math(lambda x, y: x % y)
 
 
-# This flattens a list with "|"
+# This flattens a list with "|" into a list with values, not terms.
 def flatten(oldList):
     lst = oldList[:]
     if len(lst) > 2 and lst[-2].value == "|":
@@ -299,22 +280,8 @@ def tryGoal(goal):
                     yield findVars(goal.args) or True
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
             for arg in goal.args:
-                # print(arg)
                 if isinstance(arg, Var):
-                # if isinstance(arg, Var) or isinstance(arg, ListPL): # ???
                     changePath(arg, "Undefined")
-                # elif isinstance(arg, ListPL):   # ???
-                #     for term in arg.value:
-            
-                #     # print(arg)
-                #     # arg = ListPL(arg.value)
-                #     changePath(arg, "Undefined")
-
-
-                #     for term in arg.value:
-                #         if isinstance(term, Var):
-                #             changePath(term, "Undefined")
-                # elif isinstance(arg, list):   # probably should add this. ???
     # If no predicate exists with this number of arguments, it may be a built-in predicate.
     elif goal.pred == write and len(goal.args) == 1:
             print(goal.args[0].value)
@@ -343,9 +310,6 @@ def tryGoal(goal):
         yield len(goal.args[0].value) == goal.args[1].value
     # After trying all alts, reset any Vars that were turned into Consts.
     goal.args = originalArgs
-    # for arg in goal.args:
-    #     if isinstance(arg, Var):
-    #         changePath(arg, "Undefined")
     yield False               # If all the alts failed, then the goal failed.
 
 
@@ -353,7 +317,7 @@ def tryGoal(goal):
 def tryAlt(query, alt):
     # Memo is a dictionary of all terms in this alt.
     # This makes sure that no terms are duplicates.
-    memo = {}       
+    memo = {}
     altArgs = [create(arg, memo) for arg in alt.args]
     altGoals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) for goal in alt.goals]
     goalsToTry = altGoals          # A list of goals that must be satisfied for this alt to succeed.
@@ -392,16 +356,8 @@ def tryGoals(goalsToTry):
 
 
 def changePath(arg, newValue):
-    # if isinstance(arg, Term):
     if isinstance(arg, Var):
         arg.value = newValue
-    if isinstance(arg, ListPL) and newValue == "Undefined":     # ???
-        for term in arg.lst:
-            changePath(term, "Undefined")
-    # if isinstance(arg, ListPL):
-    #     for term in arg.value:
-    #         changePath(term, "Undefined")
-
     for child in arg.children:
         # if child value already is new value, maybe don't need to change child's path? Try later! ???
         changePath(child, newValue)         # Change each parent to the new value.
@@ -416,26 +372,8 @@ def findVars(args):
         if isinstance(arg, Var) and arg.name[0] != "_":
             if isinstance(arg.value, list):
                 arg = Var(arg.name, arg.value)
-                # arg.value = flatten(arg.value)      # Problem! This should not actually change the value. ??? HERE!
             result.append(arg)
-            # result.append(arg.name + ' = ' + str(flatten(arg.value)))
     return result
-
-
-# # Returns a list of all Vars found in a list.
-# def findVars(args):
-#     result = []
-#     for arg in args:
-#         if isinstance(arg, ListPL):
-#             result.extend(findVars(arg.value))
-#         if isinstance(arg, Var) and arg.name[0] != "_":
-#             newArg = Var(arg.name)
-#             newArg.value = arg.value
-#             if isinstance(arg.value, list):
-#                 newArg.value = flatten(arg.value)
-#             result.append(newArg)
-#     return result
-
 
 
 # #### Built-in Features ####
@@ -466,7 +404,7 @@ cut = Predicate("cut")
 setEqual = Predicate("setEqual")
 notEqual = Predicate("notEqual")
 
-# # # Use this for all comparisons, such as >, =, 
+# # # Use this for all comparisons, such as >, =,
 # # compare = Predicate("compare")
 
 # evaluate = Predicate("evaluate")

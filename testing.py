@@ -210,6 +210,7 @@ splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "Seco
 # query << [is_("X", 4 |minus| 3)]
 # query << [is_(4, 2 |plus| "X" |plus| 5)]     # is_ pred can't have vars on right side.
 # query << [append_([1, 2, 3], ["a", "b"], "X")]
+# query << [append_("A", "B", [1, 2, 3, 4, 5])]
 # query << [ismember(1, [1, 2, 3, 1])]
 # query << [ismember2("X", [1, 2, 3, 1])]
 # query << [between(1, 5, "K")]
@@ -225,21 +226,14 @@ splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "Seco
 
 #### Test queries below FAIL ####  ???
 
-query << [append_("A", "B", [1, 2, 3, 4, 5])]       # B changes but A doesn't. Check type of both. ????
-# success = -append_("A", "B", [1, 2, 3, 4, 5])
-# query << [append_("X",  "Y", [1, 2, 3, 4, 5])]
-
-# query << [splitAt(3, ["a", "b", "c", "d", "e", "f", "g", "h"], "A", "B")]
-
-# for s in success:
-#     print(s)
+query << [splitAt(3, ["a", "b", "c", "d", "e", "f", "g", "h"], "A", "B")]
 
 ### To see results ###
 for s in query:   # Can also be '-success' to reduce typing '-' elsewhere.
     print(s)
-#    # If you want to use the results, you can do something like this:
-#    # X = s["X"]
-#    # print(X)
+    # # If you want to use the results, you can do something like this:
+    # X = s["B"]
+    # print(X)
 
 # The query can be indexed to find a specific result.
 # print(query[5])
