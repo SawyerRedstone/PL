@@ -61,7 +61,7 @@ class Query():
                     args[argName] = Var(argName, memo[argName].value)
             if len(args) > 0:
                 self.successes.append(args)
-                print(args)    # For debugging. ???
+                print(args)    # For debugging. ??? For some reason, this works???
             else:
                 self.successes.append(True)
         if self.successes == []:
@@ -121,16 +121,11 @@ class Alt():
 
 # This function tries to unify the query and alt args, and returns a bool of its success.
 def tryUnify(queryArgs, altArgs):
-    # for i, (queryArg, altArg) in enumerate(zip(queryArgs, altArgs)):    # Loop through the query and alt arguments.
     for queryArg, altArg in zip(queryArgs, altArgs):    # Loop through the query and alt arguments.
-
         # Check if unification is possible before unifying.
         if queryArg != altArg:
             return False
-        # if isinstance(queryArg, ListPL) and altArg.value == 
         queryArg.unifyWith(altArg)
-        # if isinstance(queryArg.value, list):        # ??? HERE
-        #     queryArgs[i] = Term.changeType(queryArg.value)
     return True                                 # If it reaches this point, they can be unified.   
 
 
@@ -159,6 +154,9 @@ class Term():
         return str(self.value)
         # return repr(self.name + " = " + str(self.value))  
     def __str__(self):
+        # if isinstance(self.value, list):
+        #     print("Testing: " + self.name + " = " + str(flatten(self.value)))
+        #     return self.name + " = " + str(flatten(self.value))    # ???
         return str(self.value)
     def __hash__(self):
         return hash(repr(self))
@@ -176,6 +174,9 @@ class Var(Term):
         self.value = value
         super().__init__(name = self.name, value = self.value)    # Initialize the Var. 
     def __repr__(self):
+        # if isinstance(self.value, list):
+        #     # print("Testing: " + self.name + " = " + str(flatten(self.value)))
+        #     return repr(self.name + " = " + str(flatten(self.value)))    # ???
         return repr(self.name + " = " + str(self.value))
 
 
@@ -257,20 +258,10 @@ class ListPL(Term):
             return self.head == other.head and self.tail == other.tail
         return super().__eq__(other)
     def unifyWith(self, altArg):
-        # if altArg.value == "Undefined":
-        #     # altArg.value = [Var("H"), Const("|"), Var("T")]      # Probably need to turn it into a ListPL??? HERE
-        #     altArg = ListPL([Var("H"), Const("|"), Var("T")])      # Probably need to turn it into a ListPL??? HERE
-
         if isinstance(altArg, ListPL):
-            if self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail):   # Later needs to clear path of all this.
-                # for term in self.tail.value:    # why only the tail???
-                #     Term.changeType(term) # ???
-
-                # changePath(altArg, altArg.value)        #???
-                
+            if self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail):   # Later needs to clear path of all this???
                 return True
             return False
-            # return self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail)
         return super().unifyWith(altArg)    # LOOK HERE!! ???
     def __repr__(self):
         return str(self)
@@ -311,8 +302,8 @@ def tryGoal(goal):
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
             for arg in goal.args:
                 # print(arg)
-                # if isinstance(arg, Var):
-                if isinstance(arg, Var) or isinstance(arg, ListPL): # ???
+                if isinstance(arg, Var):
+                # if isinstance(arg, Var) or isinstance(arg, ListPL): # ???
                     changePath(arg, "Undefined")
                 # elif isinstance(arg, ListPL):   # ???
                 #     for term in arg.value:
@@ -429,6 +420,7 @@ def findVars(args):
                 arg = Var(arg.name, arg.value)
                 # arg.value = flatten(arg.value)      # Problem! This should not actually change the value. ??? HERE!
             result.append(arg)
+            # result.append(arg.name + ' = ' + str(flatten(arg.value)))
     return result
 
 
