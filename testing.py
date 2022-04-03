@@ -124,11 +124,11 @@ count("A", "C") >> [is_("B", "A" |plus| 1), count("B", "C")]
 
 +always_true()
 
-# increment_all([], "X") >> [setEqual("X", [])]
-# increment_all(["H", "|", "T"], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
-
 increment_all([], "X") >> [setEqual("X", [])]
-increment_all(["H", Tail("T")], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", Tail("Z")])]
+increment_all(["H", "|", "T"], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
+
+# increment_all([], "X") >> [setEqual("X", [])]
+# increment_all(["H", Tail("T")], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", Tail("Z")])]
 
 +basicList(["a", "b", "c"])
 
@@ -182,7 +182,7 @@ splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "Seco
 # query << [member("X", ["bob", "apple", "shirt", "pip"])]
 # query << [inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")]
 # query << [inboth([1, 2, 3, 4], [2, 5, 6, 1], "X")]
-query << [increment_all([12, 99, 4, -7], "X")]
+# query << [increment_all([12, 99, 4, -7], "X")]
 # query << [merge([1, 4, 5, 10, 11, 13], [3, 4, 1000], "X")]
 # query << [all_diff(["a", "b", "c"])]
 # query << [all_diff(["a", "b", "c", "b"])]
@@ -191,17 +191,15 @@ query << [increment_all([12, 99, 4, -7], "X")]
 # query << [setEqual("X", ["q", "y", "z", "w"]), not_(len_("X", 4))]
 # query << [setEqual("X", 3 |plus| 4), not_(setEqual("X", 99))]
 # query << [setEqual("X", "f"), not_(member("X", ["a", "b", "c"]))]
-
-
 # query << [write("hi")]
 # query << [is_("X", 2 |plus| 4)]
 # query << [is_(6, 2 |plus| 4)]
-# query << [is_(6, 2 |plus| 8)]
+# query << [is_(6, 2 |plus| 8)]           # Results don't show false if previous query was true. Good or bad?
 # query << [is_("X", 2 |plus| "hi")]    # Change error later. ???
 # query << [fail()]
 # query << [is_digesting("tiger", "grass")]
 # query << [is_digesting("X", "Y")]
-# query << [count(0, "X")]
+# query(10) << [count(0, "X")]
 # query << [always_true()]
 # query << [setEqual("X", [])]
 # query << [basicList(["X", "Y", "Z"])]
@@ -211,7 +209,7 @@ query << [increment_all([12, 99, 4, -7], "X")]
 # query << [is_("X", 2 |times| 4 |times| 5 |plus| 2)]
 # query << [is_("X", 4 |minus| 3)]
 # query << [is_(4, 2 |plus| "X" |plus| 5)]     # is_ pred can't have vars on right side.
-# query << [append([1, 2, 3], ["a", "b"], "X")]
+# query << [append_([1, 2, 3], ["a", "b"], "X")]
 # query << [ismember(1, [1, 2, 3, 1])]
 # query << [ismember2("X", [1, 2, 3, 1])]
 # query << [between(1, 5, "K")]
@@ -227,17 +225,21 @@ query << [increment_all([12, 99, 4, -7], "X")]
 
 #### Test queries below FAIL ####  ???
 
-# query << [append_("X", "Y", [1, 2, 3, 4, 5])]
+query << [append_("A", "B", [1, 2, 3, 4, 5])]       # B changes but A doesn't. Check type of both. ????
+# success = -append_("A", "B", [1, 2, 3, 4, 5])
+# query << [append_("X",  "Y", [1, 2, 3, 4, 5])]
+
 # query << [splitAt(3, ["a", "b", "c", "d", "e", "f", "g", "h"], "A", "B")]
 
-
+# for s in success:
+#     print(s)
 
 ### To see results ###
 for s in query:   # Can also be '-success' to reduce typing '-' elsewhere.
     print(s)
-   # If you want to use the results, you can do something like this:
-   # X = s["X"]
-   # print(X)
+#    # If you want to use the results, you can do something like this:
+#    # X = s["X"]
+#    # print(X)
 
 # The query can be indexed to find a specific result.
 # print(query[5])

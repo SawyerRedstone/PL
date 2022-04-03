@@ -16,16 +16,10 @@ def create(term, memo = {}):
         newMath = Math(term.function)
         newMath.mathList = [create(item, memo) if not callable(item) else item for item in term.mathList]
         memo[str(term)] = newMath
-    elif isinstance(term, Tail):
-        memo[str(term)] = Tail(term.name)
-        if term.name in memo:
-            memo[str(term)].match = memo[term.name]
-        else:
-            memo[term.name] = Var(term.name)
-            memo[str(term)].match = memo[term.name]
     elif isinstance(term, list):
         # If the list is empty, it is a Const; otherwise it is a ListPL.
         memo[str(term)] = ListPL([create(item, memo) for item in term]) if term else Const(term)
+        # memo[str(term)].lst = term   # A ListPL's lst is the list with values as strings, not terms --- Delete later if never used! ???
     elif isinstance(term, Goal):
         memo[str(term)] = Goal(term.pred, [create(item, memo) for item in term.args])
     elif term[0].isupper() or term[0] == "_":    # Does _ work???
@@ -67,6 +61,7 @@ class Query():
                     args[argName] = Var(argName, memo[argName].value)
             if len(args) > 0:
                 self.successes.append(args)
+                print(args)    # For debugging. ???
             else:
                 self.successes.append(True)
         if self.successes == []:
@@ -126,11 +121,16 @@ class Alt():
 
 # This function tries to unify the query and alt args, and returns a bool of its success.
 def tryUnify(queryArgs, altArgs):
+    # for i, (queryArg, altArg) in enumerate(zip(queryArgs, altArgs)):    # Loop through the query and alt arguments.
     for queryArg, altArg in zip(queryArgs, altArgs):    # Loop through the query and alt arguments.
+
         # Check if unification is possible before unifying.
         if queryArg != altArg:
             return False
+        # if isinstance(queryArg, ListPL) and altArg.value == 
         queryArg.unifyWith(altArg)
+        # if isinstance(queryArg.value, list):        # ??? HERE
+        #     queryArgs[i] = Term.changeType(queryArg.value)
     return True                                 # If it reaches this point, they can be unified.   
 
 
@@ -145,9 +145,8 @@ class Term():
         if isinstance(word, list):
             if word == []:
                 return Const(word)
-            elif isinstance(word[0], Tail):
-                return word[0]
-                # return word[0].match
+            elif word[0].value == "|":
+                return word[-1]
             return ListPL(word)
         # All other values are Consts.
         return Const(word)
@@ -166,7 +165,7 @@ class Term():
     def unifyWith(self, altArg):                               
         altArg.children.append(self)                        # The children are the variables we want to find out.
         if self:
-            altArg.value = self.value
+            altArg.value = self.value     # Maybe make this equal to a copy of the value, in case the value is a list. ???
         changePath(altArg, altArg.value)  # Set all unified terms to new value.   
         return True
     
@@ -175,27 +174,10 @@ class Var(Term):
     def __init__(self, name, value = "Undefined"):
         self.name = name
         self.value = value
-        self.tail = False
         super().__init__(name = self.name, value = self.value)    # Initialize the Var. 
-    # def __repr__(self):
-    #     return repr(self.name + " = " + str(self.value))
+    def __repr__(self):
+        return repr(self.name + " = " + str(self.value))
 
-# Tails are a special Var with a value that is always a list.
-class Tail(Var):
-    def __init__(self, name):
-        super().__init__(name = name)
-#         self.match = None   # This is a Var with the same name.
-#         # self.match = Var("X")
-#         self.name = name
-#     def __str__(self):
-#         return "Tail: " + self.name
-#     # This gives the object the .value attribute.
-#     @property
-#     def value(self):
-#         return self.match.value
-#     @property
-#     def children(self):
-#         return self.match.children
 
 class Const(Term):  # A constant, aka an atom.
     def __init__(self, value):
@@ -263,6 +245,10 @@ class ListPL(Term):
     def __init__(self, lst):
         self.head = lst[0]
         self.tail = Term.changeType(lst[1:])
+        self.lst = lst
+        # self.name = "List"
+        # self.children = []                  # The children are the variables that will change if this term has a value.
+        # self.tail.children = self.children
         super().__init__(name = "List", value = lst)
     def __len__(self):
         return len(self.value)
@@ -271,19 +257,35 @@ class ListPL(Term):
             return self.head == other.head and self.tail == other.tail
         return super().__eq__(other)
     def unifyWith(self, altArg):
+        # if altArg.value == "Undefined":
+        #     # altArg.value = [Var("H"), Const("|"), Var("T")]      # Probably need to turn it into a ListPL??? HERE
+        #     altArg = ListPL([Var("H"), Const("|"), Var("T")])      # Probably need to turn it into a ListPL??? HERE
+
         if isinstance(altArg, ListPL):
-            if self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail):
-                for term in enumerate(self.tail.value):
-                    if term:
-                        Term.changeType(term)
+            if self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail):   # Later needs to clear path of all this.
+                # for term in self.tail.value:    # why only the tail???
+                #     Term.changeType(term) # ???
+
+                # changePath(altArg, altArg.value)        #???
+                
                 return True
             return False
             # return self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail)
-        return super().unifyWith(altArg)
+        return super().unifyWith(altArg)    # LOOK HERE!! ???
     def __repr__(self):
         return str(self)
     def __str__(self):
         return str(self.value)
+    def __repr__(self):
+        return str(self.lst)
+    # @property
+    # def value(self):
+    #     value = self.lst
+    #     for term in self.lst:
+    #         if term.value == "Undefined":       # Can't be undefined, since only other lists or undefined should be able to unify. ???
+    #             value = "Undefined"
+    #     return value
+
 
 
 def tryGoal(goal):
@@ -296,6 +298,7 @@ def tryGoal(goal):
         # To ensure the value does not get reset, the variable must be changed to a Const.
         for argIndex, arg in enumerate(goal.args):
             if isinstance(arg, Var) and arg.value != "Undefined":
+            # if isinstance(arg, Var) and arg.value != "Undefined" and not isinstance(arg.value, list): # ???
                 goal.args[argIndex] = Term.changeType(arg.value)
         # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
         for alt in alts:
@@ -307,8 +310,21 @@ def tryGoal(goal):
                     yield findVars(goal.args) or True
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
             for arg in goal.args:
-                if isinstance(arg, Var):
+                # print(arg)
+                # if isinstance(arg, Var):
+                if isinstance(arg, Var) or isinstance(arg, ListPL): # ???
                     changePath(arg, "Undefined")
+                # elif isinstance(arg, ListPL):   # ???
+                #     for term in arg.value:
+            
+                #     # print(arg)
+                #     # arg = ListPL(arg.value)
+                #     changePath(arg, "Undefined")
+
+
+                #     for term in arg.value:
+                #         if isinstance(term, Var):
+                #             changePath(term, "Undefined")
                 # elif isinstance(arg, list):   # probably should add this. ???
     # If no predicate exists with this number of arguments, it may be a built-in predicate.
     elif goal.pred == write and len(goal.args) == 1:
@@ -326,7 +342,7 @@ def tryGoal(goal):
         global wasCut
         wasCut = True
         yield True
-    elif goal.pred == setEqual:     # ???
+    elif goal.pred == setEqual:
         if tryUnify([goal.args[0]], [goal.args[1]]):
             yield findVars(goal.args) or True
     elif goal.pred == notEqual:
@@ -338,6 +354,9 @@ def tryGoal(goal):
         yield len(goal.args[0].value) == goal.args[1].value
     # After trying all alts, reset any Vars that were turned into Consts.
     goal.args = originalArgs
+    # for arg in goal.args:
+    #     if isinstance(arg, Var):
+    #         changePath(arg, "Undefined")
     yield False               # If all the alts failed, then the goal failed.
 
 
@@ -387,6 +406,13 @@ def changePath(arg, newValue):
     # if isinstance(arg, Term):
     if isinstance(arg, Var):
         arg.value = newValue
+    if isinstance(arg, ListPL) and newValue == "Undefined":     # ???
+        for term in arg.lst:
+            changePath(term, "Undefined")
+    # if isinstance(arg, ListPL):
+    #     for term in arg.value:
+    #         changePath(term, "Undefined")
+
     for child in arg.children:
         # if child value already is new value, maybe don't need to change child's path? Try later! ???
         changePath(child, newValue)         # Change each parent to the new value.
@@ -400,9 +426,25 @@ def findVars(args):
             result.extend(findVars(arg.value))
         if isinstance(arg, Var) and arg.name[0] != "_":
             if isinstance(arg.value, list):
-                arg.value = flatten(arg.value)
+                arg = Var(arg.name, arg.value)
+                # arg.value = flatten(arg.value)      # Problem! This should not actually change the value. ??? HERE!
             result.append(arg)
     return result
+
+
+# # Returns a list of all Vars found in a list.
+# def findVars(args):
+#     result = []
+#     for arg in args:
+#         if isinstance(arg, ListPL):
+#             result.extend(findVars(arg.value))
+#         if isinstance(arg, Var) and arg.name[0] != "_":
+#             newArg = Var(arg.name)
+#             newArg.value = arg.value
+#             if isinstance(arg.value, list):
+#                 newArg.value = flatten(arg.value)
+#             result.append(newArg)
+#     return result
 
 
 
@@ -422,7 +464,7 @@ member = Predicate("member")
 member("X", ["_", "|", "T"]) >> [member("X", "T")]
 
 append_ = Predicate("append_")
-+append_([], "X", "X")
++append_([], "W", "W")
 append_(["H", "|", "T"], "X", ["H", "|", "S"]) >> [append_("T", "X", "S")]
 
 
