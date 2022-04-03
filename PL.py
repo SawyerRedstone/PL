@@ -57,11 +57,14 @@ class Query():
             args = {}
             for argName in memo:
                 if isinstance(memo[argName], Var):
-                    # args[argName] = memo[argName].value
-                    args[argName] = Var(argName, memo[argName].value)
+                    # print(memo[argName].value)
+                    # newLst = [term.value for term in memo[argName].value]
+                    args[argName] = str(flatten(memo[argName].value))
+                    # args[argName] = flatten(memo[argName].value)
+                    # args[argName] = Var(argName, memo[argName].value)
             if len(args) > 0:
-                self.successes.append(args)
-                print(args)    # For debugging. ??? For some reason, this works???
+                self.successes.append(str(args))
+                # print("TEST: " + str(args))    # For debugging. ??? For some reason, this works???
             else:
                 self.successes.append(True)
         if self.successes == []:
@@ -69,6 +72,9 @@ class Query():
         # Reset the size for future queries, in the case where multiple queries are made at once.
         self.size = None        
     def __iter__(self):
+        # for key, item in enumerate(self.successes):
+        #     if isinstance(item, list):
+        #         self.successes[key] = flatten(item)
         return iter(self.successes)
     # query(3) makes the query only show 3 results.
     def __call__(self, num):
@@ -151,6 +157,8 @@ class Term():
     def __bool__(self):
         return self.value != "Undefined"    # A term is false it if has no value.
     def __repr__(self):
+        # if isinstance(self.value, list):
+        #     return str(flatten(self.value))
         return str(self.value)
         # return repr(self.name + " = " + str(self.value))  
     def __str__(self):
@@ -173,11 +181,11 @@ class Var(Term):
         self.name = name
         self.value = value
         super().__init__(name = self.name, value = self.value)    # Initialize the Var. 
-    def __repr__(self):
-        # if isinstance(self.value, list):
-        #     # print("Testing: " + self.name + " = " + str(flatten(self.value)))
-        #     return repr(self.name + " = " + str(flatten(self.value)))    # ???
-        return repr(self.name + " = " + str(self.value))
+    # def __repr__(self):
+    #     # if isinstance(self.value, list):
+    #     #     # print("Testing: " + self.name + " = " + str(flatten(self.value)))
+    #     #     return repr(self.name + " = " + str(flatten(self.value)))    # ???
+    #     return repr(self.name + " = " + str(self.value))
 
 
 class Const(Term):  # A constant, aka an atom.
@@ -234,12 +242,13 @@ mod = Math(lambda x, y: x % y)
 
 
 # This flattens a list with "|"
-def flatten(lst):
+def flatten(oldList):
+    lst = oldList[:]
     if len(lst) > 2 and lst[-2].value == "|":
         tail = lst.pop()
         lst.pop()
         lst.extend(flatten(tail.value))
-    return [Term.changeType(term.value) for term in lst]
+    return [item.value if isinstance(item, Term) else item for item in lst]
 
 
 class ListPL(Term):
@@ -247,9 +256,6 @@ class ListPL(Term):
         self.head = lst[0]
         self.tail = Term.changeType(lst[1:])
         self.lst = lst
-        # self.name = "List"
-        # self.children = []                  # The children are the variables that will change if this term has a value.
-        # self.tail.children = self.children
         super().__init__(name = "List", value = lst)
     def __len__(self):
         return len(self.value)
@@ -269,14 +275,6 @@ class ListPL(Term):
         return str(self.value)
     def __repr__(self):
         return str(self.lst)
-    # @property
-    # def value(self):
-    #     value = self.lst
-    #     for term in self.lst:
-    #         if term.value == "Undefined":       # Can't be undefined, since only other lists or undefined should be able to unify. ???
-    #             value = "Undefined"
-    #     return value
-
 
 
 def tryGoal(goal):
