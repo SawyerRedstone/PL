@@ -30,6 +30,11 @@ ismember = Predicate("ismember")
 ismember2 = Predicate("ismember2")
 all_diff = Predicate("all_diff")
 splitAt = Predicate("splitAt")
+someTree = Predicate("someTree")
+sublist = Predicate("sublist")
+sublist_cut = Predicate("sublist_cut")
+isSorted = Predicate("isSorted")
+bad_sort = Predicate("bad_sort")
 
 # #### facts/rules ####
 
@@ -147,8 +152,23 @@ ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]    # Problem is member args are never created. ???
 
 splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "SecondPart", "List"), len_("FirstPart", "Pos")]
-# splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "SecondPart", "List")]
 
+sublist("A", "B") >> [append_("A", "_", "B")]
+sublist("A", ["_", "|", "T"]) >> [sublist("A", "T")]
+
+# sublist_cut(A, B) :- append(A, _, B), !.
+# sublist_cut(A, [_|T]) :- sublist_cut(A, T).
+sublist_cut("A", "B") >> [append_("A", "_", "B"), cut()]
+sublist_cut("A", ["_", "|", "T"]) >> [sublist_cut("A", "T")]
+
+# isSorted([_]).
+# isSorted([H1, H2 | T]) :- H1 =< H2, isSorted([H2 | T]).
++isSorted(["_"])
+isSorted(["H1", "H2", "|", "T"]) >> [le_("H1", "H2"), isSorted(["H2", "|", "T"])]
+
+
+# bad_sort(X, Y) :- permutation(X, Y), isSorted(Y), !.
+bad_sort("X", "Y") >> [permutation_("X", "Y"), isSorted("Y"), cut()]
 
 # ##########################################
 
@@ -212,21 +232,43 @@ splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "Seco
 # query << [append_([1, 2, 3], ["a", "b"], "X")]
 # query << [append_("A", "B", [1, 2, 3, 4, 5])]
 # query << [ismember(1, [1, 2, 3, 1])]
-# query << [ismember2("X", [1, 2, 3, 1])]
 # query << [between(1, 5, "K")]
 # query << [lt_(1, 1 |plus| 2)]
 # query << [lt_(1 |plus| 2, 1)]
+# query << [splitAt(3, ["a", "b", "c", "d", "e", "f", "g", "h"], "A", "B")]
+# query << [ismember2(1, [1, 2, 3, 1])]
+# query << [ismember2("X", [1, 2, 3, 1])]
+# query << [sublist(["a", "a"], ["b", "a", "a", "b"])]
+# query << [sublist(["b", "a", "b"], ["b", "a", "a", "b"])]
+# query << [sublist(["a", "b", "a"], ["b", "a", "a", "b"])]
+# query << [sublist(["a"], ["b", "a", "a", "b"])]
+# query << [sublist(["a", "b", "d"], ["a", "b", "c", "d"])]
+# query << [sublist_cut(["a"], ["b", "a", "a", "b"])]
+# query << [member("X", [4, 5, 14, 15, 24, 25]), gt_("X", 10), cut(), is_(0, "X" |mod| 2)]
+# query << [member("X", [4, 5, 14, 15, 24, 25]), gt_("X", 10), is_(0, "X" |mod| 2)]
+# query << [member("X", [4, 5, 14, 15, 24, 25]), cut(), gt_("X", 10), is_(0, "X" |mod| 2)]
+# query << [member("X", [3, 4, 5, 13, 14, 15, 23, 24, 25]), gt_("X", 10), cut(), is_(0, "X" |mod| 2)]
+# query << [isSorted([1, 2])]
+# query << [isSorted([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])]
+# query << [isSorted([1, 2, 3, 4, 10, 6, 7, 8, 9, 10])]
 
-
+# query << [bad_sort([5, 3, 1, 10, 3], "Y")]
+# query << [permutation_([1, 2, 3], "X")]
 
 
 ### Testing Zone ###
 
 
-
 #### Test queries below FAIL ####  ???
 
-query << [splitAt(3, ["a", "b", "c", "d", "e", "f", "g", "h"], "A", "B")]
+# query << [permutation_([1, 2], [2, 1])]
+# query << [permutation_([1, 2], [1, 2])]
+
+
+
+
+# query << [between(1, 5, "X"), mynot(setEqual("X", 3))]  # Fails because my predicates can't take other predicates as args.
+
 
 ### To see results ###
 for s in query:   # Can also be '-success' to reduce typing '-' elsewhere.
