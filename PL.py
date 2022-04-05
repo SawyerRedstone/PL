@@ -3,8 +3,6 @@
 
 import itertools
 
-wasCut = False
-
 # Take a list, string, or int, and convert it to type Term.
 def create(term, memo = {}):
     if str(term) in memo:
@@ -19,10 +17,9 @@ def create(term, memo = {}):
     elif isinstance(term, list):
         # If the list is empty, it is a Const; otherwise it is a ListPL.
         memo[str(term)] = ListPL([create(item, memo) for item in term]) if term else Const(term)
-        # memo[str(term)].lst = term   # A ListPL's lst is the list with values as strings, not terms --- Delete later if never used! ???
     elif isinstance(term, Goal):
         memo[str(term)] = Goal(term.pred, [create(item, memo) for item in term.args])
-    elif term[0].isupper() or term[0] == "_":    # Does _ work???
+    elif term[0].isupper() or term[0] == "_":
         memo[str(term)] = Var(term)
     # Otherwise, it is a Const.
     else:
@@ -47,14 +44,17 @@ class Query():
         self.successes = []
         self.size = None
     def __lshift__(self, goals):
-        global wasCut
         # Memo is a dictionary of all args in the goals.
         # This makes sure that no terms are duplicates.
         memo = {}
         goals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) for goal in goals]
-        success = tryGoals(goals)
+        attempt = tryGoals(goals)
         # loop through the generator self.size times, or until end if size is not specified.
-        for _ in itertools.islice(success, self.size):
+        # for _ in itertools.islice(attempt, self.size):
+        for attempt in itertools.islice(attempt, self.size):
+            success = attempt[0]
+            if not success:
+                break
             args = {}
             for argName in memo:
                 if isinstance(memo[argName], Var):
@@ -63,9 +63,9 @@ class Query():
                 self.successes.append(args)
             else:
                 self.successes.append(True)
-            if wasCut:
-                wasCut = False
-                break
+            # if wasCut:
+            #     wasCut = False
+            #     break
         if self.successes == []:
             self.successes.append(False)
         # Reset the size for future queries, in the case where multiple queries are made at once.
@@ -145,14 +145,12 @@ class Term():
             if word == []:
                 return Const(word)
             elif word[0].value == "|":
-                return word[-1]         # What if it returned a ListPL of that? HERE! ???
+                return word[-1]
             return ListPL(word)
         # All other values are Consts.
         return Const(word)
     # This checks if they *can* be equal.
     def __eq__(self, other):
-        # if isinstance(self.value, list) and isinstance(other.value, list) and self.value and other.value:    # ???
-        #     return ListPL(self.value) == ListPL(other.value)
         return self.value == other.value or not self or not other
     def __bool__(self):
         return self.value != "Undefined"    # A term is false it if has no value.
@@ -165,7 +163,7 @@ class Term():
     def unifyWith(self, altArg):
         altArg.children.append(self)                        # The children are the variables we want to find out.
         if self:
-            altArg.value = self.value     # Maybe make this equal to a copy of the value, in case the value is a list. ???
+            altArg.value = self.value     # Maybe make this equal to a copy of the value, in case the value is a list. ***
         changePath(altArg, altArg.value)  # Set all unified terms to new value.
         return True
 
@@ -177,6 +175,7 @@ class Var(Term):
         super().__init__(name = self.name, value = self.value)    # Initialize the Var.
     def __repr__(self):
         return repr(self.name + " = " + str(self.value))
+    # def __
 
 
 class Const(Term):  # A constant, aka an atom.
@@ -198,7 +197,7 @@ class Math(Term):
         newMath.mathList = [other, self.function]
         return newMath
     def __or__(self, other):
-        # Check if 'other' is built-in. (Add other built-in here! ???)
+        # Check if 'other' is built-in. (Add other built-in here! ***)
         if other is plus or other is minus:
             other = other.function
         if self.mathList[-1] is times or self.mathList[-1] is div or self.mathList[-1] is mod:
@@ -235,27 +234,29 @@ mod = Math(lambda x, y: x % y)
 
 
 class ListPL(Term):
-    def __init__(self, lst):
+    def __init__(self, lst, name = "List"):
         self.head = lst[0]
         self.tail = Term.changeType(lst[1:])
         self.lst = lst
-        super().__init__(name = "List", value = lst)
+        super().__init__(name = name, value = lst)
     def __len__(self):
         return len(self.value)
     def __eq__(self, other):
-        if self.tail and not isinstance(self.tail, ListPL):
+        if isinstance(other.value, list) and other.value:       # ***
+            other = ListPL(other.value)
+        if self.tail and not isinstance(self.tail, ListPL):     # Should this be here? ***
             self.tail = Term.changeType(self.tail.value)
         if isinstance(other, ListPL):
-            if other.tail and not isinstance(other.tail, ListPL):        # Do I need this?
-                other.tail = Term.changeType(other.tail.value)
             return self.head == other.head and self.tail == other.tail
         return super().__eq__(other)
     def unifyWith(self, altArg):
+        if isinstance(altArg.value, list) and altArg.value:       # ***
+            altArg = ListPL(altArg.value)
         if isinstance(altArg, ListPL):
-            if self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail):   # Later needs to clear path of all this???
+            if self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail):   # Later needs to clear path of all this? ***
                 return True
             return False
-        return super().unifyWith(altArg)    # LOOK HERE!! ???
+        return super().unifyWith(altArg)
     def __repr__(self):
         return str(self)
     def __str__(self):
@@ -265,7 +266,6 @@ class ListPL(Term):
 
 
 def tryGoal(goal):
-    global wasCut
     # Keep copy of original goal args. This is not a deep copy, so changed values will remain changed here.
     # This allows Vars that are temporary changed to Consts to return back to their Var form.
     originalArgs = [arg for arg in goal.args]
@@ -275,16 +275,19 @@ def tryGoal(goal):
         # To ensure the value does not get reset, the variable must be changed to a Const.
         for argIndex, arg in enumerate(goal.args):
             if isinstance(arg, Var) and arg.value != "Undefined":
-            # if isinstance(arg, Var) and arg.value != "Undefined" and not isinstance(arg.value, list): # ???
                 goal.args[argIndex] = Term.changeType(arg.value)
         # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
         for alt in alts:
             altAttempts = tryAlt(goal, alt)
             # Only yield if it succeeded, since failing one alt doesn't mean that the goal failed.
             for attempt in altAttempts:
-                if attempt:
+                success = attempt[0]
+                wasCut = attempt[1]
+                if success:
                     # Yield vars, or True if this succeeded without changing vars.
                     yield findVars(goal.args) or True
+                if wasCut:
+                    break
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
             for arg in goal.args:
                 if isinstance(arg, Var):
@@ -302,7 +305,7 @@ def tryGoal(goal):
     elif goal.pred == ge_:
         yield goal.args[0].value >= goal.args[1].value
     elif goal.pred == cut:
-        wasCut = True
+        # wasCut = True
         yield True
     elif goal.pred == setEqual:
         if tryUnify([goal.args[0]], [goal.args[1]]):
@@ -319,6 +322,7 @@ def tryGoal(goal):
 
 # This tries the current alternative to see if it succeeds.
 def tryAlt(query, alt):
+    wasCut = False
     # Memo is a dictionary of all terms in this alt.
     # This makes sure that no terms are duplicates.
     memo = {}
@@ -326,44 +330,64 @@ def tryAlt(query, alt):
     altGoals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) for goal in alt.goals]
     goalsToTry = altGoals          # A list of goals that must be satisfied for this alt to succeed.
     if not tryUnify(query.args, altArgs):    # If the alt can't be unified, then it fails.
-        yield False
+        yield False, wasCut
     elif len(goalsToTry) > 0:       # If this alt has goals, try them.
-        for success in tryGoals(goalsToTry):
-            yield success
+        # for success in tryGoals(goalsToTry):
+        #     yield success
+        for attempt in tryGoals(goalsToTry):
+            success = attempt[0]
+            if success:
+                yield attempt
+            # wasCut = attempt[1]
+            # yield attempt
     else:
-        yield True  # If there are no goals to try, this alt succeeded.
+        yield True, wasCut  # If there are no goals to try, this alt succeeded.
 
 
 def tryGoals(goalsToTry):
-    # global wasCut
+    wasCut = False
     goals = [tryGoal(goal) for goal in goalsToTry]  # A list of [tryGoal(goal1), tryGoal(goal2), etc]
     currGoal = 0                                    # This is the index for the goal we are currently trying.
     failed = False
     while not failed:
         while 0 <= currGoal < len(goals):           # The goals succeed it currGoal reaches the end.
+            if wasCut and goalsToTry[currGoal].pred == cut:
+                failed = True
+                break
+            if goalsToTry[currGoal].pred == cut:
+                wasCut = True
             currGoalArgs = next(goals[currGoal])    # Try the goal at the current index.
             if currGoalArgs:                        # This goal succeeded and args have been instantiated.
                 currGoal += 1
             else:
-                if currGoal == 0 or wasCut:   # If the first goal fails, there are no more things to try, and the function fails.
+                # Problem found! If wasCut, it can still backtrack, just not to before the cut. ***
+                # if currGoal == 0 or wasCut:   # If the first goal fails, there are no more things to try, and the function fails.
+                if currGoal == 0:   # If the first goal fails, there are no more things to try, and the function fails.
                     failed = True
                     break
                 goals[currGoal] = tryGoal(goalsToTry[currGoal])  # Reset the generator.
                 currGoal -= 1
+                # if goalsToTry[currGoal].pred == cut:
+                #     failed = True
+                #     break
         if not failed:
-            yield True          # If we got here, then all the goals succeeded.
+            # yield True         # If we got here, then all the goals succeeded.
+            yield True, wasCut     # If we got here, then all the goals succeeded.
             currGoal -= 1       # Go back a goal to try for another solution.
+            # if goalsToTry[currGoal].pred == cut:
+            #     failed = True
+            #     break
         # if wasCut:
         #     wasCut = False
         #     break
-    # yield False
+    yield False, wasCut
 
 
 def changePath(arg, newValue):
     if isinstance(arg, Var):
         arg.value = newValue
     for child in arg.children:
-        # if child value already is new value, maybe don't need to change child's path? Try later! ???
+        # if child value already is new value, maybe don't need to change child's path? Try later! ***
         changePath(child, newValue)         # Change each parent to the new value.
 
 
@@ -431,7 +455,7 @@ not_ = Predicate("not_")
 # not_("A") >> ["A", cut(), fail()]
 # not_("_") >> []
 
-mynot = Predicate("mynot")      # ??? Doesn't work.
+mynot = Predicate("mynot")      # *** Doesn't work.
 mynot("A") >> ["A", cut(), fail()]
 mynot("_") >> []
 
