@@ -61,13 +61,12 @@ class Query():
                 if isinstance(memo[argName], Var):
                     args[argName] = str(flatten(memo[argName].value))
             if len(args) > 0:
-                print("TEST: " + str(args))    # For debugging. ***
+                # print("TEST: " + str(args))    # For debugging. ***
                 self.successes.append(args)
             else:
-                print("TEST: True")    # For debugging. ***
+                # print("TEST: True")    # For debugging. ***
                 self.successes.append(True)
-            if wasCut:      # This should be True! ***
-            #     wasCut = False
+            if wasCut:
                 break
         if self.successes == []:
             self.successes.append(False)
@@ -101,16 +100,6 @@ class Goal():
     # '+' for putting info IN (facts).
     def __pos__(self):
         self >> []      # Treat a fact as a rule with no goals.
-    # # '-' for getting info OUT (Queries).
-    # def __neg__(self):
-    #     global wasCut
-    #     memo = {}
-    #     self.args = [create(arg, memo) for arg in self.args]
-    #     for success in tryGoal(self):
-    #         yield success
-    #         if wasCut:
-    #             wasCut = False
-    #             break
 
 
 
@@ -177,7 +166,6 @@ class Var(Term):
         super().__init__(name = self.name, value = self.value)    # Initialize the Var.
     def __repr__(self):
         return repr(self.name + " = " + str(self.value))
-    # def __
 
 
 class Const(Term):  # A constant, aka an atom.
@@ -299,29 +287,29 @@ def tryGoal(goal):
     # If no predicate exists with this number of arguments, it may be a built-in predicate.
     elif goal.pred == write and len(goal.args) == 1:
             print(goal.args[0].value)
-            yield True
+            yield True, wasCut
     elif goal.pred == lt_:
-        yield goal.args[0].value < goal.args[1].value
+        yield (goal.args[0].value < goal.args[1].value, wasCut)
     elif goal.pred == le_:
-        yield goal.args[0].value <= goal.args[1].value
+        yield (goal.args[0].value <= goal.args[1].value, wasCut)
     elif goal.pred == gt_:
-        yield goal.args[0].value > goal.args[1].value
+        yield (goal.args[0].value > goal.args[1].value, wasCut)
     elif goal.pred == ge_:
-        yield goal.args[0].value >= goal.args[1].value
+        yield (goal.args[0].value >= goal.args[1].value, wasCut)
     elif goal.pred == cut:
-        # wasCut = True
-        yield True
+        wasCut = True
+        yield True, wasCut
     elif goal.pred == setEqual:
         if tryUnify([goal.args[0]], [goal.args[1]]):
-            yield findVars(goal.args) or True
+            yield (findVars(goal.args) or True, wasCut)
     elif goal.pred == notEqual:
         if goal.args[0].value != goal.args[1].value:
-            yield findVars(goal.args) or True
+            yield (findVars(goal.args) or True, wasCut)
     elif goal.pred == not_:
-        yield not next(tryGoal(goal.args[0]))
+        yield (not next(tryGoal(goal.args[0])), wasCut)
     # After trying all alts, reset any Vars that were turned into Consts.
     goal.args = originalArgs
-    yield False               # If all the alts failed, then the goal failed.
+    yield False, wasCut               # If all the alts failed, then the goal failed.
 
 
 # This tries the current alternative to see if it succeeds.
@@ -336,8 +324,6 @@ def tryAlt(query, alt):
     if not tryUnify(query.args, altArgs):    # If the alt can't be unified, then it fails.
         yield False, wasCut
     elif len(goalsToTry) > 0:       # If this alt has goals, try them.
-        # for success in tryGoals(goalsToTry):
-        #     yield success
         for attempt in tryGoals(goalsToTry):
             success = attempt[0]
             wasCut = attempt[1]
@@ -345,7 +331,6 @@ def tryAlt(query, alt):
                 yield attempt
             if wasCut:
                 break
-
     else:
         yield True, wasCut  # If there are no goals to try, this alt succeeded.
 
@@ -362,31 +347,20 @@ def tryGoals(goalsToTry):
                 break
             if goalsToTry[currGoal].pred == cut:
                 wasCut = True
-            # currGoalAttempt = next(goals[currGoal])
-            currGoalArgs = next(goals[currGoal])    # Try the goal at the current index.
-            if currGoalArgs:                        # This goal succeeded and args have been instantiated.
+            currGoalAttempt = next(goals[currGoal])
+            success = currGoalAttempt[0]
+            wasCut = currGoalAttempt[1]
+            if success:                        # This goal succeeded and args have been instantiated.
                 currGoal += 1
             else:
-                # Problem found! If wasCut, it can still backtrack, just not to before the cut. ***
-                # if currGoal == 0 or wasCut:   # If the first goal fails, there are no more things to try, and the function fails.
-                if currGoal == 0:   # If the first goal fails, there are no more things to try, and the function fails.
+                if currGoal == 0 or wasCut:   # If the first goal fails, there are no more things to try, and the function fails.
                     failed = True
                     break
                 goals[currGoal] = tryGoal(goalsToTry[currGoal])  # Reset the generator.
                 currGoal -= 1
-                # if goalsToTry[currGoal].pred == cut:
-                #     failed = True
-                #     break
         if not failed:
-            # yield True         # If we got here, then all the goals succeeded.
             yield True, wasCut     # If we got here, then all the goals succeeded.
             currGoal -= 1       # Go back a goal to try for another solution.
-            # if goalsToTry[currGoal].pred == cut:
-            #     failed = True
-            #     break
-        # if wasCut:
-        #     wasCut = False
-        #     break
     yield False, wasCut
 
 

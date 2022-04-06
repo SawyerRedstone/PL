@@ -271,18 +271,18 @@ studies("alex", "physics") >> []
 # query << [permutation_([1, 2, 3], "X")]
 # query << [permutation_([1, 2], [2, 1])]
 # query << [permutation_([1, 2, 3], [2, 3, 1])]
-
-
-### Testing Zone ###
-
 # query << [bad_sort([5, 3, 1, 10, 3], "Y")]
-query << [ismember2(1, [1, 2, 3, 1])]
+# query << [ismember2(1, [1, 2, 3, 1])]
 # query << [ismember2("X", [1, 2, 3, 1])]
 # query << [sublist_cut(["a"], ["b", "a", "a", "b"])]
 # query << [teaches("dr_fred", "Course"), studies("Student", "Course")]
 # query << [teaches("dr_fred", "Course"), cut(), studies("Student", "Course")]
 # query << [teaches("dr_fred", "Course"), studies("Student", "Course"), cut()]
 # query << [cut(), teaches("dr_fred", "Course"), studies("Student", "Course")]
+
+
+### Testing Zone ###
+
 
 
 #### Test queries below FAIL ####  ???
