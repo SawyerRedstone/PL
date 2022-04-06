@@ -26,7 +26,7 @@ count = Predicate("count")
 always_true = Predicate("always_true")
 basicList = Predicate("basicList")
 merge = Predicate("merge")
-ismember = Predicate("ismember")
+# ismember = Predicate("ismember")
 ismember2 = Predicate("ismember2")
 all_diff = Predicate("all_diff")
 splitAt = Predicate("splitAt")
@@ -144,8 +144,8 @@ increment_all(["H", "|", "T"], "X") >> [is_("Y", "H" |plus| 1), increment_all("T
 merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [lt_("H1", "H2"), merge("T1", ["H2", "|", "T2"], "Z"), setEqual("X", ["H1", "|", "Z"])]
 merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [ge_("H1", "H2"), merge(["H1", "|", "T1"], "T2", "Z"), setEqual("X", ["H2", "|", "Z"])]
 
-+ismember("H", ["H", "|", "_"]) 
-ismember("H", ["_", "|", "T"]) >> [ismember("H", "T")]
+# ismember("H", ["H", "|", "_"]) >> []      # member/2 predicate is already built-in.
+# ismember("H", ["_", "|", "T"]) >> [ismember("H", "T")]
 
 ismember2("H", ["H", "|", "_"]) >> [cut()]
 ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
@@ -228,9 +228,9 @@ studies("alex", "physics") >> []
 # query << [all_diff(["a", "b", "c", "b"])]
 # query << [between(1, 3, "X"), between(1, 3, "Y"), between(1, 3, "Z"), all_diff(["X", "Y", "Z"])]
 # query << [not_(member("X", ["a", "b", "c"])), setEqual("X", "f")]
+# query << [setEqual("X", "f"), not_(member("X", ["a", "b", "c"]))]
 # query << [setEqual("X", ["q", "y", "z", "w"]), not_(len_("X", 4))]
 # query << [setEqual("X", 3 |plus| 4), not_(setEqual("X", 99))]
-# query << [setEqual("X", "f"), not_(member("X", ["a", "b", "c"]))]
 # query << [write("hi")]
 # query << [is_("X", 2 |plus| 4)]
 # query << [is_(6, 2 |plus| 4)]
@@ -251,7 +251,7 @@ studies("alex", "physics") >> []
 # query << [is_(4, 2 |plus| "X" |plus| 5)]     # is_ pred can't have vars on right side.
 # query << [append_([1, 2, 3], ["a", "b"], "X")]
 # query << [append_("A", "B", [1, 2, 3, 4, 5])]
-# query << [ismember(1, [1, 2, 3, 1])]
+# query << [member(1, [1, 2, 3, 1])]
 # query << [between(1, 5, "K")]
 # query << [lt_(1, 1 |plus| 2)]
 # query << [lt_(1 |plus| 2, 1)]

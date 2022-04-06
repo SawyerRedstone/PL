@@ -306,7 +306,7 @@ def tryGoal(goal):
         if goal.args[0].value != goal.args[1].value:
             yield (findVars(goal.args) or True, wasCut)
     elif goal.pred == not_:
-        yield (not next(tryGoal(goal.args[0])), wasCut)
+        yield not next(tryGoal(goal.args[0]))[0], wasCut
     # After trying all alts, reset any Vars that were turned into Consts.
     goal.args = originalArgs
     yield False, wasCut               # If all the alts failed, then the goal failed.
@@ -409,8 +409,8 @@ fail = Predicate("failPredicate")
 write = Predicate("write")
 
 member = Predicate("member")
-member("X", ["X", "|", "_"]) >> []
-member("X", ["_", "|", "T"]) >> [member("X", "T")]
+member("H", ["H", "|", "_"]) >> []
+member("H", ["_", "|", "T"]) >> [member("H", "T")]
 
 append_ = Predicate("append_")
 append_([], "W", "W") >> []
@@ -436,9 +436,9 @@ not_ = Predicate("not_")
 # not_("A") >> ["A", cut(), fail()]
 # not_("_") >> []
 
-mynot = Predicate("mynot")      # *** Doesn't work.
-mynot("A") >> ["A", cut(), fail()]
-mynot("_") >> []
+# mynot = Predicate("mynot")      # *** Doesn't work.
+# mynot("A") >> ["A", cut(), fail()]
+# mynot("_") >> []
 
 # </2 predicate.
 lt_ = Predicate("less than")
