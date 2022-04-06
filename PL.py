@@ -53,6 +53,7 @@ class Query():
         # for _ in itertools.islice(attempt, self.size):
         for attempt in itertools.islice(attempt, self.size):
             success = attempt[0]
+            wasCut = attempt[1]
             if not success:
                 break
             args = {}
@@ -60,12 +61,14 @@ class Query():
                 if isinstance(memo[argName], Var):
                     args[argName] = str(flatten(memo[argName].value))
             if len(args) > 0:
+                print("TEST: " + str(args))    # For debugging. ***
                 self.successes.append(args)
             else:
+                print("TEST: True")    # For debugging. ***
                 self.successes.append(True)
-            # if wasCut:
+            if wasCut:      # This should be True! ***
             #     wasCut = False
-            #     break
+                break
         if self.successes == []:
             self.successes.append(False)
         # Reset the size for future queries, in the case where multiple queries are made at once.
@@ -116,7 +119,6 @@ class Alt():
     def __init__(self, args, goals):
         self.args = args
         self.goals = goals
-        # self.wasCut = False
     def __str__(self):
         return "altArgs: " + str(self.args) + "\naltGoals: " + str(self.goals) + "\n"
     def __repr__(self):
@@ -266,6 +268,7 @@ class ListPL(Term):
 
 
 def tryGoal(goal):
+    wasCut = False
     # Keep copy of original goal args. This is not a deep copy, so changed values will remain changed here.
     # This allows Vars that are temporary changed to Consts to return back to their Var form.
     originalArgs = [arg for arg in goal.args]
@@ -285,7 +288,8 @@ def tryGoal(goal):
                 wasCut = attempt[1]
                 if success:
                     # Yield vars, or True if this succeeded without changing vars.
-                    yield findVars(goal.args) or True
+                    # yield findVars(goal.args) or True
+                    yield (findVars(goal.args) or True, wasCut)
                 if wasCut:
                     break
             # Clear any args that were defined in this goal, so they may be reused for the next alt.
@@ -336,10 +340,12 @@ def tryAlt(query, alt):
         #     yield success
         for attempt in tryGoals(goalsToTry):
             success = attempt[0]
+            wasCut = attempt[1]
             if success:
                 yield attempt
-            # wasCut = attempt[1]
-            # yield attempt
+            if wasCut:
+                break
+
     else:
         yield True, wasCut  # If there are no goals to try, this alt succeeded.
 
@@ -356,6 +362,7 @@ def tryGoals(goalsToTry):
                 break
             if goalsToTry[currGoal].pred == cut:
                 wasCut = True
+            # currGoalAttempt = next(goals[currGoal])
             currGoalArgs = next(goals[currGoal])    # Try the goal at the current index.
             if currGoalArgs:                        # This goal succeeded and args have been instantiated.
                 currGoal += 1

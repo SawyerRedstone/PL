@@ -35,6 +35,8 @@ sublist = Predicate("sublist")
 sublist_cut = Predicate("sublist_cut")
 isSorted = Predicate("isSorted")
 bad_sort = Predicate("bad_sort")
+teaches = Predicate("teaches")
+studies = Predicate("studies")
 
 # #### facts/rules ####
 
@@ -148,7 +150,7 @@ ismember("H", ["_", "|", "T"]) >> [ismember("H", "T")]
 ismember2("H", ["H", "|", "_"]) >> [cut()]
 ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 
-+all_diff([])
+all_diff([]) >> []
 all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]    # Problem is member args are never created. ???
 
 splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "SecondPart", "List"), len_("FirstPart", "Pos")]
@@ -169,6 +171,24 @@ isSorted(["H1", "H2", "|", "T"]) >> [le_("H1", "H2"), isSorted(["H2", "|", "T"])
 
 # bad_sort(X, Y) :- permutation(X, Y), isSorted(Y), !.
 bad_sort("X", "Y") >> [permutation_("X", "Y"), isSorted("Y"), cut()]
+
+
+# teaches(dr_fred, history).
+teaches("dr_fred", "history") >> []
+# teaches(dr_fred, english).
+teaches("dr_fred", "english") >> []
+# teaches(dr_fred, drama).
+teaches("dr_fred", "drama") >> []
+# teaches(dr_fiona, physics).
+teaches("dr_fiona", "physics") >> []         	
+# studies(alice, english).
+studies("alice", "english") >> []
+# studies(angus, english).
+studies("angus", "english") >> []
+# studies(amelia, drama).
+studies("amelia", "drama") >> []
+# studies(alex, physics).
+studies("alex", "physics") >> []
 
 # ##########################################
 
@@ -236,14 +256,11 @@ bad_sort("X", "Y") >> [permutation_("X", "Y"), isSorted("Y"), cut()]
 # query << [lt_(1, 1 |plus| 2)]
 # query << [lt_(1 |plus| 2, 1)]
 # query << [splitAt(3, ["a", "b", "c", "d", "e", "f", "g", "h"], "A", "B")]
-# query << [ismember2(1, [1, 2, 3, 1])]
-# query << [ismember2("X", [1, 2, 3, 1])]
 # query << [sublist(["a", "a"], ["b", "a", "a", "b"])]
 # query << [sublist(["b", "a", "b"], ["b", "a", "a", "b"])]
 # query << [sublist(["a", "b", "a"], ["b", "a", "a", "b"])]
 # query << [sublist(["a"], ["b", "a", "a", "b"])]
 # query << [sublist(["a", "b", "d"], ["a", "b", "c", "d"])]
-# query << [sublist_cut(["a"], ["b", "a", "a", "b"])]
 # query << [member("X", [4, 5, 14, 15, 24, 25]), gt_("X", 10), cut(), is_(0, "X" |mod| 2)]
 # query << [member("X", [4, 5, 14, 15, 24, 25]), gt_("X", 10), is_(0, "X" |mod| 2)]
 # query << [member("X", [4, 5, 14, 15, 24, 25]), cut(), gt_("X", 10), is_(0, "X" |mod| 2)]
@@ -251,18 +268,25 @@ bad_sort("X", "Y") >> [permutation_("X", "Y"), isSorted("Y"), cut()]
 # query << [isSorted([1, 2])]
 # query << [isSorted([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])]
 # query << [isSorted([1, 2, 3, 4, 10, 6, 7, 8, 9, 10])]
-
-# query << [bad_sort([5, 3, 1, 10, 3], "Y")]
 # query << [permutation_([1, 2, 3], "X")]
+# query << [permutation_([1, 2], [2, 1])]
+# query << [permutation_([1, 2, 3], [2, 3, 1])]
 
 
 ### Testing Zone ###
 
+# query << [bad_sort([5, 3, 1, 10, 3], "Y")]
+query << [ismember2(1, [1, 2, 3, 1])]
+# query << [ismember2("X", [1, 2, 3, 1])]
+# query << [sublist_cut(["a"], ["b", "a", "a", "b"])]
+# query << [teaches("dr_fred", "Course"), studies("Student", "Course")]
+# query << [teaches("dr_fred", "Course"), cut(), studies("Student", "Course")]
+# query << [teaches("dr_fred", "Course"), studies("Student", "Course"), cut()]
+# query << [cut(), teaches("dr_fred", "Course"), studies("Student", "Course")]
+
 
 #### Test queries below FAIL ####  ???
 
-# query << [permutation_([1, 2], [2, 1])]
-# query << [permutation_([1, 2], [1, 2])]
 
 
 
