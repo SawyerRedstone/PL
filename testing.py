@@ -1,5 +1,6 @@
 # This file is used for internal testing.
 from PL import *
+from maze import *
 # from Experimenting import *
 
 
@@ -165,7 +166,7 @@ sublist_cut("A", ["_", "|", "T"]) >> [sublist_cut("A", "T")]
 
 # isSorted([_]).
 # isSorted([H1, H2 | T]) :- H1 =< H2, isSorted([H2 | T]).
-+isSorted(["_"])
+isSorted(["_"]) >> []
 isSorted(["H1", "H2", "|", "T"]) >> [le_("H1", "H2"), isSorted(["H2", "|", "T"])]
 
 
@@ -189,6 +190,7 @@ studies("angus", "english") >> []
 studies("amelia", "drama") >> []
 # studies(alex, physics).
 studies("alex", "physics") >> []
+
 
 # ##########################################
 
@@ -231,7 +233,7 @@ studies("alex", "physics") >> []
 # query << [setEqual("X", "f"), not_(member("X", ["a", "b", "c"]))]
 # query << [setEqual("X", ["q", "y", "z", "w"]), not_(len_("X", 4))]
 # query << [setEqual("X", 3 |plus| 4), not_(setEqual("X", 99))]
-# query << [write("hi")]
+# query << [write_("hi")]
 # query << [is_("X", 2 |plus| 4)]
 # query << [is_(6, 2 |plus| 4)]
 # query << [is_(6, 2 |plus| 8)]           # Results don't show false if previous query was true. Good or bad?
@@ -279,6 +281,13 @@ studies("alex", "physics") >> []
 # query << [teaches("dr_fred", "Course"), cut(), studies("Student", "Course")]
 # query << [teaches("dr_fred", "Course"), studies("Student", "Course"), cut()]
 # query << [cut(), teaches("dr_fred", "Course"), studies("Student", "Course")]
+# query << [newPos(11, 1, "n", "NewR", "NewC")]
+# query << [newPos(11, 1, "w", "NewR", "NewC")]
+# query << [newPos(11, 1, "e", "NewR", "NewC")]
+# query << [newPos(11, 1, "s", "NewR", "NewC")]
+# query << [move(11, 1, "NewR", "NewC", [[11, 2]], "Visited", ["w", "w", "w"], "Dirs")]
+# query << [printUnsolvedMaze()]
+# query << [reverse_([1,2,3], "X")]
 
 
 ### Testing Zone ###
@@ -287,8 +296,22 @@ studies("alex", "physics") >> []
 
 #### Test queries below FAIL ####  ???
 
+# query << [mazeStartPos("StartR", "StartC"),
+#     solve("StartR", "StartC", "_", "_", [["StartR", "StartC"]], "_", [], "Path1"),
+#     reverse_("Path1", "Path")]
+# query(1) << [winningPath("Path"), write_("Path")]
 
+# query << [printMaze([])]
+# query << [printSolvedMaze()]
 
+# query(13) << [mazeDimension("Rows", "Cols"),
+#     between(0, "Rows", "Row"),
+#     between(0, "Cols", "Col"),
+#     mazeElement("Row", "Col", "Appearance", [])
+#     ]
+# query << [mazeElement(0, 15, "Appearance", [])]
+
+# query << [between(0, 12, "Rows")]
 
 
 # query << [between(1, 5, "X"), mynot(setEqual("X", 3))]  # Fails because my predicates can't take other predicates as args.

@@ -19,8 +19,10 @@ def create(term, memo = {}):
         memo[str(term)] = ListPL([create(item, memo) for item in term]) if term else Const(term)
     elif isinstance(term, Goal):
         memo[str(term)] = Goal(term.pred, [create(item, memo) for item in term.args])
-    elif term[0].isupper() or term[0] == "_":
+    elif term[0].isupper():
         memo[str(term)] = Var(term)
+    elif term[0] == "_":        # Vars that start with "_" are temporary.
+        return Var(term)        # Since all _s are different, they should not be added to memo.
     # Otherwise, it is a Const.
     else:
         memo[str(term)] = Const(term)
@@ -285,9 +287,14 @@ def tryGoal(goal):
                 if isinstance(arg, Var):
                     changePath(arg, "Undefined")
     # If no predicate exists with this number of arguments, it may be a built-in predicate.
-    elif goal.pred == write and len(goal.args) == 1:
-            print(goal.args[0].value)
+    elif goal.pred == write_ and len(goal.args) == 1:
+            print(goal.args[0].value, end="")
+            # print(goal.args[0].value)
+
             yield True, wasCut
+    elif goal.pred == nl_:
+        print()
+        yield True, wasCut
     elif goal.pred == lt_:
         yield (goal.args[0].value < goal.args[1].value, wasCut)
     elif goal.pred == le_:
@@ -297,7 +304,6 @@ def tryGoal(goal):
     elif goal.pred == ge_:
         yield (goal.args[0].value >= goal.args[1].value, wasCut)
     elif goal.pred == cut:
-        wasCut = True
         yield True, wasCut
     elif goal.pred == setEqual:
         if tryUnify([goal.args[0]], [goal.args[1]]):
@@ -406,7 +412,8 @@ is_("Q", "Q") >> []
 # fail/0.
 fail = Predicate("failPredicate")
 
-write = Predicate("write")
+write_ = Predicate("write_")
+nl_ = Predicate("nl_")
 
 member = Predicate("member")
 member("H", ["H", "|", "_"]) >> []
@@ -460,6 +467,17 @@ len_(["_", "|", "T"], "A") >> [len_("T", "B"), is_("A", "B" |plus| 1)]
 permutation_ = Predicate("permutation_")
 permutation_([], []) >> []
 permutation_(["H", "|", "T"], "S") >> [permutation_("T", "P"), append_("X", "Y", "P"), append_("X", ["H", "|", "Y"], "S")]
+
+
+# reverse(Xs, Ys) :- reverse(Xs, [], Ys, Ys).
+# reverse([], Ys, Ys, []).
+# reverse([X|Xs], Rs, Ys, [_|Bound]) :- reverse(Xs, [X|Rs], Ys, Bound).
+reverse_ = Predicate("reverse_")
+reverse_("Xs", "Ys") >> [reverse_("Xs", [], "Ys", "Ys")]
+reverse_([], "Ys", "Ys", []) >> []
+reverse_(["X", "|", "Xs"], "Rs", "Ys", ["_", "|", "Bound"]) >> [reverse_("Xs", ["X", "|", "Rs"], "Ys", "Bound")]
+
+
 
 # Use to make queries.
 query = Query()
