@@ -140,9 +140,9 @@ mazeDimension(15, 12) >> []
 # % That is, when solving the maze, you start
 # % at mazeStartPos and you finish and mazeEndPos.
 # mazeStartPos(13,6).
-mazeStartPos(13,6) >> []
+mazeStartPos(13, 6) >> []
 # mazeEndPos(0,10).
-mazeEndPos(0,10) >> []
+mazeEndPos(0, 10) >> []
 
 # %%%%%%%%%%%%%%%%%%%%
 # % MAZE PRINTING
@@ -170,7 +170,6 @@ mazeElement("_", "_", " ", "_") >> []
 # % Newline at the end of each row.
 # mazeNewLine(C) :- mazeDimension(_,C), nl.
 mazeNewLine("C") >> [mazeDimension("_", "C"), nl_()]
-# mazeNewLine("C") >> [mazeDimension("_", "C"), write_("\n")]
 
 
 # % Print the maze, with a winning path, maybe.
@@ -181,7 +180,7 @@ mazeNewLine("C") >> [mazeDimension("_", "C"), nl_()]
 #     mazeDimension(Rows, Cols),
 #     between(0, Rows, Row),
 #     between(0, Cols, Col),
-#     mazeElement(Row, Col, Appearance,WinningPath),
+#     mazeElement(Row, Col, Appearance, WinningPath),
 #     write(Appearance),
 #     mazeNewLine(Col),
 #     fail.

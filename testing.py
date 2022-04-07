@@ -41,64 +41,64 @@ studies = Predicate("studies")
 
 # #### facts/rules ####
 
-+male("bob")
-+male("john")
-+male("ben")
-+male("martin")
-+male("edmund")
-+male("david")
-+male("isidore")
-+male("william")
-+male("ferdinand")
-+male("morris")
-+male("alphonse")
-+male("jiri")
-+female("kathryn")
-+female("beatrice")
-+female("rachel")
-+female("lillian")
-+female("alice")
-+female("rosa")
-+female("marjorie")
-+female("emma")
-+female("nellie")
-+female("eva")
-+female("bertha")
-+female("fergie")
+male("bob") >> []
+male("john") >> []
+male("ben") >> []
+male("martin") >> []
+male("edmund") >> []
+male("david") >> []
+male("isidore") >> []
+male("william") >> []
+male("ferdinand") >> []
+male("morris") >> []
+male("alphonse") >> []
+male("jiri") >> []
+female("kathryn") >> []
+female("beatrice") >> []
+female("rachel") >> []
+female("lillian") >> []
+female("alice") >> []
+female("rosa") >> []
+female("marjorie") >> []
+female("emma") >> []
+female("nellie") >> []
+female("eva") >> []
+female("bertha") >> []
+female("fergie") >> []
 
 # A is the child of B
-+child("bob", "john")
-+child("bob", "kathryn")
-+child("beatrice", "john")
-+child("beatrice", "kathryn")
-+child("john", "ben")
-+child("john", "rachel")
-+child("lillian", "ben")
-+child("lillian", "rachel")
-+child("kathryn", "rosa")
-+child("kathryn", "martin")
-+child("alice", "martin")
-+child("alice", "rosa")
-+child("ferdinand", "martin")
-+child("ferdinand", "fergie")
-+child("marjorie", "edmund")
-+child("marjorie", "lillian")
-+child("david", "lillian")
-+child("david", "edmund")
-+child("ben", "isidore")
-+child("ben", "bertha")
-+child("william", "isidore")
-+child("william", "bertha")
-+child("emma", "isidore")
-+child("emma", "bertha")
-+child("morris", "alphonse")
-+child("morris", "emma")
-+child("nellie", "alphonse")
-+child("nellie", "emma")
-+child("eva", "alphonse")
-+child("eva", "emma")
-+child("jiri", "alphonse")
-+child("jiri", "emma")
+child("bob", "john") >> []
+child("bob", "kathryn") >> []
+child("beatrice", "john") >> []
+child("beatrice", "kathryn") >> []
+child("john", "ben") >> []
+child("john", "rachel") >> []
+child("lillian", "ben") >> []
+child("lillian", "rachel") >> []
+child("kathryn", "rosa") >> []
+child("kathryn", "martin") >> []
+child("alice", "martin") >> []
+child("alice", "rosa") >> []
+child("ferdinand", "martin") >> []
+child("ferdinand", "fergie") >> []
+child("marjorie", "edmund") >> []
+child("marjorie", "lillian") >> []
+child("david", "lillian") >> []
+child("david", "edmund") >> []
+child("ben", "isidore") >> []
+child("ben", "bertha") >> []
+child("william", "isidore") >> []
+child("william", "bertha") >> []
+child("emma", "isidore") >> []
+child("emma", "bertha") >> []
+child("morris", "alphonse") >> []
+child("morris", "emma") >> []
+child("nellie", "alphonse") >> []
+child("nellie", "emma") >> []
+child("eva", "alphonse") >> []
+child("eva", "emma") >> []
+child("jiri", "alphonse") >> []
+child("jiri", "emma") >> []
 
 parent("A", "B") >> [child("B", "A")]
 
@@ -115,22 +115,22 @@ ancestor("A", "B") >> [parent("A", "X"), ancestor("X", "B")]
 
 first_cousin("A", "B") >> [parent("X", "A"), sibling("Y", "X"), parent("Y", "B")]
 
-+collatz("N", "N")
+collatz("N", "N") >> []
 collatz("N0", "N") >> [is_(0, "N0" |mod| 2), is_("N1", "N0" |div| 2), collatz("N1", "N")]
 collatz("N0", "N") >> [is_(1, "N0" |mod| 2), is_("N1", 3 |times| "N0" |plus| 1), collatz("N1", "N")]
 
 inboth("A", "B", "X") >> [member("X", "A"), member("X", "B")]
 
-+just_ate("deer", "grass")
-+just_ate("tiger", "deer")
+just_ate("deer", "grass") >> []
+just_ate("tiger", "deer") >> []
 
 is_digesting("A", "B") >> [just_ate("A", "B")]
 is_digesting("A", "B") >> [just_ate("A", "C"), is_digesting("C", "B")]
 
-+count("A", "A")
+count("A", "A") >> []
 count("A", "C") >> [is_("B", "A" |plus| 1), count("B", "C")]
 
-+always_true()
+always_true() >> []
 
 increment_all([], "X") >> [setEqual("X", [])]
 increment_all(["H", "|", "T"], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
@@ -138,10 +138,10 @@ increment_all(["H", "|", "T"], "X") >> [is_("Y", "H" |plus| 1), increment_all("T
 # increment_all([], "X") >> [setEqual("X", [])]
 # increment_all(["H", Tail("T")], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", Tail("Z")])]
 
-+basicList(["a", "b", "c"])
+basicList(["a", "b", "c"]) >> []
 
-+merge("A", [], "A")
-+merge([], "B", "B")
+merge("A", [], "A") >> []
+merge([], "B", "B") >> []
 merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [lt_("H1", "H2"), merge("T1", ["H2", "|", "T2"], "Z"), setEqual("X", ["H1", "|", "Z"])]
 merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [ge_("H1", "H2"), merge(["H1", "|", "T1"], "T2", "Z"), setEqual("X", ["H2", "|", "Z"])]
 
@@ -291,26 +291,17 @@ studies("alex", "physics") >> []
 
 
 ### Testing Zone ###
+
 # query << [winningPath("Path")]
-
-query << [winningPath("Path"), write_("Path")]
-
+# query << [winningPath("Path"), write_("Path")]
 
 #### Test queries below FAIL ####  ???
 
-# query << [mazeStartPos("StartR", "StartC"),
-#     solve("StartR", "StartC", "_", "_", [["StartR", "StartC"]], "_", [], "Path1"),
-#     reverse_("Path1", "Path")]
 
-# query << [printMaze([])]
+query << [printUnsolvedMaze()]
 # query << [printSolvedMaze()]
 
-# query(13) << [mazeDimension("Rows", "Cols"),
-#     between(0, "Rows", "Row"),
-#     between(0, "Cols", "Col"),
-#     mazeElement("Row", "Col", "Appearance", [])
-#     ]
-# query << [mazeElement(0, 15, "Appearance", [])]
+# query << [mazeElement(0, 1, "Appearance", [])]
 
 # query << [between(0, 12, "Rows")]
 

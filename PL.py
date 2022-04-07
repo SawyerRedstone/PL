@@ -288,7 +288,7 @@ def tryGoal(goal):
                     changePath(arg, "Undefined")
     # If no predicate exists with this number of arguments, it may be a built-in predicate.
     elif goal.pred == write_ and len(goal.args) == 1:
-        print(goal.args[0].value, end="")
+        print(flatten(goal.args[0].value), end="")
         yield True, wasCut
     elif goal.pred == nl_:
         print()
@@ -302,6 +302,7 @@ def tryGoal(goal):
     elif goal.pred == ge_:
         yield (goal.args[0].value >= goal.args[1].value, wasCut)
     elif goal.pred == cut:
+        wasCut = True
         yield True, wasCut
     elif goal.pred == setEqual:
         if tryUnify([goal.args[0]], [goal.args[1]]):
