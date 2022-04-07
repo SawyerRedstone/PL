@@ -286,20 +286,20 @@ studies("alex", "physics") >> []
 # query << [newPos(11, 1, "e", "NewR", "NewC")]
 # query << [newPos(11, 1, "s", "NewR", "NewC")]
 # query << [move(11, 1, "NewR", "NewC", [[11, 2]], "Visited", ["w", "w", "w"], "Dirs")]
-# query << [printUnsolvedMaze()]
 # query << [reverse_([1,2,3], "X")]
+# query << [printUnsolvedMaze()]
+query << [printSolvedMaze()]
 
 
 ### Testing Zone ###
-
 # query << [winningPath("Path")]
+
 # query << [winningPath("Path"), write_("Path")]
 
 #### Test queries below FAIL ####  ???
 
 
-query << [printUnsolvedMaze()]
-# query << [printSolvedMaze()]
+# query << [printUnsolvedMaze()]
 
 # query << [mazeElement(0, 1, "Appearance", [])]
 

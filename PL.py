@@ -98,10 +98,8 @@ class Goal():
             self.pred.alternatives[len(self.args)].append(Alt(self.args, others))
         else:
             self.pred.alternatives[len(self.args)] = [Alt(self.args, others)]
-    # Alternatively, add facts as +head.
-    # '+' for putting info IN (facts).
-    def __pos__(self):
-        self >> []      # Treat a fact as a rule with no goals.
+    def __repr__(self):
+        return self.pred.name
 
 
 
@@ -286,6 +284,9 @@ def tryGoal(goal):
             for arg in goal.args:
                 if isinstance(arg, Var):
                     changePath(arg, "Undefined")
+            if wasCut:      # *** Testing.
+                wasCut = False
+                break
     # If no predicate exists with this number of arguments, it may be a built-in predicate.
     elif goal.pred == write_ and len(goal.args) == 1:
         print(flatten(goal.args[0].value), end="")
