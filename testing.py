@@ -291,7 +291,9 @@ studies("alex", "physics") >> []
 
 
 ### Testing Zone ###
+# query << [winningPath("Path")]
 
+query << [winningPath("Path"), write_("Path")]
 
 
 #### Test queries below FAIL ####  ???
@@ -299,7 +301,6 @@ studies("alex", "physics") >> []
 # query << [mazeStartPos("StartR", "StartC"),
 #     solve("StartR", "StartC", "_", "_", [["StartR", "StartC"]], "_", [], "Path1"),
 #     reverse_("Path1", "Path")]
-# query(1) << [winningPath("Path"), write_("Path")]
 
 # query << [printMaze([])]
 # query << [printSolvedMaze()]
