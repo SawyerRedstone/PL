@@ -288,7 +288,7 @@ studies("alex", "physics") >> []
 # query << [move(11, 1, "NewR", "NewC", [[11, 2]], "Visited", ["w", "w", "w"], "Dirs")]
 # query << [reverse_([1,2,3], "X")]
 # query << [printUnsolvedMaze()]
-query << [printSolvedMaze()]
+# query << [printSolvedMaze()]
 
 
 ### Testing Zone ###
@@ -313,11 +313,11 @@ query << [printSolvedMaze()]
 for s in query:   # Can also be '-success' to reduce typing '-' elsewhere.
     print(s)
     # # If you want to use the results, you can do something like this:
-    # X = s["B"]
+    # X = s["Course"]
     # print(X)
 
 # The query can be indexed to find a specific result.
-# print(query[5])
+# print(query[2])
 
 
 
