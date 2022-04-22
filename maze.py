@@ -162,7 +162,7 @@ mazeElement("R", "C", "e", "_") >> [mazeEndPos("R", "C"), cut()]
 # mazeElement(R,C,'*',_) :- mazeWall(R,C), !.
 mazeElement("R", "C", "*", "_") >> [mazeWall("R", "C"), cut()]
 # mazeElement(R,C,'.',V) :- member([R,C],V), !.
-mazeElement("R", "C", ".", "V") >> [member(["R", "C"], "V"), cut()]
+mazeElement("R", "C", ".", "V") >> [member_(["R", "C"], "V"), cut()]
 # mazeElement(_,_,' ',_).
 mazeElement("_", "_", " ", "_") >> []
 
@@ -287,7 +287,7 @@ newPos("OldRow", "OldCol", "s", "NewRow", "OldCol") >> [is_("NewRow", "OldRow" |
 #     direction(D), newPos(CurrentR, CurrentC, D, NewR, NewC), not(member([NewR, NewC], PosVisitedIn)), 
 #     append([[NewR, NewC]], PosVisitedIn, PosVisitedOut), append([D], MoveListIn, MoveListOut).
 move("CurrentR", "CurrentC", "NewR", "NewC", "PosVisitedIn", "PosVisitedOut", "MoveListIn", "MoveListOut") >> [
-    direction("D"), newPos("CurrentR", "CurrentC", "D", "NewR", "NewC"), not_(member(["NewR", "NewC"], "PosVisitedIn")),
+    direction("D"), newPos("CurrentR", "CurrentC", "D", "NewR", "NewC"), not_(member_(["NewR", "NewC"], "PosVisitedIn")),
     append_([["NewR", "NewC"]], "PosVisitedIn", "PosVisitedOut"), append_(["D"], "MoveListIn", "MoveListOut")]
 
 # % Solve the maze by repeatedly calling move. Stops when

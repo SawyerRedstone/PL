@@ -21,6 +21,9 @@ def create(term, memo = {}):
         memo[str(term)] = ListPL([create(item, memo) for item in term]) if term else Const(term)
     elif isinstance(term, Goal):
         memo[str(term)] = Goal(term.pred, [create(item, memo) for item in term.args])
+    elif "-" in term:       # ***
+        pairList = term.split("-")
+        memo[str(term)] = Pair([create(item, memo) for item in pairList])
     elif term[0].isupper():
         memo[str(term)] = Var(term)
     elif term[0] == "_":        # Vars that start with "_" are temporary.
@@ -196,7 +199,7 @@ class Math(Term):
         # Check if 'other' is built-in. (Add other built-in here! ***)
         if other is plus or other is minus:
             other = other.function
-        if self.mathList[-1] is times or self.mathList[-1] is div or self.mathList[-1] is mod:
+        if self.mathList[-1] is times or self.mathList[-1] is div or self.mathList[-1] is mod or self.mathList[-1] is floorDiv:
             op = self.mathList.pop()
             addend = self.mathList.pop()
             newMath = addend | op | other
@@ -218,15 +221,6 @@ class Math(Term):
         return str(self)
     def __hash__(self):
         return hash(tuple(self.mathList))
-
-
-plus = Math(lambda x, y: x + y)
-minus = Math(lambda x, y: x - y)
-times = Math(lambda x, y: x * y)
-div = Math(lambda x, y: x / y)
-mod = Math(lambda x, y: x % y)
-
-
 
 
 class ListPL(Term):
@@ -257,8 +251,15 @@ class ListPL(Term):
         return str(self)
     def __str__(self):
         return str(self.value)
-    def __repr__(self):
-        return str(self.lst)
+
+
+
+# A Pair is a combination of terms seperated with dashes. 
+class Pair(ListPL):
+    def __init__(self, terms):
+        super().__init__(terms, name = "Pair")
+    def __str__(self):
+        return "-".join(str(term) for term in self.terms)
 
 
 def tryGoal(goal):
@@ -420,7 +421,21 @@ def flatten(toFlatten):
 
 # #### Built-in Features ####
 
-# The Prolog is/2 predicate, with a different name because "is" already exists in Python.
+# Use to make queries.
+query = Query()
+
+
+# Mathamatical expressions that can be used.
+# To use these, type the operator between two |s, like so:
+# 4 |plus| 5 |plus| 6
+plus = Math(lambda x, y: x + y)
+minus = Math(lambda x, y: x - y)
+times = Math(lambda x, y: x * y)
+div = Math(lambda x, y: x / y)
+floorDiv = Math(lambda x, y: x // y)
+mod = Math(lambda x, y: x % y)
+
+# The Prolog is/2 predicate.
 is_ = Predicate("is_")
 is_("Q", "Q") >> []
 
@@ -430,9 +445,9 @@ fail = Predicate("failPredicate")
 write_ = Predicate("write_")
 nl_ = Predicate("nl_")
 
-member = Predicate("member")
-member("H", ["H", "|", "_"]) >> []
-member("H", ["_", "|", "T"]) >> [member("H", "T")]
+member_ = Predicate("member_")
+member_("H", ["H", "|", "_"]) >> []
+member_("H", ["_", "|", "T"]) >> [member_("H", "T")]
 
 append_ = Predicate("append_")
 append_([], "W", "W") >> []
@@ -448,14 +463,11 @@ notEqual = Predicate("notEqual")
 
 call_ = Predicate("call_")
 
-# (\+)/1 predicate.
+
 not_ = Predicate("not_")
 not_("A") >> [call_("A"), cut(), fail()]
 not_("_") >> []
 
-# mynot = Predicate("mynot")      # *** Doesn't work.
-# mynot("A") >> ["A", cut(), fail()]
-# mynot("_") >> []
 
 # </2 predicate.
 lt_ = Predicate("less than")
@@ -468,26 +480,21 @@ between = Predicate("between")
 between("N", "M", "K") >> [le_("N", "M"), setEqual("K", "N")]
 between("N", "M", "K") >> [lt_("N", "M"), is_("N1", "N" |plus| 1), between("N1", "M", "K")]
 
+
 len_ = Predicate("len_")
 len_([], 0) >> []
 len_(["_", "|", "T"], "A") >> [len_("T", "B"), is_("A", "B" |plus| 1)]
 
-# permutation([],[]).
-# permutation([H|T],S) :- permutation(T,P),append(X,Y,P),append(X,[H|Y],S).
+
 permutation_ = Predicate("permutation_")
 permutation_([], []) >> []
 permutation_(["H", "|", "T"], "S") >> [permutation_("T", "P"), append_("X", "Y", "P"), append_("X", ["H", "|", "Y"], "S")]
 
 
-# reverse(Xs, Ys) :- reverse(Xs, [], Ys, Ys).
-# reverse([], Ys, Ys, []).
-# reverse([X|Xs], Rs, Ys, [_|Bound]) :- reverse(Xs, [X|Rs], Ys, Bound).
 reverse_ = Predicate("reverse_")
 reverse_("Xs", "Ys") >> [reverse_("Xs", [], "Ys", "Ys")]
 reverse_([], "Ys", "Ys", []) >> []
 reverse_(["X", "|", "Xs"], "Rs", "Ys", ["_", "|", "Bound"]) >> [reverse_("Xs", ["X", "|", "Rs"], "Ys", "Bound")]
 
-
-
-# Use to make queries.
-query = Query()
+# This is used when head should always succeed.
+true_ = Predicate("true_")
