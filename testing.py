@@ -42,6 +42,8 @@ lookup = Predicate("lookup")
 graph1 = Predicate("graph1")
 graph2 = Predicate("graph2")
 graph3 = Predicate("graph3")
+hasCycle = Predicate("hasCycle")
+getChain = Predicate("getChain")
 
 # #### facts/rules ####
 
@@ -185,16 +187,16 @@ studies("angus", "english") >> []
 studies("amelia", "drama") >> []
 studies("alex", "physics") >> []
 
-# lookup(K, L, V) :- member(K-V, L), !.
 lookup("K", "L", "V") >> [member_("K-V", "L"), cut()]
 
-# graph1([n1-n2, n2-n5, n1-n3, n1-n4, n4-n6, n6-n7, n6-n8]).
 graph1(["n1-n2", "n2-n5", "n1-n3", "n1-n4", "n4-n6", "n6-n7", "n6-n8"]) >> []
-# graph2([n1-n2, n2-n5, n1-n3, n1-n4, n4-n6, n6-n7, n7-n1, n7-n8]).
 graph2(["n1-n2", "n2-n5", "n1-n3", "n1-n4", "n4-n6", "n6-n7", "n7-n1", "n7-n8"]) >> []
-# graph3([n4-n5, n1-n2, n1-n3, n1-n4, n4-n9, n9-10, n9-n11, n9-n12, n12-n9]).
 graph3(["n4-n5", "n1-n2", "n1-n3", "n1-n4", "n4-n9", "n9-10", "n9-n11", "n9-n12", "n12-n9"]) >> []
 
+hasCycle("G") >> [member_("X-Y", "G"), getChain(["X"], "Y", "G"), cut()]
+
+getChain("Reached", "Next", "_G") >> [member_("Next", "Reached"), cut()]
+getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", ["Next"], "NewReached"), getChain("NewReached", "X", "G"), cut()]
 
 # ##########################################
 
@@ -242,7 +244,7 @@ graph3(["n4-n5", "n1-n2", "n1-n3", "n1-n4", "n4-n9", "n9-10", "n9-n11", "n9-n12"
 # query << [is_(6, 2 |plus| 4)]
 # query << [is_(6, 2 |plus| 8)]           # Results don't show false if previous query was true. Good or bad?
 # query << [is_("X", 2 |plus| "hi")]    # Change error later. ???
-# query << [fail()]
+# query << [fail_()]
 # query << [is_digesting("tiger", "grass")]
 # query << [is_digesting("X", "Y")]
 # query(10) << [count(0, "X")]
@@ -292,7 +294,6 @@ graph3(["n4-n5", "n1-n2", "n1-n3", "n1-n4", "n4-n9", "n9-10", "n9-n11", "n9-n12"
 # query << [move(11, 1, "NewR", "NewC", [[11, 2]], "Visited", ["w", "w", "w"], "Dirs")]
 # query << [reverse_([1,2,3], "X")]
 # query << [printUnsolvedMaze()]
-# query << [printSolvedMaze()]
 # query << [prime_factors(12, "X")]     # Maybe use for demonstration. ***
 # query << [lookup(5, ["6-a", "7-z", "5-t", "34-w"], "Value")]
 # query << [lookup("Key", ["6-a", "7-z", "5-t", "34-w"], "z")]
@@ -301,6 +302,12 @@ graph3(["n4-n5", "n1-n2", "n1-n3", "n1-n4", "n4-n9", "n9-10", "n9-n11", "n9-n12"
 
 ### Testing Zone ###
 
+# query << [not_(male("bob"))]
+
+# query << [newPos(11, 1, "w", "NewR", "NewC")]
+
+# query << [printSolvedMaze()]
+# query << [graph2("G"), hasCycle("G")]
 
 #### Test queries below FAIL ####  ???
 
@@ -309,10 +316,10 @@ graph3(["n4-n5", "n1-n2", "n1-n3", "n1-n4", "n4-n9", "n9-10", "n9-n11", "n9-n12"
 
 
 ### To see results ###
-for s in query:   # Can also be '-success' to reduce typing '-' elsewhere.
-    print(s)
+for result in query:
+    print(result)
     # # If you want to use the results, you can do something like this:
-    # X = s["Course"]
+    # X = result["X"]
     # print(X)
 
 # The query can be indexed to find a specific result.

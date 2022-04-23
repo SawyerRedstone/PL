@@ -97,8 +97,8 @@ class Goal():
         self.value = self           # This allows goals to unify with Vars.
     def __str__(self):
         return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
-    # Add rules as: head >> [goal1, goal2]
-    # Add facts as head >> []
+    # Add facts as: head >> []
+    # Add rules as: head >> [goal1, goal2, ...]
     def __rshift__(self, others):
         if len(self.args) in self.pred.alternatives:
             self.pred.alternatives[len(self.args)].append(Alt(self.args, others))
@@ -110,6 +110,7 @@ class Goal():
         if isinstance(other, Var):
             other.value = self
         return True
+
 
 
 # Alts are individual alternatives that were added to a predicate.
@@ -247,11 +248,10 @@ class ListPL(Term):
                 return True
             return False
         return super().unifyWith(altArg)
-    def __repr__(self):
-        return str(self)
     def __str__(self):
         return str(self.value)
-
+    def __repr__(self):
+        return str(self.lst)
 
 
 # A Pair is a combination of terms seperated with dashes. 
@@ -285,7 +285,6 @@ def tryGoal(goal):
                 wasCut = attempt[1]
                 if success:
                     # Yield vars, or True if this succeeded without changing vars.
-                    # yield findVars(goal.args) or True
                     yield (findVars(goal.args) or True, wasCut)
                 if wasCut:
                     break
@@ -320,8 +319,11 @@ def tryGoal(goal):
     elif goal.pred == notEqual:
         if goal.args[0].value != goal.args[1].value:
             yield (findVars(goal.args) or True, wasCut)
-    elif goal.pred == call_:
-        yield next(tryGoal(goal.args[0]))[0], wasCut
+    elif goal.pred == call_:    # *** Fixing this now.
+        goalToCall = goal.args[0].value
+        result = next(tryGoal(goalToCall))
+        yield (result[0], wasCut)
+        # yield next(tryGoal(goalToCall))[0], wasCut
     # elif goal.pred == not_:
     #     yield not next(tryGoal(goal.args[0]))[0], wasCut
     # After trying all alts, reset any Vars that were turned into Consts.
@@ -347,10 +349,11 @@ def tryAlt(query, alt):
         yield False, wasCut
     elif len(goalsToTry) > 0:       # If this alt has goals, try them.
         for attempt in tryGoals(goalsToTry):
-            success = attempt[0]
+            # success = attempt[0]
             wasCut = attempt[1]
-            if success:
-                yield attempt
+            # if success:
+            #     yield attempt
+            yield attempt
             if wasCut:
                 break
     else:
@@ -440,7 +443,7 @@ is_ = Predicate("is_")
 is_("Q", "Q") >> []
 
 # fail/0.
-fail = Predicate("failPredicate")
+fail_ = Predicate("fail_")
 
 write_ = Predicate("write_")
 nl_ = Predicate("nl_")
@@ -465,7 +468,7 @@ call_ = Predicate("call_")
 
 
 not_ = Predicate("not_")
-not_("A") >> [call_("A"), cut(), fail()]
+not_("A") >> [call_("A"), cut(), fail_()]
 not_("_") >> []
 
 

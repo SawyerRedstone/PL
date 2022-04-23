@@ -191,7 +191,7 @@ printMaze("WinningPath") >> [
     mazeElement("Row", "Col", "Appearance", "WinningPath"),
     write_("Appearance"),
     mazeNewLine("Col"),
-    fail()]
+    fail_()]
 
 # % Shortcut function to print the maze
 # % if you don't have the solution yet.
