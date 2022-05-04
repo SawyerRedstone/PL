@@ -112,7 +112,7 @@ parent("A", "B") >> [child("B", "A")]
 father("A", "B") >> [male("A"), parent("A", "B")]
 mother("A", "B") >> [female("A"), parent("A", "B")]
 
-sibling("A", "B") >> [parent("X", "A"), parent("X", "B"), notEqual("A", "B")]
+sibling("A", "B") >> [parent("X", "A"), parent("X", "B"), PL.notEqual("A", "B")]
 
 uncle("A", "B") >> [parent("X", "B"), sibling("A", "X"), male("A")]
 aunt("A", "B") >> [parent("X", "B"), sibling("A", "X"), female("A")]
@@ -123,10 +123,10 @@ ancestor("A", "B") >> [parent("A", "X"), ancestor("X", "B")]
 first_cousin("A", "B") >> [parent("X", "A"), sibling("Y", "X"), parent("Y", "B")]
 
 collatz("N", "N") >> []
-collatz("N0", "N") >> [is_(0, "N0" |mod| 2), is_("N1", "N0" |div| 2), collatz("N1", "N")]
-collatz("N0", "N") >> [is_(1, "N0" |mod| 2), is_("N1", 3 |times| "N0" |plus| 1), collatz("N1", "N")]
+collatz("N0", "N") >> [PL.is_(0, "N0" |PL.mod| 2), PL.is_("N1", "N0" |PL.div| 2), collatz("N1", "N")]
+collatz("N0", "N") >> [PL.is_(1, "N0" |PL.mod| 2), PL.is_("N1", 3 |PL.times| "N0" |PL.plus| 1), collatz("N1", "N")]
 
-inboth("A", "B", "X") >> [member_("X", "A"), member_("X", "B")]
+inboth("A", "B", "X") >> [PL.member_("X", "A"), PL.member_("X", "B")]
 
 just_ate("deer", "grass") >> []
 just_ate("tiger", "deer") >> []
@@ -135,48 +135,38 @@ is_digesting("A", "B") >> [just_ate("A", "B")]
 is_digesting("A", "B") >> [just_ate("A", "C"), is_digesting("C", "B")]
 
 count("A", "A") >> []
-count("A", "C") >> [is_("B", "A" |plus| 1), count("B", "C")]
+count("A", "C") >> [PL.is_("B", "A" |PL.plus| 1), count("B", "C")]
 
 always_true() >> []
 
-increment_all([], "X") >> [setEqual("X", [])]
-increment_all(["H", "|", "T"], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
-
-# increment_all([], "X") >> [setEqual("X", [])]
-# increment_all(["H", Tail("T")], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", Tail("Z")])]
+increment_all([], "X") >> [PL.setEqual("X", [])]
+increment_all(["H", "|", "T"], "X") >> [PL.is_("Y", "H" |PL.plus| 1), increment_all("T", "Z"), PL.setEqual("X", ["Y", "|", "Z"])]
 
 basicList(["a", "b", "c"]) >> []
 
 merge("A", [], "A") >> []
 merge([], "B", "B") >> []
-merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [lt_("H1", "H2"), merge("T1", ["H2", "|", "T2"], "Z"), setEqual("X", ["H1", "|", "Z"])]
-merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [ge_("H1", "H2"), merge(["H1", "|", "T1"], "T2", "Z"), setEqual("X", ["H2", "|", "Z"])]
+merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [PL.lt_("H1", "H2"), merge("T1", ["H2", "|", "T2"], "Z"), PL.setEqual("X", ["H1", "|", "Z"])]
+merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [PL.ge_("H1", "H2"), merge(["H1", "|", "T1"], "T2", "Z"), PL.setEqual("X", ["H2", "|", "Z"])]
 
-
-ismember2("H", ["H", "|", "_"]) >> [cut()]
+ismember2("H", ["H", "|", "_"]) >> [PL.cut()]
 ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 
 all_diff([]) >> []
-all_diff(["H", "|", "T"]) >> [not_(member_("H", "T")), all_diff("T")]    # Problem is member args are never created. ???
+all_diff(["H", "|", "T"]) >> [PL.not_(PL.member_("H", "T")), all_diff("T")]    # Problem is member args are never created. ???
 
-splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "SecondPart", "List"), len_("FirstPart", "Pos")]
+splitAt("Pos", "List", "FirstPart", "SecondPart") >> [PL.append_("FirstPart", "SecondPart", "List"), PL.len_("FirstPart", "Pos")]
 
-sublist("A", "B") >> [append_("A", "_", "B")]
+sublist("A", "B") >> [PL.append_("A", "_", "B")]
 sublist("A", ["_", "|", "T"]) >> [sublist("A", "T")]
 
-# sublist_cut(A, B) :- append(A, _, B), !.
-# sublist_cut(A, [_|T]) :- sublist_cut(A, T).
-sublist_cut("A", "B") >> [append_("A", "_", "B"), cut()]
+sublist_cut("A", "B") >> [PL.append_("A", "_", "B"), PL.cut()]
 sublist_cut("A", ["_", "|", "T"]) >> [sublist_cut("A", "T")]
 
-# isSorted([_]).
-# isSorted([H1, H2 | T]) :- H1 =< H2, isSorted([H2 | T]).
 isSorted(["_"]) >> []
-isSorted(["H1", "H2", "|", "T"]) >> [le_("H1", "H2"), isSorted(["H2", "|", "T"])]
+isSorted(["H1", "H2", "|", "T"]) >> [PL.le_("H1", "H2"), isSorted(["H2", "|", "T"])]
 
-
-# bad_sort(X, Y) :- permutation(X, Y), isSorted(Y), !.
-bad_sort("X", "Y") >> [permutation_("X", "Y"), isSorted("Y"), cut()]
+bad_sort("X", "Y") >> [PL.permutation_("X", "Y"), isSorted("Y"), PL.cut()]
 
 
 teaches("dr_fred", "history") >> []
@@ -188,16 +178,16 @@ studies("angus", "english") >> []
 studies("amelia", "drama") >> []
 studies("alex", "physics") >> []
 
-lookup("K", "L", "V") >> [member_("K-V", "L"), cut()]
+lookup("K", "L", "V") >> [PL.member_("K-V", "L"), PL.cut()]
 
 graph1(["n1-n2", "n2-n5", "n1-n3", "n1-n4", "n4-n6", "n6-n7", "n6-n8"]) >> []
 graph2(["n1-n2", "n2-n5", "n1-n3", "n1-n4", "n4-n6", "n6-n7", "n7-n1", "n7-n8"]) >> []
 graph3(["n4-n5", "n1-n2", "n1-n3", "n1-n4", "n4-n9", "n9-10", "n9-n11", "n9-n12", "n12-n9"]) >> []
 
-hasCycle("G") >> [member_("X-Y", "G"), getChain(["X"], "Y", "G"), cut()]
+hasCycle("G") >> [PL.member_("X-Y", "G"), getChain(["X"], "Y", "G"), PL.cut()]
 
-getChain("Reached", "Next", "_G") >> [member_("Next", "Reached"), cut()]
-getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", ["Next"], "NewReached"), getChain("NewReached", "X", "G"), cut()]
+getChain("Reached", "Next", "_G") >> [PL.member_("Next", "Reached"), PL.cut()]
+getChain("Reached", "Next", "G") >> [PL.member_("Next-X", "G"), PL.append_("Reached", ["Next"], "NewReached"), getChain("NewReached", "X", "G"), PL.cut()]
 
 # ##########################################
 
@@ -228,91 +218,88 @@ getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", 
 # PL.query << [first_cousin("david", "X")]
 # PL.query << [first_cousin("jiri", "X")]
 # PL.query(9) << [collatz(10, "X")]          # To see only some results, use PL.query(number_of_results).
-# PL.query << [member_("X", ["bob", "apple", "shirt", "pip"])]
+# PL.query << [PL.member_("X", ["bob", "apple", "shirt", "pip"])]
 # PL.query << [inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")]
 # PL.query << [inboth([1, 2, 3, 4], [2, 5, 6, 1], "X")]
 # PL.query << [increment_all([12, 99, 4, -7], "X")]
 # PL.query << [merge([1, 4, 5, 10, 11, 13], [3, 4, 1000], "X")]
 # PL.query << [all_diff(["a", "b", "c"])]
 # PL.query << [all_diff(["a", "b", "c", "b"])]
-# PL.query << [between(1, 3, "X"), between(1, 3, "Y"), between(1, 3, "Z"), all_diff(["X", "Y", "Z"])]
-# PL.query << [not_(member_("X", ["a", "b", "c"])), setEqual("X", "f")]
-# PL.query << [setEqual("X", "f"), not_(member_("X", ["a", "b", "c"]))]
-# PL.query << [setEqual("X", ["q", "y", "z", "w"]), not_(len_("X", 4))]
-# PL.query << [setEqual("X", 3 |plus| 4), not_(setEqual("X", 99))]
-# PL.query << [write_("hi")]
-# PL.query << [is_("X", 2 |plus| 4)]
-# PL.query << [is_(6, 2 |plus| 4)]
-# PL.query << [is_(6, 2 |plus| 8)]           # Results don't show false if previous PL.query was true. Good or bad?
-# PL.query << [is_("X", 2 |plus| "hi")]    # Change error later. ???
-# PL.query << [fail_()]
+# PL.query << [PL.between(1, 3, "X"), PL.between(1, 3, "Y"), PL.between(1, 3, "Z"), all_diff(["X", "Y", "Z"])]
+# PL.query << [PL.not_(PL.member_("X", ["a", "b", "c"])), PL.setEqual("X", "f")]
+# PL.query << [PL.setEqual("X", "f"), PL.not_(PL.member_("X", ["a", "b", "c"]))]
+# PL.query << [PL.setEqual("X", ["q", "y", "z", "w"]), PL.not_(PL.len_("X", 4))]
+# PL.query << [PL.setEqual("X", 3 |PL.plus| 4), PL.not_(PL.setEqual("X", 99))]
+# PL.query << [PL.write_("hi")]
+# PL.query << [PL.is_("X", 2 |PL.plus| 4)]
+# PL.query << [PL.is_(6, 2 |PL.plus| 4)]
+# PL.query << [PL.is_(6, 2 |PL.plus| 8)]           # Results don't show false if previous PL.query was true. Good or bad?
+# PL.query << [PL.is_("X", 2 |PL.plus| "hi")]    # Change error later. ???
+# PL.query << [PL.fail_()]
 # PL.query << [is_digesting("tiger", "grass")]
 # PL.query << [is_digesting("X", "Y")]
 # PL.query(10) << [count(0, "X")]
 # PL.query << [always_true()]
-# PL.query << [setEqual("X", [])]
+# PL.query << [PL.setEqual("X", [])]
 # PL.query << [basicList(["X", "Y", "Z"])]
-# PL.query << [is_("X", 2 |plus| (4 |times| 5))]
-# PL.query << [is_("X", 2 |plus| 4 |times| 5)]
-# PL.query << [is_("X", 2 |times| 4 |plus| 5)]
-# PL.query << [is_("X", 2 |times| 4 |times| 5 |plus| 2)]
-# PL.query << [is_("X", 4 |minus| 3)]
-# PL.query << [is_(4, 2 |plus| "X" |plus| 5)]     # is_ pred can't have vars on right side.
-# PL.query << [append_([1, 2, 3], ["a", "b"], "X")]
-# PL.query << [append_("A", "B", [1, 2, 3, 4, 5])]
-# PL.query << [member_(1, [1, 2, 3, 1])]
-# PL.query << [between(1, 5, "K")]
-# PL.query << [lt_(1, 1 |plus| 2)]
-# PL.query << [lt_(1 |plus| 2, 1)]
+# PL.query << [PL.is_("X", 2 |PL.plus| (4 |PL.times| 5))]
+# PL.query << [PL.is_("X", 2 |PL.plus| 4 |PL.times| 5)]
+# PL.query << [PL.is_("X", 2 |PL.times| 4 |PL.plus| 5)]
+# PL.query << [PL.is_("X", 2 |PL.times| 4 |PL.times| 5 |PL.plus| 2)]
+# PL.query << [PL.is_("X", 4 |PL.minus| 3)]
+# PL.query << [PL.is_(4, 2 |PL.plus| "X" |PL.plus| 5)]     # is_ pred can't have vars on right side.
+# PL.query << [PL.append_([1, 2, 3], ["a", "b"], "X")]
+# PL.query << [PL.append_("A", "B", [1, 2, 3, 4, 5])]
+# PL.query << [PL.member_(1, [1, 2, 3, 1])]
+# PL.query << [PL.between(1, 5, "K")]
+# PL.query << [PL.lt_(1, 1 |PL.plus| 2)]
+# PL.query << [PL.lt_(1 |PL.plus| 2, 1)]
 # PL.query << [splitAt(3, ["a", "b", "c", "d", "e", "f", "g", "h"], "A", "B")]
 # PL.query << [sublist(["a", "a"], ["b", "a", "a", "b"])]
 # PL.query << [sublist(["b", "a", "b"], ["b", "a", "a", "b"])]
 # PL.query << [sublist(["a", "b", "a"], ["b", "a", "a", "b"])]
 # PL.query << [sublist(["a"], ["b", "a", "a", "b"])]
 # PL.query << [sublist(["a", "b", "d"], ["a", "b", "c", "d"])]
-# PL.query << [member_("X", [4, 5, 14, 15, 24, 25]), gt_("X", 10), cut(), is_(0, "X" |mod| 2)]
-# PL.query << [member_("X", [4, 5, 14, 15, 24, 25]), gt_("X", 10), is_(0, "X" |mod| 2)]
-# PL.query << [member_("X", [4, 5, 14, 15, 24, 25]), cut(), gt_("X", 10), is_(0, "X" |mod| 2)]
-# PL.query << [member_("X", [3, 4, 5, 13, 14, 15, 23, 24, 25]), gt_("X", 10), cut(), is_(0, "X" |mod| 2)]
+# PL.query << [PL.member_("X", [4, 5, 14, 15, 24, 25]), PL.gt_("X", 10), PL.cut(), PL.is_(0, "X" |PL.mod| 2)]
+# PL.query << [PL.member_("X", [4, 5, 14, 15, 24, 25]), PL.gt_("X", 10), PL.is_(0, "X" |PL.mod| 2)]
+# PL.query << [PL.member_("X", [4, 5, 14, 15, 24, 25]), PL.cut(), PL.gt_("X", 10), PL.is_(0, "X" |PL.mod| 2)]
+# PL.query << [PL.member_("X", [3, 4, 5, 13, 14, 15, 23, 24, 25]), PL.gt_("X", 10), PL.cut(), PL.is_(0, "X" |PL.mod| 2)]
 # PL.query << [isSorted([1, 2])]
 # PL.query << [isSorted([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])]
 # PL.query << [isSorted([1, 2, 3, 4, 10, 6, 7, 8, 9, 10])]
-# PL.query << [permutation_([1, 2, 3], "X")]
-# PL.query << [permutation_([1, 2], [2, 1])]
-# PL.query << [permutation_([1, 2, 3], [2, 3, 1])]
+# PL.query << [PL.permutation_([1, 2, 3], "X")]
+# PL.query << [PL.permutation_([1, 2], [2, 1])]
+# PL.query << [PL.permutation_([1, 2, 3], [2, 3, 1])]
 # PL.query << [bad_sort([5, 3, 1, 10, 3], "Y")]
 # PL.query << [ismember2(1, [1, 2, 3, 1])]
 # PL.query << [ismember2("X", [1, 2, 3, 1])]
 # PL.query << [sublist_cut(["a"], ["b", "a", "a", "b"])]
 # PL.query << [teaches("dr_fred", "Course"), studies("Student", "Course")]
-# PL.query << [teaches("dr_fred", "Course"), cut(), studies("Student", "Course")]
-# PL.query << [teaches("dr_fred", "Course"), studies("Student", "Course"), cut()]
-# PL.query << [cut(), teaches("dr_fred", "Course"), studies("Student", "Course")]
+# PL.query << [teaches("dr_fred", "Course"), PL.cut(), studies("Student", "Course")]
+# PL.query << [teaches("dr_fred", "Course"), studies("Student", "Course"), PL.cut()]
+# PL.query << [PL.cut(), teaches("dr_fred", "Course"), studies("Student", "Course")]
 # PL.query << [newPos(11, 1, "n", "NewR", "NewC")]
 # PL.query << [newPos(11, 1, "w", "NewR", "NewC")]
 # PL.query << [newPos(11, 1, "e", "NewR", "NewC")]
 # PL.query << [newPos(11, 1, "s", "NewR", "NewC")]
 # PL.query << [move(11, 1, "NewR", "NewC", [[11, 2]], "Visited", ["w", "w", "w"], "Dirs")]
-# PL.query << [reverse_([1,2,3], "X")]
+# PL.query << [PL.reverse_([1,2,3], "X")]
 # PL.query << [printUnsolvedMaze()]
 # PL.query << [prime_factors(12, "X")]     # Maybe use for demonstration. ***
-# PL.query << [lookup(5, ["6-a", "7-z", "5-t", "34-w"], "Value")]
-# PL.query << [lookup("Key", ["6-a", "7-z", "5-t", "34-w"], "z")]
-# PL.query << [lookup(6, ["6-a", "7-z", "5-t", "34-w", "6-foo"], "Value")]
-# PL.query << [not_(male("bob"))]
+# PL.query << [PL.not_(male("bob"))]
 # PL.query << [printSolvedMaze()]
-# PL.query << [between(1, 5, "X"), not_(setEqual("X", 3))]
+# PL.query << [PL.between(1, 5, "X"), PL.not_(PL.setEqual("X", 3))]
 
 
 ### Testing Zone ###
 
-
-PL.query << [graph2("G"), hasCycle("G")]
-
 #### Test queries below FAIL ####  ???
 
 
-
+# PL.query << [lookup(5, ["6-a", "7-z", "5-t", "34-w"], "Value")]
+# PL.query << [lookup("Key", ["6-a", "7-z", "5-t", "34-w"], "z")]
+# PL.query << [lookup(6, ["6-a", "7-z", "5-t", "34-w", "6-foo"], "Value")]
+# PL.query << [graph2("G"), hasCycle("G")]
 
 ### To see results ###
 for result in PL.query:
@@ -324,5 +311,5 @@ for result in PL.query:
 # The query can be indexed to find a specific result.
 # print(PL.query[2])
 
-
+PL.beginQuerying()
 
