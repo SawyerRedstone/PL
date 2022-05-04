@@ -472,45 +472,23 @@ def goalFromString(strOfGoals):
     return lstOfGoals
 
 
-# # This can be used to query similarly to Prolog. 
-# # Type ";" to continue, "." to query again, and "halt" to end.
-# def beginQuerying():
-#     while True: 
-#         queryInput = input("?- ")       # Here, a user should input a goal. For example: between(2, 6, "X")
-#         goals = goalFromString(queryInput)
-#         count = 0                       # This keeps track of the current solution we are on.
-#         query = Query()                 # Reset the current query.
-#         query << goals                  # Add the goals to the query.
-#         print(query[count])             # Show the first solution.
-#         queryInput = input("?- ")       # Get input to see what to do next.
-#         while queryInput == ";":        # If it's a semicolon, show the next solution.
-#             count += 1                  # Increment the solution count.
-#             try:
-#                 print(query[count])         # Print the next solution
-#                 queryInput = input("?- ")   # Get input to see if the query should continue.
-#             except:
-#                 print("No more solutions.")
-#                 break
-#         if queryInput == "halt":        # If it's "halt", the function ends.
-#             break
-
-
-
 # This can be used to query similarly to Prolog. 
-# Type ";" to continue, "." to query again, and "halt" to end.
+# Type ";" to continue, "halt" to end, or try a new goal at any point.
+# Problems: ***
+# Cannot do queries with infinite results.
+# Cannot do queries with lists.
 def beginQuerying():
     while True: 
         queryInput = input("?- ")       # Here, a user should input a goal. For example: between(2, 6, "X")
-        if queryInput == "halt":        # If it's "halt", the function ends.
+        if queryInput == "halt":        # End the program.
             break
-        elif queryInput == ";":         # If it's ";", the function shows the next solution.
+        elif queryInput == ";":         # Show next solution.
             count += 1
             try:
-                print(query[count])         # Print the next solution
-                # queryInput = input("?- ")   # Get input to see if the query should continue.
+                print(query[count])     # Print the next solution
             except:
-                print("No more solutions.")
-        else:       # If it's anything else, it's a query.        
+                print("No more solutions. Try a new goal.")
+        else:                               # All other inputs are goals to query.        
             goals = goalFromString(queryInput)
             count = 0                       # This keeps track of the current solution we are on.
             query = Query()                 # Reset the current query.
