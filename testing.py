@@ -233,7 +233,7 @@ getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", 
 # query << [write_("hi")]
 # query << [is_("X", 2 |plus| 4)]
 # query << [is_(6, 2 |plus| 4)]
-# query << [is_(6, 2 |plus| 8)]           # Results don't show false if previous query was true. Good or bad?
+# query << [is_(6, 2 |plus| 8)]
 # query << [is_("X", 2 |plus| "hi")]    # Change error later. ???
 # query << [fail_()]
 # query << [is_digesting("tiger", "grass")]
@@ -284,7 +284,7 @@ getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", 
 # query << [newPos(11, 1, "s", "NewR", "NewC")]
 # query << [move(11, 1, "NewR", "NewC", [[11, 2]], "Visited", ["w", "w", "w"], "Dirs")]
 # query << [reverse_([1,2,3], "X")]
-query << [printUnsolvedMaze()]
+# query << [printUnsolvedMaze()]
 # query << [prime_factors(12, "X")]     # Maybe use for demonstration. ***
 # query << [not_(male("bob"))]
 # query << [printSolvedMaze()]
@@ -293,16 +293,6 @@ query << [printUnsolvedMaze()]
 
 ### Testing Zone ###
 
-# dogBreed = Predicate("dogBreed")
-# dogBreed("beagle") >> []
-# dogBreed("chihuahua") >> []
-# dogBreed("dalmatian") >> []
-# query << [dogBreed("X")]
-
-# X = query[2]["X"]
-# print(X)
-
-# print(query[1])
 
 #### Test queries below FAIL ####  ???
 
@@ -313,15 +303,13 @@ query << [printUnsolvedMaze()]
 # query << [graph2("G"), hasCycle("G")]
 
 
-# ### To see results ###
-# for result in query:
-#     print(result)
-#     # # If you want to use the results, you can do something like this:
-#     # X = result["X"]
-#     # print(X)
+### To see results ###
+for result in query:
+    print(result)
+    # # If you want to use the results, you can do something like this:
+    # X = result["X"]
+    # print(X)
 
-# The query can be indexed to find a specific result.
-# print(query[2])
 
 # beginQuerying()
 

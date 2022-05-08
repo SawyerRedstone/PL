@@ -2,6 +2,7 @@
 # Created by Sawyer Redstone.
 
 import itertools
+# from collections import UserList
 
 # Take a list, string, or int, and convert it to type Term.
 def create(term, memo = {}):
@@ -52,14 +53,17 @@ class Predicate():
     def __call__(self, *args):
         return Goal(self, args)
 
-# Query is an iterator. # Sort of. It doesn't have a next() method. ***
+
 # Use query << [list of goals] for queries.
-class Query():
+# Once the query is made, Query becomes a list of all the results.
+class Query(list):
     def __init__(self):
         self.goals = []
-        self.successes = []
         self.size = None
+        super().__init__()
     def __lshift__(self, goals):
+        # Reset the query. 
+        self.clear()        
         # Memo is a dictionary of all args in the goals.
         # This makes sure that no terms are duplicates.
         memo = {}
@@ -69,7 +73,7 @@ class Query():
         for attempt in itertools.islice(attempt, self.size):
             success = attempt[0]
             wasCut = attempt[1]
-            if not success:
+            if not success:     # Check if this can be removed so False shows up. ***
                 break
             args = {}
             for argName in memo:
@@ -77,25 +81,20 @@ class Query():
                     args[argName] = str(flatten(memo[argName].value))
             if len(args) > 0:
                 # print("TEST: " + str(args))    # For debugging. ***
-                self.successes.append(args)
+                self.append(args)
             else:
                 # print("TEST: True")    # For debugging. ***
-                self.successes.append(True)
+                self.append(True)
             if wasCut:
                 break
-        if self.successes == []:
-            self.successes.append(False)
+        if self == []:
+            self.append(False)
         # Reset the size for future queries, in the case where multiple queries are made at once.
         self.size = None
-    def __iter__(self):
-        return iter(self.successes)
     # query(3) makes the query only show 3 results.
     def __call__(self, num):
         self.size = num
         return self
-    def __getitem__(self, num):
-        return self.successes[num]
-
 
 # Goals must be completed in order to satisfy a query.
 class Goal():
