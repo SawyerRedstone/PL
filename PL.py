@@ -21,12 +21,6 @@ def create(term, memo = {}):
         memo[str(term)] = ListPL([create(item, memo) for item in term]) if term else Const(term)
     elif isinstance(term, Goal):
         memo[str(term)] = Goal(term.pred, [create(item, memo) for item in term.args])
-    # # If it has a dash, it must be a Pair.
-    # elif "-" in term:       # ***
-    #     term = term.replace(" ", "")    # Remove any extra spaces.
-    #     term = term.split("-")          
-    #     memo[str(term)] = Pair(create(term[0], memo), create(term[1], memo))
-        # memo[str(term)] = Pair([create(item, memo) for item in pairList])
     elif term[0].isupper():
         memo[str(term)] = Var(term)
     elif term[0] == "_":        # Vars that start with "_" are temporary.
@@ -268,37 +262,6 @@ class ListPL(Term):
         return str(self.value)
     def __repr__(self):
         return str(self.terms)
-
-
-# class Pair():
-#     def __init__(self, first, second):
-#         self.first = first
-#         self.second = second
-#         self.value = [first, second]
-#     def __eq__(self, other):
-#         if isinstance(other, Pair):
-#             return self.first == other.first and self.second == other.second
-#         else:
-#             if isinstance(other, Var):
-
-    def __str__(self):
-        return str(self.first) + "-" + str(self.second)
-    def __repr__(self):
-        return str(self)
-
-
-# # A Pair is a combination of terms seperated with dashes. 
-# class Pair(ListPL):
-#     def __init__(self, terms):
-#         self.head = terms[0]
-#         if len(terms) > 2:
-#             self.tail = Pair(terms[1:])
-#         else:
-#             self.tail = Const(terms[1])
-#         self.terms = terms
-#         Term.__init__(self, name = "Pair", value = self.terms)
-#     def __str__(self):
-#         return "-".join(str(term) for term in self.terms)
 
 
 def tryGoal(goal):

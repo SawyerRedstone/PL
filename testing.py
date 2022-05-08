@@ -1,8 +1,8 @@
 # This file is used for internal testing.
 from PL import *
 # import PL
-# from maze import *
-# from primeFactors import *
+from maze import *
+from primeFactors import *
 # from Experimenting import *
 
 
@@ -284,7 +284,7 @@ getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", 
 # query << [newPos(11, 1, "s", "NewR", "NewC")]
 # query << [move(11, 1, "NewR", "NewC", [[11, 2]], "Visited", ["w", "w", "w"], "Dirs")]
 # query << [reverse_([1,2,3], "X")]
-# query << [printUnsolvedMaze()]
+query << [printUnsolvedMaze()]
 # query << [prime_factors(12, "X")]     # Maybe use for demonstration. ***
 # query << [not_(male("bob"))]
 # query << [printSolvedMaze()]
@@ -293,14 +293,14 @@ getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", 
 
 ### Testing Zone ###
 
-dogBreed = Predicate("dogBreed")
-dogBreed("beagle") >> []
-dogBreed("chihuahua") >> []
-dogBreed("dalmatian") >> []
-query << [dogBreed("X")]
+# dogBreed = Predicate("dogBreed")
+# dogBreed("beagle") >> []
+# dogBreed("chihuahua") >> []
+# dogBreed("dalmatian") >> []
+# query << [dogBreed("X")]
 
-X = query[2]["X"]
-print(X)
+# X = query[2]["X"]
+# print(X)
 
 # print(query[1])
 
