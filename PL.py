@@ -44,6 +44,7 @@ def create(term, memo = {}):
     return memo[str(term)]
 
 
+# This is only used for beginQueries, and can be deleted if the function is removed. ***
 preds = {}      # Dict where key:var = name:predicate.
 
 
@@ -57,7 +58,7 @@ class Predicate():
     def __call__(self, *args):
         return Goal(self, args)
 
-# Query is an iterator.
+# Query is an iterator. # Sort of. It doesn't have a next() method. ***
 # Use query << [list of goals] for queries.
 class Query():
     def __init__(self):
