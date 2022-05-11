@@ -8,8 +8,6 @@ import itertools
 def create(term, memo = {}):
     if str(term) in memo:
         return memo[str(term)]
-    if isinstance(term, Goal):
-        memo[str(term)] = Goal(term.pred, [create(arg, memo) for arg in term.args])
     if isinstance(term, int) or isinstance(term, float):   # Numbers are constants.
         memo[str(term)] = Const(term)
     elif isinstance(term, Math):
@@ -21,20 +19,31 @@ def create(term, memo = {}):
         # If the list is empty, it is a Const; otherwise it is a ListPL.
         memo[str(term)] = ListPL([create(item, memo) for item in term]) if term else Const(term)
     elif isinstance(term, Goal):
-        memo[str(term)] = Goal(term.pred, [create(item, memo) for item in term.args])
+        if term.name == "format_":
+            strToWrite = term.args[0]      # The string to write, with {} in places that can be filled with vars.
+            if len(term.args) > 1:
+                vars = [create(arg, memo) for arg in term.args[1]]  # The vars to fill in the string.
+            else:
+                vars = []
+            memo[str(term)] = Goal(term.pred, [strToWrite, vars])
+        else:
+            memo[str(term)] = Goal(term.pred, [create(arg, memo) for arg in term.args])
     elif term[0].isupper():
         memo[str(term)] = Var(term)
     elif term[0] == "_":        # Vars that start with "_" are temporary.
         return Var(term)        # Since all _s are different, they should not be added to memo.
     # Otherwise, it is a Const.
     else:
-        # If the string is an int or float, convert it to the appropriate type.
+        # If the string is an int or float, convert it to the appropriate type. 
+        # *** Maybe remove Try block if I get rid of beginQuerying?
         try:
             term = float(term)
             if term.is_integer():
                 term = int(term)
         except ValueError:
-            pass
+            # If string has single quotes around it, remove them.
+            if term[0] == "'" and term[-1] == "'":
+                term = term[1:-1]
         memo[str(term)] = Const(term)
     return memo[str(term)]
 
@@ -67,7 +76,8 @@ class Query(list):
         # Memo is a dictionary of all args in the goals.
         # This makes sure that no terms are duplicates.
         memo = {}
-        goals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) for goal in goals]
+        goals = [create(goal, memo) for goal in goals]  # Make sure this works! ***
+        # goals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) for goal in goals]
         attempt = tryGoals(goals)
         # Loop through the generator self.size times, or until end if size is not specified.
         for attempt in itertools.islice(attempt, self.size):
@@ -98,12 +108,13 @@ class Query(list):
 
 # Goals must be completed in order to satisfy a query.
 class Goal():
-    def __init__(self, pred = [], args = []):
+    def __init__(self, pred = [], args = []):       # Maybe change order, since preds can't be empty. ***
+        self.name = pred.name
         self.pred = pred            # The predicate that is being queried.
         self.args = list(args)      # Create a list of the goal's arguments.
         self.value = self           # This allows goals to unify with Vars.
     def __str__(self):
-        return "goalPred: " + self.pred.name + "\nGoalArgs: " + str(self.args) + "\n"
+        return "goalPred: " + self.name + "\nGoalArgs: " + str(self.args) + "\n"
     # Add facts as: head >> []
     # Add rules as: head >> [goal1, goal2, ...]
     def __rshift__(self, others):
@@ -112,7 +123,7 @@ class Goal():
         else:
             self.pred.alternatives[len(self.args)] = [Alt(self.pred, self.args, others)]
     def __repr__(self):
-        return self.pred.name
+        return self.name
     def unifyWith(self, other):
         if isinstance(other, Var):
             other.value = self
@@ -297,7 +308,12 @@ def tryGoal(goal):
                 wasCut = False
                 break
     # If no predicate exists with this number of arguments, it may be a built-in predicate.
-    elif goal.pred == write_ and len(goal.args) == 1:
+    elif goal.pred == format_:
+        strToWrite = goal.args[0]
+        varsToFill = [flatten(arg.value) for arg in goal.args[1]]
+        print(strToWrite.format(*varsToFill), end="")
+        yield True, wasCut
+    elif goal.pred == write_:
         print(flatten(goal.args[0].value), end="")
         yield True, wasCut
     elif goal.pred == nl_:
@@ -482,7 +498,14 @@ is_("Q", "Q") >> []
 # fail/0.
 fail_ = Predicate("fail_")
 
+# write/1.
 write_ = Predicate("write_")
+
+# format_/1 should be used only if there are no vars to be printed.
+# If there are vars to be unified, use format_/2, where arg1 is a string with {}s for vars, and arg2 is a list of vars.
+# e.g. format_("{} likes you.", ["X"]) or format_("{}", ["X"]).
+format_ = Predicate("format_")
+
 nl_ = Predicate("nl_")
 
 member_ = Predicate("member_")
@@ -499,6 +522,7 @@ cut = Predicate("cut")
 
 # =/2 predicate.
 setEqual = Predicate("setEqual")
+# \=/2 predicate.
 notEqual = Predicate("notEqual")
 
 call_ = Predicate("call_")
@@ -536,8 +560,8 @@ reverse_("Xs", "Ys") >> [reverse_("Xs", [], "Ys", "Ys")]
 reverse_([], "Ys", "Ys", []) >> []
 reverse_(["X", "|", "Xs"], "Rs", "Ys", ["_", "|", "Bound"]) >> [reverse_("Xs", ["X", "|", "Rs"], "Ys", "Bound")]
 
-# This is used when head should always succeed. ***
-true_ = Predicate("true_")
+# # This is used when head should always succeed. ***
+# true_ = Predicate("true_")
 
 
 # beginQuerying()

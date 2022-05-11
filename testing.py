@@ -123,8 +123,14 @@ ancestor("A", "B") >> [parent("A", "X"), ancestor("X", "B")]
 first_cousin("A", "B") >> [parent("X", "A"), sibling("Y", "X"), parent("Y", "B")]
 
 collatz("N", "N") >> []
-collatz("N0", "N") >> [is_(0, "N0" |mod| 2), is_("N1", "N0" |div| 2), collatz("N1", "N")]
-collatz("N0", "N") >> [is_(1, "N0" |mod| 2), is_("N1", 3 |times| "N0" |plus| 1), collatz("N1", "N")]
+collatz("N0", "N") >> [
+    is_(0, "N0" |mod| 2), 
+    is_("N1", "N0" |div| 2), 
+    collatz("N1", "N")]
+collatz("N0", "N") >> [
+    is_(1, "N0" |mod| 2), 
+    is_("N1", 3 |times| "N0" |plus| 1), 
+    collatz("N1", "N")]
 
 inboth("A", "B", "X") >> [member_("X", "A"), member_("X", "B")]
 
@@ -153,7 +159,7 @@ ismember2("H", ["H", "|", "_"]) >> [cut()]
 ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 
 all_diff([]) >> []
-all_diff(["H", "|", "T"]) >> [not_(member_("H", "T")), all_diff("T")]    # Problem is member args are never created. ???
+all_diff(["H", "|", "T"]) >> [not_(member_("H", "T")), all_diff("T")]    # Problem is member args are never created. ***
 
 splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "SecondPart", "List"), len_("FirstPart", "Pos")]
 
@@ -217,7 +223,7 @@ getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", 
 # query << [ancestor("ben", "X")]
 # query << [first_cousin("david", "X")]
 # query << [first_cousin("jiri", "X")]
-# query(9) << [collatz(10, "X")]          # To see only some results, use query(number_of_results).
+# query(3) << [collatz(10, "L")]          # To see only some results, use query(number_of_results).
 # query << [member_("X", ["bob", "apple", "shirt", "pip"])]
 # query << [inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")]
 # query << [inboth([1, 2, 3, 4], [2, 5, 6, 1], "X")]
@@ -234,7 +240,7 @@ getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", 
 # query << [is_("X", 2 |plus| 4)]
 # query << [is_(6, 2 |plus| 4)]
 # query << [is_(6, 2 |plus| 8)]
-# query << [is_("X", 2 |plus| "hi")]    # Change error later. ???
+# query << [is_("X", 2 |plus| "hi")]    # Change error later. ***
 # query << [fail_()]
 # query << [is_digesting("tiger", "grass")]
 # query << [is_digesting("X", "Y")]
@@ -285,16 +291,20 @@ getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", 
 # query << [move(11, 1, "NewR", "NewC", [[11, 2]], "Visited", ["w", "w", "w"], "Dirs")]
 # query << [reverse_([1,2,3], "X")]
 # query << [printUnsolvedMaze()]
-# query << [prime_factors(12, "X")]     # Maybe use for demonstration. ***
 # query << [not_(male("bob"))]
 # query << [printSolvedMaze()]
 # query << [between(1, 5, "X"), not_(setEqual("X", 3))]
+# query << [format_("Hello, I'm {} and you are {}.", ["sawyer", "john"])]
+# query << [format_("{}'s brother is {}.", ["Child1", "Child2"])]
+# query << [prime_factors(12, "X")]     # Maybe use for demonstration. ***
 
 
 ### Testing Zone ###
 
 
-#### Test queries below FAIL ####  ???
+
+
+#### Test queries below FAIL ####  ***
 
 
 # query << [lookup(5, ["6-a", "7-z", "5-t", "34-w"], "Value")]
@@ -303,13 +313,15 @@ getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", 
 # query << [graph2("G"), hasCycle("G")]
 
 
-### To see results ###
-for result in query:
-    print(result)
-    # # If you want to use the results, you can do something like this:
-    # X = result["X"]
-    # print(X)
+# ### To see results ###
+# for result in query:
+#     print(result)
+#     # # If you want to use the results, you can do something like this:
+#     # X = result["X"]
+#     # print(X)
 
 
 # beginQuerying()
 
+
+print(query)
