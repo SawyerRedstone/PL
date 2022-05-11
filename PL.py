@@ -2,7 +2,6 @@
 # Created by Sawyer Redstone.
 
 import itertools
-# from collections import UserList
 
 # Take a list, string, or int, and convert it to type Term.
 def create(term, memo = {}):
@@ -10,11 +9,11 @@ def create(term, memo = {}):
         return memo[str(term)]
     if isinstance(term, int) or isinstance(term, float):   # Numbers are constants.
         memo[str(term)] = Const(term)
-    elif isinstance(term, Math):
-        # Make new math term so each alt has unchanged starting math.
-        newMath = Math(term.function)
-        newMath.mathList = [create(item, memo) if not callable(item) else item for item in term.mathList]
-        memo[str(term)] = newMath
+    # elif isinstance(term, Math):
+    #     # Make new math term so each alt has unchanged starting math.
+    #     newMath = Math(term.function)
+    #     newMath.mathList = [create(item, memo) if not callable(item) else item for item in term.mathList]
+    #     memo[str(term)] = newMath
     elif isinstance(term, list):
         # If the list is empty, it is a Const; otherwise it is a ListPL.
         memo[str(term)] = ListPL([create(item, memo) for item in term]) if term else Const(term)
@@ -28,33 +27,34 @@ def create(term, memo = {}):
             memo[str(term)] = Goal(term.pred, [strToWrite, vars])
         else:
             memo[str(term)] = Goal(term.pred, [create(arg, memo) for arg in term.args])
-    elif term[0].isupper():
+    elif term[0].isupper() and " " not in term:
         memo[str(term)] = Var(term)
     elif term[0] == "_":        # Vars that start with "_" are temporary.
         return Var(term)        # Since all _s are different, they should not be added to memo.
     # Otherwise, it is a Const.
     else:
-        # If the string is an int or float, convert it to the appropriate type. 
-        # *** Maybe remove Try block if I get rid of beginQuerying?
-        try:
-            term = float(term)
-            if term.is_integer():
-                term = int(term)
-        except ValueError:
-            # If string has single quotes around it, remove them.
-            if term[0] == "'" and term[-1] == "'":
-                term = term[1:-1]
-        memo[str(term)] = Const(term)
+        # If string has single quotes around it, remove them.
+        if term[0] == "'" and term[-1] == "'":
+            term = term[1:-1]
+            memo[str(term)] = Const(term)
+        elif " " in term:
+            math = Math()
+            # math.mathList = math.mathToList(term, memo)
+            math.mathToList(term, memo)
+            memo[str(term)] = math
+        else:       # Maybe if it is the string of a num, turn it into the num.
+            try:
+                memo[str(term)] = Const(int(term))
+            except ValueError:
+                try:
+                    memo[str(term)] = Const(float(term))
+                except ValueError:
+                    memo[str(term)] = Const(term)
     return memo[str(term)]
-
-
-# This is only used for beginQueries, and can be deleted if the function is removed. ***
-preds = {}      # Dict where key:var = name:predicate.
 
 
 class Predicate():
     def __init__(self, name):
-        preds[name] = self
         self.name = name            # The name of the predicate
         self.alternatives = {}      # Dict filled with all of the predicate alternatives, with arity as key.
     def __repr__(self):
@@ -76,8 +76,7 @@ class Query(list):
         # Memo is a dictionary of all args in the goals.
         # This makes sure that no terms are duplicates.
         memo = {}
-        goals = [create(goal, memo) for goal in goals]  # Make sure this works! ***
-        # goals = [Goal(goal.pred, [create(arg, memo) for arg in goal.args]) for goal in goals]
+        goals = [create(goal, memo) for goal in goals]
         attempt = tryGoals(goals)
         # Loop through the generator self.size times, or until end if size is not specified.
         for attempt in itertools.islice(attempt, self.size):
@@ -90,10 +89,8 @@ class Query(list):
                 if isinstance(memo[argName], Var):
                     args[argName] = str(flatten(memo[argName].value))
             if len(args) > 0:
-                # print("TEST: " + str(args))    # For debugging. ***
                 self.append(args)
             else:
-                # print("TEST: True")    # For debugging. ***
                 self.append(True)
             if wasCut:
                 break
@@ -203,45 +200,85 @@ class Const(Term):  # A constant, aka an atom.
         super().__init__(name = "Const", value = value)
 
 
-# To use math, write the operation surrounded with |.
-# For example, '3 + 4' would be written as '3 |plus| 4'.
-# (Idea from: https://code.activestate.com/recipes/384122/)
 class Math(Term):
-    def __init__(self, function):
+    def __init__(self):
         self.mathList = []
-        self.function = function
-        self.children = []     # The children are the variables that will change if this term has a value.
-    def __ror__(self, other):
-        # Make a new Math object so built-in objects won't change.
-        newMath = Math(self.function)
-        newMath.mathList = [other, self.function]
-        return newMath
-    def __or__(self, other):
-        # Check if 'other' is built-in. (Add other built-in here! ***)
-        if other is plus or other is minus:
-            other = other.function
-        if self.mathList[-1] is times or self.mathList[-1] is div or self.mathList[-1] is mod or self.mathList[-1] is floorDiv:
-            op = self.mathList.pop()
-            addend = self.mathList.pop()
-            newMath = addend | op | other
-            self.mathList.append(newMath)
-        self.mathList.append(other)
-        return self
-    # This gives the object the .value attribute.
+        self.children = []
     @property
     def value(self):
-        result = self.mathList[0].value
-        for index, item in enumerate(self.mathList):
-            if callable(item):
-                addend = self.mathList[index+1].value
-                result = item(result, addend)
-        return result
-    def __str__(self):
-        return str(self.mathList)
-    def __repr__(self):
-        return str(self)
-    def __hash__(self):
-        return hash(tuple(self.mathList))
+        toEval = self.mathList[:]
+        # mathList = self.mathToList()
+        # for i, term in enumerate(self.mathList):
+        for i in range(len(toEval)):
+            # if term not in ["+", "-", "*", "**", "/", "//", "(", ")"]:
+            if isinstance(toEval[i], Term):
+                try:
+                    toEval[i] = toEval[i].value
+                    # Make sure that the value is a number.
+                    if not isinstance(toEval[i], (int, float)):
+                        raise TypeError("Not a number.")
+                except:
+                    raise ValueError("This doesn't have a value yet.")
+        return eval("".join([str(term) for term in toEval]))
+    # This takes a string of math and turns it into a list of numbers and operators
+    def mathToList(self, mathStr, memo = {}):
+        mathStr = mathStr
+        mathStr = mathStr.replace(" ", "")
+        mathStr = mathStr.replace("+", " + ")
+        mathStr = mathStr.replace("-", " - ")
+        mathStr = mathStr.replace("*", " * ")
+        mathStr = mathStr.replace("**", " ** ")
+        mathStr = mathStr.replace("^", " ** ")        # Alternative style for exponentiation.
+        mathStr = mathStr.replace("/", " / ")
+        mathStr = mathStr.replace("//", " // ")
+        mathStr = mathStr.replace("(", " ( ")
+        mathStr = mathStr.replace(")", " ) ")
+        mathStr = mathStr.replace("%", " % ")
+        self.mathList = mathStr.split()
+        for i in range(len(self.mathList)):
+            if self.mathList[i] not in ["+", "-", "*", "**", "/", "//", "(", ")", "%"]:
+                self.mathList[i] = create(self.mathList[i], memo)
+        # return self.mathList
+
+
+# # To use math, write the operation surrounded with |.
+# # For example, '3 + 4' would be written as '3 |plus| 4'.
+# # (Idea from: https://code.activestate.com/recipes/384122/)
+# class Math(Term):
+#     def __init__(self, function):
+#         self.mathList = []
+#         self.function = function
+#         self.children = []     # The children are the variables that will change if this term has a value.
+#     def __ror__(self, other):
+#         # Make a new Math object so built-in objects won't change.
+#         newMath = Math(self.function)
+#         newMath.mathList = [other, self.function]
+#         return newMath
+#     def __or__(self, other):
+#         if other is plus or other is minus:
+#             other = other.function
+#         if self.mathList[-1] is times or self.mathList[-1] is div or self.mathList[-1] is mod or self.mathList[-1] is floorDiv:
+#             op = self.mathList.pop()
+#             addend = self.mathList.pop()
+#             newMath = addend | op | other
+#             self.mathList.append(newMath)
+#         self.mathList.append(other)
+#         return self
+#     # This gives the object the .value attribute.
+#     @property
+#     def value(self):
+#         result = self.mathList[0].value
+#         for index, item in enumerate(self.mathList):
+#             if callable(item):
+#                 addend = self.mathList[index+1].value
+#                 result = item(result, addend)
+#         return result
+#     def __str__(self):
+#         return str(self.mathList)
+#     def __repr__(self):
+#         return str(self)
+#     def __hash__(self):
+#         return hash(tuple(self.mathList))
 
 
 class ListPL(Term):
@@ -253,22 +290,22 @@ class ListPL(Term):
     def __len__(self):
         return len(self.value)
     def __eq__(self, other):
-        if isinstance(other.value, list) and other.value:       # ***
+        if isinstance(other.value, list) and other.value:
             other = ListPL(other.value)
-        if self.tail and not isinstance(self.tail, ListPL):     # Should this be here or in different method? ***
+        if self.tail and not isinstance(self.tail, ListPL):
             self.tail = Term.changeType(self.tail.value)
         if isinstance(other, ListPL):
             return self.head == other.head and self.tail == other.tail
         return super().__eq__(other)
     def unifyWith(self, altArg):
-        if isinstance(altArg.value, list) and altArg.value:       # ***
+        if isinstance(altArg.value, list) and altArg.value:
             altArg = ListPL(altArg.value)
         if isinstance(altArg, ListPL):
-            if self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail):   # Later needs to clear path of all this? ***
+            if self.head.unifyWith(altArg.head) and self.tail.unifyWith(altArg.tail):
                 return True
             return False
         return super().unifyWith(altArg)
-    def __str__(self):          # Maybe remove this? ***
+    def __str__(self):
         return str(self.value)
     def __repr__(self):
         return str(self.terms)
@@ -399,7 +436,6 @@ def changePath(arg, newValue):
     if isinstance(arg, Var):
         arg.value = newValue
     for child in arg.children:
-        # if child value already is new value, maybe don't need to change child's path? Try later! ***
         changePath(child, newValue)         # Change each parent to the new value.
 
 
@@ -428,68 +464,21 @@ def flatten(toFlatten):
     return [item.value if isinstance(item, Term) else item for item in lst]
 
 
-# Turn a string of a Goal into a goal.
-# Before doing this, remove spaces from input and split input by ",". Then call with each element. ***
-def goalFromString(strOfGoals):   
-    strOfGoals = strOfGoals.replace(" ", "")             # Remove spaces.
-    if strOfGoals[-1:] != ")":               # No matter how many goals there are, there should always be a ")" at the end.
-        raise Exception("Goals must end with ')'")
-    else:
-        strOfGoals = strOfGoals[:-1]        # Remove the ")" at the end.
-    lstOfGoals = strOfGoals.split("),")     # If there are multiple goals, separate them. This removes the ")" from each goal.
-    for index, goal in enumerate(lstOfGoals):
-        currGoal = goal.split("(")          # Split the goal into its name and arguments.
-        predName = currGoal[0]
-        if predName in preds:
-            args = currGoal[1].split(",")   # Seperate the args.
-            # Remove extra " or ' from each arg if there is one.
-            args = [arg[1:-1] if (arg[0] == "'" and arg[-1] == "'") or (arg[0] == '"' and arg[-1] == '"') else arg for arg in args]
-            # args = [arg.strip() for arg in args]
-            lstOfGoals[index] = preds[predName](*args)    # Replace string of goal with actual goal.
-        else:
-            raise Exception("Predicate not found: " + predName)
-    return lstOfGoals
-
-
-# This can be used to query similarly to Prolog. 
-# Type ";" to continue, "halt" to end, or try a new goal at any point.
-# Problems: ***
-# Cannot do queries with infinite results.
-# Cannot do queries with lists.
-def beginQuerying():
-    while True: 
-        queryInput = input("?- ")       # Here, a user should input a goal. For example: between(2, 6, "X")
-        if queryInput == "halt":        # End the program.
-            break
-        elif queryInput == ";":         # Show next solution.
-            count += 1
-            try:
-                print(query[count])     # Print the next solution
-            except:
-                print("No more solutions. Try a new goal.")
-        else:                               # All other inputs are goals to query.        
-            goals = goalFromString(queryInput)
-            count = 0                       # This keeps track of the current solution we are on.
-            query = Query()                 # Reset the current query.
-            query << goals                  # Add the goals to the query.
-            print(query[count])             # Show the first solution.
-
-
 # #### Built-in Features ####
 
 # Use to make queries.
 query = Query()
 
 
-# Mathamatical expressions that can be used.
-# To use these, type the operator between two |s, like so:
-# 4 |plus| 5 |plus| 6
-plus = Math(lambda x, y: x + y)
-minus = Math(lambda x, y: x - y)
-times = Math(lambda x, y: x * y)
-div = Math(lambda x, y: x / y)
-floorDiv = Math(lambda x, y: x // y)
-mod = Math(lambda x, y: x % y)
+# # Mathamatical expressions that can be used.
+# # To use these, type the operator between two |s, like so:
+# # 4 |plus| 5 |plus| 6
+# plus = Math(lambda x, y: x + y)
+# minus = Math(lambda x, y: x - y)
+# times = Math(lambda x, y: x * y)
+# div = Math(lambda x, y: x / y)
+# floorDiv = Math(lambda x, y: x // y)
+# mod = Math(lambda x, y: x % y)
 
 # The Prolog is/2 predicate.
 is_ = Predicate("is_")
@@ -540,14 +529,14 @@ gt_ = Predicate("greater than")
 ge_ = Predicate("greater than or equal")
 
 
-between = Predicate("between")
-between("N", "M", "K") >> [le_("N", "M"), setEqual("K", "N")]
-between("N", "M", "K") >> [lt_("N", "M"), is_("N1", "N" |plus| 1), between("N1", "M", "K")]
+# between = Predicate("between")
+# between("N", "M", "K") >> [le_("N", "M"), setEqual("K", "N")]
+# between("N", "M", "K") >> [lt_("N", "M"), is_("N1", "N" |plus| 1), between("N1", "M", "K")]
 
 
-len_ = Predicate("len_")
-len_([], 0) >> []
-len_(["_", "|", "T"], "A") >> [len_("T", "B"), is_("A", "B" |plus| 1)]
+# len_ = Predicate("len_")
+# len_([], 0) >> []
+# len_(["_", "|", "T"], "A") >> [len_("T", "B"), is_("A", "B" |plus| 1)]
 
 
 permutation_ = Predicate("permutation_")
@@ -559,9 +548,3 @@ reverse_ = Predicate("reverse_")
 reverse_("Xs", "Ys") >> [reverse_("Xs", [], "Ys", "Ys")]
 reverse_([], "Ys", "Ys", []) >> []
 reverse_(["X", "|", "Xs"], "Rs", "Ys", ["_", "|", "Bound"]) >> [reverse_("Xs", ["X", "|", "Rs"], "Ys", "Bound")]
-
-# # This is used when head should always succeed. ***
-# true_ = Predicate("true_")
-
-
-# beginQuerying()

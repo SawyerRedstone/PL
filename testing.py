@@ -1,8 +1,8 @@
 # This file is used for internal testing.
 from PL import *
 # import PL
-from maze import *
-from primeFactors import *
+# from maze import *
+# from primeFactors import *
 # from Experimenting import *
 
 
@@ -122,14 +122,24 @@ ancestor("A", "B") >> [parent("A", "X"), ancestor("X", "B")]
 
 first_cousin("A", "B") >> [parent("X", "A"), sibling("Y", "X"), parent("Y", "B")]
 
+# collatz("N", "N") >> []
+# collatz("N0", "N") >> [
+#     is_(0, "N0" |mod| 2), 
+#     is_("N1", "N0" |div| 2), 
+#     collatz("N1", "N")]
+# collatz("N0", "N") >> [
+#     is_(1, "N0" |mod| 2), 
+#     is_("N1", 3 |times| "N0" |plus| 1), 
+#     collatz("N1", "N")]
+
 collatz("N", "N") >> []
 collatz("N0", "N") >> [
-    is_(0, "N0" |mod| 2), 
-    is_("N1", "N0" |div| 2), 
+    is_(0, "N0 % 2"), 
+    is_("N1", "N0 / 2"), 
     collatz("N1", "N")]
 collatz("N0", "N") >> [
-    is_(1, "N0" |mod| 2), 
-    is_("N1", 3 |times| "N0" |plus| 1), 
+    is_(1, "N0 % 2"), 
+    is_("N1", "3 * N0 + 1"), 
     collatz("N1", "N")]
 
 inboth("A", "B", "X") >> [member_("X", "A"), member_("X", "B")]
@@ -140,13 +150,13 @@ just_ate("tiger", "deer") >> []
 is_digesting("A", "B") >> [just_ate("A", "B")]
 is_digesting("A", "B") >> [just_ate("A", "C"), is_digesting("C", "B")]
 
-count("A", "A") >> []
-count("A", "C") >> [is_("B", "A" |plus| 1), count("B", "C")]
+# count("A", "A") >> []
+# count("A", "C") >> [is_("B", "A" |plus| 1), count("B", "C")]
 
 always_true() >> []
 
-increment_all([], "X") >> [setEqual("X", [])]
-increment_all(["H", "|", "T"], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
+# increment_all([], "X") >> [setEqual("X", [])]
+# increment_all(["H", "|", "T"], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
 
 basicList(["a", "b", "c"]) >> []
 
@@ -161,7 +171,7 @@ ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 all_diff([]) >> []
 all_diff(["H", "|", "T"]) >> [not_(member_("H", "T")), all_diff("T")]    # Problem is member args are never created. ***
 
-splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "SecondPart", "List"), len_("FirstPart", "Pos")]
+# splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "SecondPart", "List"), len_("FirstPart", "Pos")]
 
 sublist("A", "B") >> [append_("A", "_", "B")]
 sublist("A", ["_", "|", "T"]) >> [sublist("A", "T")]
@@ -184,16 +194,16 @@ studies("angus", "english") >> []
 studies("amelia", "drama") >> []
 studies("alex", "physics") >> []
 
-lookup("K", "L", "V") >> [member_("K-V", "L"), cut()]
+# lookup("K", "L", "V") >> [member_("K-V", "L"), cut()]
 
-graph1(["n1-n2", "n2-n5", "n1-n3", "n1-n4", "n4-n6", "n6-n7", "n6-n8"]) >> []
-graph2(["n1-n2", "n2-n5", "n1-n3", "n1-n4", "n4-n6", "n6-n7", "n7-n1", "n7-n8"]) >> []
-graph3(["n4-n5", "n1-n2", "n1-n3", "n1-n4", "n4-n9", "n9-10", "n9-n11", "n9-n12", "n12-n9"]) >> []
+# graph1(["n1-n2", "n2-n5", "n1-n3", "n1-n4", "n4-n6", "n6-n7", "n6-n8"]) >> []
+# graph2(["n1-n2", "n2-n5", "n1-n3", "n1-n4", "n4-n6", "n6-n7", "n7-n1", "n7-n8"]) >> []
+# graph3(["n4-n5", "n1-n2", "n1-n3", "n1-n4", "n4-n9", "n9-10", "n9-n11", "n9-n12", "n12-n9"]) >> []
 
-hasCycle("G") >> [member_("X-Y", "G"), getChain(["X"], "Y", "G"), cut()]
+# hasCycle("G") >> [member_("X-Y", "G"), getChain(["X"], "Y", "G"), cut()]
 
-getChain("Reached", "Next", "_G") >> [member_("Next", "Reached"), cut()]
-getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", ["Next"], "NewReached"), getChain("NewReached", "X", "G"), cut()]
+# getChain("Reached", "Next", "_G") >> [member_("Next", "Reached"), cut()]
+# getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", ["Next"], "NewReached"), getChain("NewReached", "X", "G"), cut()]
 
 # ##########################################
 
@@ -223,7 +233,6 @@ getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", 
 # query << [ancestor("ben", "X")]
 # query << [first_cousin("david", "X")]
 # query << [first_cousin("jiri", "X")]
-# query(3) << [collatz(10, "L")]          # To see only some results, use query(number_of_results).
 # query << [member_("X", ["bob", "apple", "shirt", "pip"])]
 # query << [inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")]
 # query << [inboth([1, 2, 3, 4], [2, 5, 6, 1], "X")]
@@ -249,6 +258,7 @@ getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", 
 # query << [setEqual("X", [])]
 # query << [basicList(["X", "Y", "Z"])]
 # query << [is_("X", 2 |plus| (4 |times| 5))]
+
 # query << [is_("X", 2 |plus| 4 |times| 5)]
 # query << [is_("X", 2 |times| 4 |plus| 5)]
 # query << [is_("X", 2 |times| 4 |times| 5 |plus| 2)]
@@ -301,16 +311,16 @@ getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", 
 
 ### Testing Zone ###
 
+query(3) << [collatz(10, "L")]          # To see only some results, use query(number_of_results).
+
+# query << [is_("X", 4 |plus| 5 |times| 2)]
+
+# query << [is_("X", (4 |plus| 5) |times| 2)]     #*** Uh oh. This fails.
+# query << [is_("X", "(4 + 5) * 2")]     #*** Uh oh. This fails.
 
 
 
 #### Test queries below FAIL ####  ***
-
-
-# query << [lookup(5, ["6-a", "7-z", "5-t", "34-w"], "Value")]
-# query << [lookup("Key", ["6-a", "7-z", "5-t", "34-w"], "z")]
-# query << [lookup(6, ["6-a", "7-z", "5-t", "34-w", "6-foo"], "Value")]
-# query << [graph2("G"), hasCycle("G")]
 
 
 # ### To see results ###
@@ -319,9 +329,5 @@ getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", 
 #     # # If you want to use the results, you can do something like this:
 #     # X = result["X"]
 #     # print(X)
-
-
-# beginQuerying()
-
 
 print(query)
