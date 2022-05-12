@@ -122,16 +122,6 @@ ancestor("A", "B") >> [parent("A", "X"), ancestor("X", "B")]
 
 first_cousin("A", "B") >> [parent("X", "A"), sibling("Y", "X"), parent("Y", "B")]
 
-# collatz("N", "N") >> []
-# collatz("N0", "N") >> [
-#     is_(0, "N0" |mod| 2), 
-#     is_("N1", "N0" |div| 2), 
-#     collatz("N1", "N")]
-# collatz("N0", "N") >> [
-#     is_(1, "N0" |mod| 2), 
-#     is_("N1", 3 |times| "N0" |plus| 1), 
-#     collatz("N1", "N")]
-
 collatz("N", "N") >> []
 collatz("N0", "N") >> [
     is_(0, "N0 % 2"), 
@@ -150,13 +140,13 @@ just_ate("tiger", "deer") >> []
 is_digesting("A", "B") >> [just_ate("A", "B")]
 is_digesting("A", "B") >> [just_ate("A", "C"), is_digesting("C", "B")]
 
-# count("A", "A") >> []
-# count("A", "C") >> [is_("B", "A" |plus| 1), count("B", "C")]
+count("A", "A") >> []
+count("A", "C") >> [is_("B", "A + 1"), count("B", "C")]
 
 always_true() >> []
 
-# increment_all([], "X") >> [setEqual("X", [])]
-# increment_all(["H", "|", "T"], "X") >> [is_("Y", "H" |plus| 1), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
+increment_all([], "X") >> [setEqual("X", [])]
+increment_all(["H", "|", "T"], "X") >> [is_("Y", "H + 1"), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
 
 basicList(["a", "b", "c"]) >> []
 
@@ -253,12 +243,12 @@ studies("alex", "physics") >> []
 # query << [fail_()]
 # query << [is_digesting("tiger", "grass")]
 # query << [is_digesting("X", "Y")]
+# query(3) << [collatz(10, "L")]          # To see only some results, use query(number_of_results).
 # query(10) << [count(0, "X")]
 # query << [always_true()]
 # query << [setEqual("X", [])]
 # query << [basicList(["X", "Y", "Z"])]
 # query << [is_("X", 2 |plus| (4 |times| 5))]
-
 # query << [is_("X", 2 |plus| 4 |times| 5)]
 # query << [is_("X", 2 |times| 4 |plus| 5)]
 # query << [is_("X", 2 |times| 4 |times| 5 |plus| 2)]
@@ -311,7 +301,6 @@ studies("alex", "physics") >> []
 
 ### Testing Zone ###
 
-query(3) << [collatz(10, "L")]          # To see only some results, use query(number_of_results).
 
 # query << [is_("X", 4 |plus| 5 |times| 2)]
 
