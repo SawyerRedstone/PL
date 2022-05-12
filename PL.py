@@ -9,11 +9,6 @@ def create(term, memo = {}):
         return memo[str(term)]
     if isinstance(term, int) or isinstance(term, float):   # Numbers are constants.
         memo[str(term)] = Const(term)
-    # elif isinstance(term, Math):
-    #     # Make new math term so each alt has unchanged starting math.
-    #     newMath = Math(term.function)
-    #     newMath.mathList = [create(item, memo) if not callable(item) else item for item in term.mathList]
-    #     memo[str(term)] = newMath
     elif isinstance(term, list):
         # If the list is empty, it is a Const; otherwise it is a ListPL.
         memo[str(term)] = ListPL([create(item, memo) for item in term]) if term else Const(term)
@@ -39,7 +34,6 @@ def create(term, memo = {}):
             memo[str(term)] = Const(term)
         elif " " in term:
             math = Math()
-            # math.mathList = math.mathToList(term, memo)
             math.mathToList(term, memo)
             memo[str(term)] = math
         else:       # Maybe if it is the string of a num, turn it into the num.
@@ -197,7 +191,8 @@ class Var(Term):
 
 class Const(Term):  # A constant, aka an atom.
     def __init__(self, value):
-        super().__init__(name = "Const", value = value)
+        super().__init__(name = value, value = value)
+
 
 
 class Math(Term):
@@ -207,18 +202,16 @@ class Math(Term):
     @property
     def value(self):
         toEval = self.mathList[:]
-        # mathList = self.mathToList()
-        # for i, term in enumerate(self.mathList):
         for i in range(len(toEval)):
-            # if term not in ["+", "-", "*", "**", "/", "//", "(", ")"]:
             if isinstance(toEval[i], Term):
+                name = toEval[i].name
                 try:
                     toEval[i] = toEval[i].value
                     # Make sure that the value is a number.
                     if not isinstance(toEval[i], (int, float)):
-                        raise TypeError("Not a number.")
+                        raise TypeError
                 except:
-                    raise ValueError("This doesn't have a value yet.")
+                    raise ValueError("'" + name + "' doesn't have a numeric value.")
         return eval("".join([str(term) for term in toEval]))
     # This takes a string of math and turns it into a list of numbers and operators
     def mathToList(self, mathStr, memo = {}):
@@ -469,17 +462,6 @@ def flatten(toFlatten):
 # Use to make queries.
 query = Query()
 
-
-# # Mathamatical expressions that can be used.
-# # To use these, type the operator between two |s, like so:
-# # 4 |plus| 5 |plus| 6
-# plus = Math(lambda x, y: x + y)
-# minus = Math(lambda x, y: x - y)
-# times = Math(lambda x, y: x * y)
-# div = Math(lambda x, y: x / y)
-# floorDiv = Math(lambda x, y: x // y)
-# mod = Math(lambda x, y: x % y)
-
 # The Prolog is/2 predicate.
 is_ = Predicate("is_")
 is_("Q", "Q") >> []
@@ -490,8 +472,7 @@ fail_ = Predicate("fail_")
 # write/1.
 write_ = Predicate("write_")
 
-# format_/1 should be used only if there are no vars to be printed.
-# If there are vars to be unified, use format_/2, where arg1 is a string with {}s for vars, and arg2 is a list of vars.
+# format/2: arg1 is a string with {}s for vars and arg2 is a list of vars.
 # e.g. format_("{} likes you.", ["X"]) or format_("{}", ["X"]).
 format_ = Predicate("format_")
 
@@ -529,14 +510,15 @@ gt_ = Predicate("greater than")
 ge_ = Predicate("greater than or equal")
 
 
-# between = Predicate("between")
-# between("N", "M", "K") >> [le_("N", "M"), setEqual("K", "N")]
-# between("N", "M", "K") >> [lt_("N", "M"), is_("N1", "N" |plus| 1), between("N1", "M", "K")]
+between = Predicate("between")
+between("N", "M", "K") >> [le_("N", "M"), setEqual("K", "N")]
+between("N", "M", "K") >> [lt_("N", "M"), is_("N1", "N + 1"), between("N1", "M", "K")]
 
 
-# len_ = Predicate("len_")
-# len_([], 0) >> []
-# len_(["_", "|", "T"], "A") >> [len_("T", "B"), is_("A", "B" |plus| 1)]
+
+len_ = Predicate("len_")
+len_([], 0) >> []
+len_(["_", "|", "T"], "A") >> [len_("T", "B"), is_("A", "B + 1")]
 
 
 permutation_ = Predicate("permutation_")

@@ -1,9 +1,7 @@
 # This file is used for internal testing.
 from PL import *
-# import PL
-# from maze import *
-# from primeFactors import *
-# from Experimenting import *
+from maze import *
+from primeFactors import *
 
 
 ################### Testing #####################
@@ -161,7 +159,7 @@ ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 all_diff([]) >> []
 all_diff(["H", "|", "T"]) >> [not_(member_("H", "T")), all_diff("T")]    # Problem is member args are never created. ***
 
-# splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "SecondPart", "List"), len_("FirstPart", "Pos")]
+splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "SecondPart", "List"), len_("FirstPart", "Pos")]
 
 sublist("A", "B") >> [append_("A", "_", "B")]
 sublist("A", ["_", "|", "T"]) >> [sublist("A", "T")]
@@ -174,7 +172,6 @@ isSorted(["H1", "H2", "|", "T"]) >> [le_("H1", "H2"), isSorted(["H2", "|", "T"])
 
 bad_sort("X", "Y") >> [permutation_("X", "Y"), isSorted("Y"), cut()]
 
-
 teaches("dr_fred", "history") >> []
 teaches("dr_fred", "english") >> []
 teaches("dr_fred", "drama") >> []
@@ -183,17 +180,6 @@ studies("alice", "english") >> []
 studies("angus", "english") >> []
 studies("amelia", "drama") >> []
 studies("alex", "physics") >> []
-
-# lookup("K", "L", "V") >> [member_("K-V", "L"), cut()]
-
-# graph1(["n1-n2", "n2-n5", "n1-n3", "n1-n4", "n4-n6", "n6-n7", "n6-n8"]) >> []
-# graph2(["n1-n2", "n2-n5", "n1-n3", "n1-n4", "n4-n6", "n6-n7", "n7-n1", "n7-n8"]) >> []
-# graph3(["n4-n5", "n1-n2", "n1-n3", "n1-n4", "n4-n9", "n9-10", "n9-n11", "n9-n12", "n12-n9"]) >> []
-
-# hasCycle("G") >> [member_("X-Y", "G"), getChain(["X"], "Y", "G"), cut()]
-
-# getChain("Reached", "Next", "_G") >> [member_("Next", "Reached"), cut()]
-# getChain("Reached", "Next", "G") >> [member_("Next-X", "G"), append_("Reached", ["Next"], "NewReached"), getChain("NewReached", "X", "G"), cut()]
 
 # ##########################################
 
@@ -234,12 +220,12 @@ studies("alex", "physics") >> []
 # query << [not_(member_("X", ["a", "b", "c"])), setEqual("X", "f")]
 # query << [setEqual("X", "f"), not_(member_("X", ["a", "b", "c"]))]
 # query << [setEqual("X", ["q", "y", "z", "w"]), not_(len_("X", 4))]
-# query << [setEqual("X", 3 |plus| 4), not_(setEqual("X", 99))]
+# query << [setEqual("X", "3 + 4"), not_(setEqual("X", 99))]
 # query << [write_("hi")]
-# query << [is_("X", 2 |plus| 4)]
-# query << [is_(6, 2 |plus| 4)]
-# query << [is_(6, 2 |plus| 8)]
-# query << [is_("X", 2 |plus| "hi")]    # Change error later. ***
+# query << [is_("X", "2 + 4")]
+# query << [is_(6, "2 + 4")]
+# query << [is_(6, "2 + 8")]
+# query << [is_("X", "2 + hi")]
 # query << [fail_()]
 # query << [is_digesting("tiger", "grass")]
 # query << [is_digesting("X", "Y")]
@@ -248,28 +234,28 @@ studies("alex", "physics") >> []
 # query << [always_true()]
 # query << [setEqual("X", [])]
 # query << [basicList(["X", "Y", "Z"])]
-# query << [is_("X", 2 |plus| (4 |times| 5))]
-# query << [is_("X", 2 |plus| 4 |times| 5)]
-# query << [is_("X", 2 |times| 4 |plus| 5)]
-# query << [is_("X", 2 |times| 4 |times| 5 |plus| 2)]
-# query << [is_("X", 4 |minus| 3)]
-# query << [is_(4, 2 |plus| "X" |plus| 5)]     # is_ pred can't have vars on right side.
+# query << [is_("X", "2 + (4 * 5)")]
+# query << [is_("X", "2 + 4 * 5")]
+# query << [is_("X", "2 * 4 + 5")]
+# query << [is_("X", "2 * 4 * 5 + 2")]
+# query << [is_("X", "4 - 3")]
+# query << [is_(4, "2 + X + 5")]     # is_ pred can't have vars on right side.
 # query << [append_([1, 2, 3], ["a", "b"], "X")]
 # query << [append_("A", "B", [1, 2, 3, 4, 5])]
 # query << [member_(1, [1, 2, 3, 1])]
 # query << [between(1, 5, "K")]
-# query << [lt_(1, 1 |plus| 2)]
-# query << [lt_(1 |plus| 2, 1)]
+# query << [lt_(1, "1 + 2")]
+# query << [lt_("1 + 2", 1)]
 # query << [splitAt(3, ["a", "b", "c", "d", "e", "f", "g", "h"], "A", "B")]
 # query << [sublist(["a", "a"], ["b", "a", "a", "b"])]
 # query << [sublist(["b", "a", "b"], ["b", "a", "a", "b"])]
 # query << [sublist(["a", "b", "a"], ["b", "a", "a", "b"])]
 # query << [sublist(["a"], ["b", "a", "a", "b"])]
 # query << [sublist(["a", "b", "d"], ["a", "b", "c", "d"])]
-# query << [member_("X", [4, 5, 14, 15, 24, 25]), gt_("X", 10), cut(), is_(0, "X" |mod| 2)]
-# query << [member_("X", [4, 5, 14, 15, 24, 25]), gt_("X", 10), is_(0, "X" |mod| 2)]
-# query << [member_("X", [4, 5, 14, 15, 24, 25]), cut(), gt_("X", 10), is_(0, "X" |mod| 2)]
-# query << [member_("X", [3, 4, 5, 13, 14, 15, 23, 24, 25]), gt_("X", 10), cut(), is_(0, "X" |mod| 2)]
+# query << [member_("X", [4, 5, 14, 15, 24, 25]), gt_("X", 10), cut(), is_(0, "X % 2")]
+# query << [member_("X", [4, 5, 14, 15, 24, 25]), gt_("X", 10), is_(0, "X % 2")]
+# query << [member_("X", [4, 5, 14, 15, 24, 25]), cut(), gt_("X", 10), is_(0, "X % 2")]
+# query << [member_("X", [3, 4, 5, 13, 14, 15, 23, 24, 25]), gt_("X", 10), cut(), is_(0, "X % 2")]
 # query << [isSorted([1, 2])]
 # query << [isSorted([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])]
 # query << [isSorted([1, 2, 3, 4, 10, 6, 7, 8, 9, 10])]
@@ -296,7 +282,7 @@ studies("alex", "physics") >> []
 # query << [between(1, 5, "X"), not_(setEqual("X", 3))]
 # query << [format_("Hello, I'm {} and you are {}.", ["sawyer", "john"])]
 # query << [format_("{}'s brother is {}.", ["Child1", "Child2"])]
-# query << [prime_factors(12, "X")]     # Maybe use for demonstration. ***
+# query << [prime_factors(12, "X")]
 
 
 ### Testing Zone ###

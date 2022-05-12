@@ -156,15 +156,15 @@ mazeEndPos(0, 10) >> []
 # % paths. When drawing the solution, periods
 # % show the winning path.
 # mazeElement(R,C,'S',_) :- mazeStartPos(R,C), !.
-mazeElement("R", "C", "s", "_") >> [mazeStartPos("R", "C"), cut()]
+mazeElement("R", "C", "'S'", "_") >> [mazeStartPos("R", "C"), cut()]
 # mazeElement(R,C,'E',_) :- mazeEndPos(R,C), !.
-mazeElement("R", "C", "e", "_") >> [mazeEndPos("R", "C"), cut()]
+mazeElement("R", "C", "'E'", "_") >> [mazeEndPos("R", "C"), cut()]
 # mazeElement(R,C,'*',_) :- mazeWall(R,C), !.
-mazeElement("R", "C", "*", "_") >> [mazeWall("R", "C"), cut()]
+mazeElement("R", "C", "'*'", "_") >> [mazeWall("R", "C"), cut()]
 # mazeElement(R,C,'.',V) :- member([R,C],V), !.
-mazeElement("R", "C", ".", "V") >> [member_(["R", "C"], "V"), cut()]
+mazeElement("R", "C", "'.'", "V") >> [member_(["R", "C"], "V"), cut()]
 # mazeElement(_,_,' ',_).
-mazeElement("_", "_", " ", "_") >> []
+mazeElement("_", "_", "' '", "_") >> []
 
 
 # % Newline at the end of each row.
@@ -257,10 +257,10 @@ direction("w") >> []
 # newPos(OldRow, OldCol, w, OldRow, NewCol) :- NewCol is OldCol - 1, not(mazeWall(OldRow, NewCol)), mazeDimension(_, Y), NewCol < Y, NewCol >= 0.
 # newPos(OldRow, OldCol, n, NewRow, OldCol) :- NewRow is OldRow - 1, not(mazeWall(NewRow, OldCol)), mazeDimension(X, _), NewRow < X, NewRow >= 0.
 # newPos(OldRow, OldCol, s, NewRow, OldCol) :- NewRow is OldRow + 1, not(mazeWall(NewRow, OldCol)), mazeDimension(X, _), NewRow < X, NewRow >= 0.
-newPos("OldRow", "OldCol", "e", "OldRow", "NewCol") >> [is_("NewCol", "OldCol" |plus| 1), not_(mazeWall("OldRow", "NewCol")), mazeDimension("_", "Y"), lt_("NewCol", "Y"), ge_("NewCol", 0)]
-newPos("OldRow", "OldCol", "w", "OldRow", "NewCol") >> [is_("NewCol", "OldCol" |minus| 1), not_(mazeWall("OldRow", "NewCol")), mazeDimension("_", "Y"), lt_("NewCol", "Y"), ge_("NewCol", 0)]
-newPos("OldRow", "OldCol", "n", "NewRow", "OldCol") >> [is_("NewRow", "OldRow" |minus| 1), not_(mazeWall("NewRow", "OldCol")), mazeDimension("X", "_"), lt_("NewRow", "X"), ge_("NewRow", 0)]
-newPos("OldRow", "OldCol", "s", "NewRow", "OldCol") >> [is_("NewRow", "OldRow" |plus| 1), not_(mazeWall("NewRow", "OldCol")), mazeDimension("X", "_"), lt_("NewRow", "X"), ge_("NewRow", 0)]
+newPos("OldRow", "OldCol", "e", "OldRow", "NewCol") >> [is_("NewCol", "OldCol + 1"), not_(mazeWall("OldRow", "NewCol")), mazeDimension("_", "Y"), lt_("NewCol", "Y"), ge_("NewCol", 0)]
+newPos("OldRow", "OldCol", "w", "OldRow", "NewCol") >> [is_("NewCol", "OldCol - 1"), not_(mazeWall("OldRow", "NewCol")), mazeDimension("_", "Y"), lt_("NewCol", "Y"), ge_("NewCol", 0)]
+newPos("OldRow", "OldCol", "n", "NewRow", "OldCol") >> [is_("NewRow", "OldRow - 1"), not_(mazeWall("NewRow", "OldCol")), mazeDimension("X", "_"), lt_("NewRow", "X"), ge_("NewRow", 0)]
+newPos("OldRow", "OldCol", "s", "NewRow", "OldCol") >> [is_("NewRow", "OldRow + 1"), not_(mazeWall("NewRow", "OldCol")), mazeDimension("X", "_"), lt_("NewRow", "X"), ge_("NewRow", 0)]
 
 
 # % Generate all possible moves from given position.
