@@ -12,13 +12,21 @@ aunt = Predicate("aunt")
 ancestor = Predicate("ancestor")
 first_cousin = Predicate("first_cousin")
 
+# Add facts of the male Greek gods.
+# These facts are written in the form male(name) >> [].
 male("zeus") >> []
-female("hera") >> []
+male("atlas") >> []
+male("apollo") >> []
+male("eros") >> []
+male("dionysus") >> []
+male("kratos") >> []
+male("morpheus") >> []
+male("hermes") >> []
+male("ares") >> []
+male("charon") >> []
+male("pan") >> []
+male("zephyrus") >> []
+male("cronus") >> []
+male("erebus") >> []
+male("asclepius") >> []
 
-# Check to see if any names aren't mentioned in genders. ***
-child("hercules", "zeus") >> []
-child("athena", "zeus") >> []
-child("ares", "hera") >> []
-child("eileithyia", "hera") >> []
-child("hebe", "hera") >> []
-child("hephaestus", "hera") >> []

@@ -1,9 +1,5 @@
 from PL import *
 
-
-# %%%%%%%%%%%%%%%%%%%%
-# % MAZE DATA
-# %%%%%%%%%%%%%%%%%%%%
 mazeWall = Predicate("mazeWall")
 solve = Predicate("solve")
 mazeDimension = Predicate("mazeDimension")
@@ -19,10 +15,9 @@ direction = Predicate("direction")
 newPos = Predicate("newPos")
 move = Predicate("move")
 
-
-
-
-
+####################
+# MAZE DATA
+####################
 
 # The raw map data. Each mazeWall(R,C) indicates the presence of a wall
 # at row R, column C.
@@ -130,169 +125,153 @@ mazeWall(14, 9) >> []
 mazeWall(14, 10) >> []
 mazeWall(14, 11) >> []
 
-
-
-# % The maximum dimensions of the maze grid
-# mazeDimension(15,12).
+# The maximum dimensions of the maze grid
 mazeDimension(15, 12) >> []
 
-# % The start and end position of the maze.
-# % That is, when solving the maze, you start
-# % at mazeStartPos and you finish and mazeEndPos.
-# mazeStartPos(13,6).
+# The start and end position of the maze.
+# That is, when solving the maze, you start
+# at mazeStartPos and you finish and mazeEndPos.
 mazeStartPos(13, 6) >> []
-# mazeEndPos(0,10).
 mazeEndPos(0, 10) >> []
 
-# %%%%%%%%%%%%%%%%%%%%
-# % MAZE PRINTING
-# %%%%%%%%%%%%%%%%%%%%
+####################
+# MAZE PRINTING
+####################
 
-# % Helper predicates determine which character
-# % to print for a particular maze position.
-# % We use S to signify the starting position,
-# % and E to signify the ending position.
-# % Stars are used for maze walls, space for
-# % paths. When drawing the solution, periods
-# % show the winning path.
-# mazeElement(R,C,'S',_) :- mazeStartPos(R,C), !.
+# Helper predicates determine which character
+# to print for a particular maze position.
+# We use S to signify the starting position,
+# and E to signify the ending position.
+# Stars are used for maze walls, space for
+# paths. When drawing the solution, periods
+# show the winning path.
 mazeElement("R", "C", "'S'", "_") >> [mazeStartPos("R", "C"), cut()]
-# mazeElement(R,C,'E',_) :- mazeEndPos(R,C), !.
 mazeElement("R", "C", "'E'", "_") >> [mazeEndPos("R", "C"), cut()]
-# mazeElement(R,C,'*',_) :- mazeWall(R,C), !.
 mazeElement("R", "C", "'*'", "_") >> [mazeWall("R", "C"), cut()]
-# mazeElement(R,C,'.',V) :- member([R,C],V), !.
-mazeElement("R", "C", "'.'", "V") >> [member_(["R", "C"], "V"), cut()]
-# mazeElement(_,_,' ',_).
+mazeElement("R", "C", "'.'", "V") >> [member(["R", "C"], "V"), cut()]
 mazeElement("_", "_", "' '", "_") >> []
 
 
-# % Newline at the end of each row.
-# mazeNewLine(C) :- mazeDimension(_,C), nl.
-mazeNewLine("C") >> [mazeDimension("_", "C"), nl_()]
+# Newline at the end of each row.
+mazeNewLine("C") >> [mazeDimension("_", "C"), nl()]
 
 
-# % Print the maze, with a winning path, maybe.
-# % We just enumerate all positions within the
-# % maze dimensions, call mazeElement to figure
-# % out what to print there, and then print it.
-# printMaze(WinningPath) :-
-#     mazeDimension(Rows, Cols),
-#     between(0, Rows, Row),
-#     between(0, Cols, Col),
-#     mazeElement(Row, Col, Appearance, WinningPath),
-#     write(Appearance),
-#     mazeNewLine(Col),
-#     fail.
+# Print the maze, with a winning path, maybe.
+# We just enumerate all positions within the
+# maze dimensions, call mazeElement to figure
+# out what to print there, and then print it.
 printMaze("WinningPath") >> [
     mazeDimension("Rows", "Cols"),
     between(0, "Rows", "Row"),
     between(0, "Cols", "Col"),
     mazeElement("Row", "Col", "Appearance", "WinningPath"),
-    write_("Appearance"),
+    write("Appearance"),
     mazeNewLine("Col"),
-    fail_()]
+    fail()]
 
-# % Shortcut function to print the maze
-# % if you don't have the solution yet.
-# printUnsolvedMaze :-
-#     printMaze([]).
+# Shortcut function to print the maze
+# if you don't have the solution yet.
 printUnsolvedMaze() >> [printMaze([])]
 
-# % Shortcut function to find the solution
-# % and print it.
-# printSolvedMaze :-
-#     mazeStartPos(StartR,StartC),
-#     solve(StartR,StartC,_,_,[[StartR,StartC]],Visited,[],_),
-#     printMaze(Visited).
+# Shortcut function to find the solution
+# and print it.
 printSolvedMaze() >> [
     mazeStartPos("StartR", "StartC"),
     solve("StartR", "StartC", "_", "_", [["StartR", "StartC"]], "Visited", [], "_"),
     printMaze("Visited")]
 
-# % Print out the winning path by calling solve.
-# winningPath(Path) :-
-#     mazeStartPos(StartR,StartC),
-#     solve(StartR,StartC,_,_,[[StartR,StartC]],_,[],Path1),
-#     reverse(Path1,Path).
+# Print out the winning path by calling solve.
 winningPath("Path") >> [
     mazeStartPos("StartR", "StartC"),
     solve("StartR", "StartC", "_", "_", [["StartR", "StartC"]], "_", [], "Path1"),
-    reverse_("Path1", "Path")]
+    reverse("Path1", "Path")]
 
-# %%%%%%%%%%%%%%%%%%%%
-# % MAZE SOLVING
-# %%%%%%%%%%%%%%%%%%%%
+####################
+# MAZE SOLVING
+####################
 
-# % The four cardinal directions that we can move in: north,
-# % south, east, west.
-# direction(n).
-# direction(s).
-# direction(e).
-# direction(w).
+# The four cardinal directions that we can move in: north,
+# south, east, west.
 direction("n") >> []
 direction("s") >> []
 direction("e") >> []
 direction("w") >> []
 
-# % Given a current position in the maze, and a direction of travel, calculate
-# % a new position.
-# % For example, to move east, from position (4,7), I would do:
-# %    ?- newPos(4,7,e,NewRow,NewCol).
-# %    NewRow = 4,
-# %    NewCol = 8 ;
-# %    false.
-# % This predicate should fail if the proposed position is outside the bounds of the map,
-# % or if it's a wall. For example:
-# % Can't do this: new position (15,6) would be outside the map.
-# %    ?- newPos(14,6,s,NewRow,NewCol).
-# %    false.
-# %
-# % Can't do this either: new position (14,7) is a wall
-# %    ?- newPos(14,6,e,NewRow,NewCol).
-# %    false.
+# Given a current position in the maze, and a direction of travel, calculate
+# a new position.
+# For example, to move east, from position (4,7), I would do:
+#    ?- newPos(4,7,e,NewRow,NewCol).
+#    NewRow = 4,
+#    NewCol = 8 ;
+#    false.
+# This predicate should fail if the proposed position is outside the bounds of the map,
+# or if it's a wall. For example:
+# Can't do this: new position (15,6) would be outside the map.
+#    ?- newPos(14,6,s,NewRow,NewCol).
+#    false.
+#
+# Can't do this either: new position (14,7) is a wall
+#    ?- newPos(14,6,e,NewRow,NewCol).
+#    false.
+
+newPos("OldRow", "OldCol", "e", "OldRow", "NewCol") >> [
+    is_("NewCol", "OldCol + 1"), 
+    not_(mazeWall("OldRow", "NewCol")), 
+    mazeDimension("_", "Y"), 
+    lt("NewCol", "Y"), 
+    ge("NewCol", 0)]
+newPos("OldRow", "OldCol", "w", "OldRow", "NewCol") >> [
+    is_("NewCol", "OldCol - 1"), 
+    not_(mazeWall("OldRow", "NewCol")), 
+    mazeDimension("_", "Y"), 
+    lt("NewCol", "Y"), 
+    ge("NewCol", 0)]
+newPos("OldRow", "OldCol", "n", "NewRow", "OldCol") >> [
+    is_("NewRow", "OldRow - 1"), 
+    not_(mazeWall("NewRow", "OldCol")), 
+    mazeDimension("X", "_"), 
+    lt("NewRow", "X"), 
+    ge("NewRow", 0)]
+newPos("OldRow", "OldCol", "s", "NewRow", "OldCol") >> [
+    is_("NewRow", "OldRow + 1"), 
+    not_(mazeWall("NewRow", "OldCol")), 
+    mazeDimension("X", "_"), 
+    lt("NewRow", "X"), 
+    ge("NewRow", 0)]
 
 
-# newPos(OldRow, OldCol, e, OldRow, NewCol) :- NewCol is OldCol + 1, not(mazeWall(OldRow, NewCol)), mazeDimension(_, Y), NewCol < Y, NewCol >= 0.
-# newPos(OldRow, OldCol, w, OldRow, NewCol) :- NewCol is OldCol - 1, not(mazeWall(OldRow, NewCol)), mazeDimension(_, Y), NewCol < Y, NewCol >= 0.
-# newPos(OldRow, OldCol, n, NewRow, OldCol) :- NewRow is OldRow - 1, not(mazeWall(NewRow, OldCol)), mazeDimension(X, _), NewRow < X, NewRow >= 0.
-# newPos(OldRow, OldCol, s, NewRow, OldCol) :- NewRow is OldRow + 1, not(mazeWall(NewRow, OldCol)), mazeDimension(X, _), NewRow < X, NewRow >= 0.
-newPos("OldRow", "OldCol", "e", "OldRow", "NewCol") >> [is_("NewCol", "OldCol + 1"), not_(mazeWall("OldRow", "NewCol")), mazeDimension("_", "Y"), lt_("NewCol", "Y"), ge_("NewCol", 0)]
-newPos("OldRow", "OldCol", "w", "OldRow", "NewCol") >> [is_("NewCol", "OldCol - 1"), not_(mazeWall("OldRow", "NewCol")), mazeDimension("_", "Y"), lt_("NewCol", "Y"), ge_("NewCol", 0)]
-newPos("OldRow", "OldCol", "n", "NewRow", "OldCol") >> [is_("NewRow", "OldRow - 1"), not_(mazeWall("NewRow", "OldCol")), mazeDimension("X", "_"), lt_("NewRow", "X"), ge_("NewRow", 0)]
-newPos("OldRow", "OldCol", "s", "NewRow", "OldCol") >> [is_("NewRow", "OldRow + 1"), not_(mazeWall("NewRow", "OldCol")), mazeDimension("X", "_"), lt_("NewRow", "X"), ge_("NewRow", 0)]
+# Generate all possible moves from given position.
+# 
+# Parameters are as follows:
+# move(CurrentR,     # Current row and column position
+#      CurrentC, 
+# 
+#      NewR,         # new row and column position
+#      NewC, 
+# 
+#      PosVisitedIn,  # List of [R,C] positions visited prior to this move
+#                     # for example: [[1, 9], [1, 8], [2, 8]]
+#      PosVisitedOut, # List of [R,C] positions visited including this move.
+#                     # New moves are attached to the beginning of the list.
+#                     # for example: [[1, 10], [1, 9], [1, 8], [2, 8]]
+#      MoveListIn,    # List of moves made before this move.
+#                     # For example: [n,n,w,w,n,e]
+#      MoveListOut)   # List of moves made including this move.
+#                     # New moves added at beginning of the list.
+#                     # For example: [n,n,n,w,w,n,e]
 
-
-# % Generate all possible moves from given position.
-# % 
-# % Parameters are as follows:
-# % move(CurrentR,     % Current row and column position
-# %      CurrentC, 
-# % 
-# %      NewR,         % new row and column position
-# %      NewC, 
-# % 
-# %      PosVisitedIn,  % List of [R,C] positions visited prior to this move
-# %                     % for example: [[1, 9], [1, 8], [2, 8]]
-# %      PosVisitedOut, % List of [R,C] positions visited including this move.
-# %                     % New moves are attached to the beginning of the list.
-# %                     % for example: [[1, 10], [1, 9], [1, 8], [2, 8]]
-# %      MoveListIn,    % List of moves made before this move.
-# %                     % For example: [n,n,w,w,n,e]
-# %      MoveListOut)   % List of moves made including this move.
-# %                     % New moves added at beginning of the list.
-# %                     % For example: [n,n,n,w,w,n,e]
-
-# move(CurrentR, CurrentC, NewR, NewC, PosVisitedIn, PosVisitedOut, MoveListIn, MoveListOut) :- 
-#     direction(D), newPos(CurrentR, CurrentC, D, NewR, NewC), not(member([NewR, NewC], PosVisitedIn)), 
-#     append([[NewR, NewC]], PosVisitedIn, PosVisitedOut), append([D], MoveListIn, MoveListOut).
 move("CurrentR", "CurrentC", "NewR", "NewC", "PosVisitedIn", "PosVisitedOut", "MoveListIn", "MoveListOut") >> [
-    direction("D"), newPos("CurrentR", "CurrentC", "D", "NewR", "NewC"), not_(member_(["NewR", "NewC"], "PosVisitedIn")),
-    append_([["NewR", "NewC"]], "PosVisitedIn", "PosVisitedOut"), append_(["D"], "MoveListIn", "MoveListOut")]
+    direction("D"), newPos("CurrentR", "CurrentC", "D", "NewR", "NewC"), 
+    not_(member(["NewR", "NewC"], "PosVisitedIn")),
+    append([["NewR", "NewC"]], "PosVisitedIn", "PosVisitedOut"), 
+    append(["D"], "MoveListIn", "MoveListOut")]
 
-# % Solve the maze by repeatedly calling move. Stops when
-# % we reach the maze ending position.
-# solve(R,C,_NextR,_NextC,VisitedIn,VisitedIn,MoveListIn,MoveListIn) :- mazeEndPos(R, C), !.
-# solve(R,C,_NextR,_NextC,VisitedIn,VisitedOut,MoveListIn,MoveListOut) :- move(R, C, NewR, NewC, VisitedIn, V2, MoveListIn, M2), solve(NewR, NewC, _, _, V2, VisitedOut, M2, MoveListOut).
-solve("R", "C", "_NextR", "_NextC", "VisitedIn", "VisitedIn", "MoveListIn", "MoveListIn") >> [mazeEndPos("R", "C"), cut()]
-solve("R", "C", "_NextR", "_NextC", "VisitedIn", "VisitedOut", "MoveListIn", "MoveListOut") >> [move("R", "C", "NewR", "NewC", "VisitedIn", "V2", "MoveListIn", "M2"), solve("NewR", "NewC", "_", "_", "V2", "VisitedOut", "M2", "MoveListOut")]
+# Solve the maze by repeatedly calling move. Stops when
+# we reach the maze ending position.
+solve("R", "C", "_NextR", "_NextC", "VisitedIn", "VisitedIn", "MoveListIn", "MoveListIn") >> [
+    mazeEndPos("R", "C"), cut()]
+solve("R", "C", "_NextR", "_NextC", "VisitedIn", "VisitedOut", "MoveListIn", "MoveListOut") >> [
+    move("R", "C", "NewR", "NewC", "VisitedIn", "V2", "MoveListIn", "M2"), 
+    solve("NewR", "NewC", "_", "_", "V2", "VisitedOut", "M2", "MoveListOut")]
+
+

@@ -1,8 +1,6 @@
 # This file is used for internal testing.
 from PL import *
 from maze import *
-from primeFactors import *
-
 
 ################### Testing #####################
 
@@ -130,7 +128,7 @@ collatz("N0", "N") >> [
     is_("N1", "3 * N0 + 1"), 
     collatz("N1", "N")]
 
-inboth("A", "B", "X") >> [member_("X", "A"), member_("X", "B")]
+inboth("A", "B", "X") >> [member("X", "A"), member("X", "B")]
 
 just_ate("deer", "grass") >> []
 just_ate("tiger", "deer") >> []
@@ -150,27 +148,27 @@ basicList(["a", "b", "c"]) >> []
 
 merge("A", [], "A") >> []
 merge([], "B", "B") >> []
-merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [lt_("H1", "H2"), merge("T1", ["H2", "|", "T2"], "Z"), setEqual("X", ["H1", "|", "Z"])]
-merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [ge_("H1", "H2"), merge(["H1", "|", "T1"], "T2", "Z"), setEqual("X", ["H2", "|", "Z"])]
+merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [lt("H1", "H2"), merge("T1", ["H2", "|", "T2"], "Z"), setEqual("X", ["H1", "|", "Z"])]
+merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [ge("H1", "H2"), merge(["H1", "|", "T1"], "T2", "Z"), setEqual("X", ["H2", "|", "Z"])]
 
 ismember2("H", ["H", "|", "_"]) >> [cut()]
 ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 
 all_diff([]) >> []
-all_diff(["H", "|", "T"]) >> [not_(member_("H", "T")), all_diff("T")]    # Problem is member args are never created. ***
+all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]    # Problem is member args are never created. ***
 
-splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append_("FirstPart", "SecondPart", "List"), len_("FirstPart", "Pos")]
+splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append("FirstPart", "SecondPart", "List"), len_("FirstPart", "Pos")]
 
-sublist("A", "B") >> [append_("A", "_", "B")]
+sublist("A", "B") >> [append("A", "_", "B")]
 sublist("A", ["_", "|", "T"]) >> [sublist("A", "T")]
 
-sublist_cut("A", "B") >> [append_("A", "_", "B"), cut()]
+sublist_cut("A", "B") >> [append("A", "_", "B"), cut()]
 sublist_cut("A", ["_", "|", "T"]) >> [sublist_cut("A", "T")]
 
 isSorted(["_"]) >> []
-isSorted(["H1", "H2", "|", "T"]) >> [le_("H1", "H2"), isSorted(["H2", "|", "T"])]
+isSorted(["H1", "H2", "|", "T"]) >> [le("H1", "H2"), isSorted(["H2", "|", "T"])]
 
-bad_sort("X", "Y") >> [permutation_("X", "Y"), isSorted("Y"), cut()]
+bad_sort("X", "Y") >> [permutation("X", "Y"), isSorted("Y"), cut()]
 
 teaches("dr_fred", "history") >> []
 teaches("dr_fred", "english") >> []
@@ -209,7 +207,7 @@ studies("alex", "physics") >> []
 # query << [ancestor("ben", "X")]
 # query << [first_cousin("david", "X")]
 # query << [first_cousin("jiri", "X")]
-# query << [member_("X", ["bob", "apple", "shirt", "pip"])]
+# query << [member("X", ["bob", "apple", "shirt", "pip"])]
 # query << [inboth(["green", "red", "orange"], ["apple", "orange", "pear"], "orange")]
 # query << [inboth([1, 2, 3, 4], [2, 5, 6, 1], "X")]
 # query << [increment_all([12, 99, 4, -7], "X")]
@@ -217,16 +215,16 @@ studies("alex", "physics") >> []
 # query << [all_diff(["a", "b", "c"])]
 # query << [all_diff(["a", "b", "c", "b"])]
 # query << [between(1, 3, "X"), between(1, 3, "Y"), between(1, 3, "Z"), all_diff(["X", "Y", "Z"])]
-# query << [not_(member_("X", ["a", "b", "c"])), setEqual("X", "f")]
-# query << [setEqual("X", "f"), not_(member_("X", ["a", "b", "c"]))]
+# query << [not_(member("X", ["a", "b", "c"])), setEqual("X", "f")]
+# query << [setEqual("X", "f"), not_(member("X", ["a", "b", "c"]))]
 # query << [setEqual("X", ["q", "y", "z", "w"]), not_(len_("X", 4))]
 # query << [setEqual("X", "3 + 4"), not_(setEqual("X", 99))]
-# query << [write_("hi")]
+# query << [write("hi")]
 # query << [is_("X", "2 + 4")]
 # query << [is_(6, "2 + 4")]
 # query << [is_(6, "2 + 8")]
 # query << [is_("X", "2 + hi")]
-# query << [fail_()]
+# query << [fail()]
 # query << [is_digesting("tiger", "grass")]
 # query << [is_digesting("X", "Y")]
 # query(3) << [collatz(10, "L")]          # To see only some results, use query(number_of_results).
@@ -240,28 +238,28 @@ studies("alex", "physics") >> []
 # query << [is_("X", "2 * 4 * 5 + 2")]
 # query << [is_("X", "4 - 3")]
 # query << [is_(4, "2 + X + 5")]     # is_ pred can't have vars on right side.
-# query << [append_([1, 2, 3], ["a", "b"], "X")]
-# query << [append_("A", "B", [1, 2, 3, 4, 5])]
-# query << [member_(1, [1, 2, 3, 1])]
+# query << [append([1, 2, 3], ["a", "b"], "X")]
+# query << [append("A", "B", [1, 2, 3, 4, 5])]
+# query << [member(1, [1, 2, 3, 1])]
 # query << [between(1, 5, "K")]
-# query << [lt_(1, "1 + 2")]
-# query << [lt_("1 + 2", 1)]
+# query << [lt(1, "1 + 2")]
+# query << [lt("1 + 2", 1)]
 # query << [splitAt(3, ["a", "b", "c", "d", "e", "f", "g", "h"], "A", "B")]
 # query << [sublist(["a", "a"], ["b", "a", "a", "b"])]
 # query << [sublist(["b", "a", "b"], ["b", "a", "a", "b"])]
 # query << [sublist(["a", "b", "a"], ["b", "a", "a", "b"])]
 # query << [sublist(["a"], ["b", "a", "a", "b"])]
 # query << [sublist(["a", "b", "d"], ["a", "b", "c", "d"])]
-# query << [member_("X", [4, 5, 14, 15, 24, 25]), gt_("X", 10), cut(), is_(0, "X % 2")]
-# query << [member_("X", [4, 5, 14, 15, 24, 25]), gt_("X", 10), is_(0, "X % 2")]
-# query << [member_("X", [4, 5, 14, 15, 24, 25]), cut(), gt_("X", 10), is_(0, "X % 2")]
-# query << [member_("X", [3, 4, 5, 13, 14, 15, 23, 24, 25]), gt_("X", 10), cut(), is_(0, "X % 2")]
+# query << [member("X", [4, 5, 14, 15, 24, 25]), gt("X", 10), cut(), is_(0, "X % 2")]
+# query << [member("X", [4, 5, 14, 15, 24, 25]), gt("X", 10), is_(0, "X % 2")]
+# query << [member("X", [4, 5, 14, 15, 24, 25]), cut(), gt("X", 10), is_(0, "X % 2")]
+# query << [member("X", [3, 4, 5, 13, 14, 15, 23, 24, 25]), gt("X", 10), cut(), is_(0, "X % 2")]
 # query << [isSorted([1, 2])]
 # query << [isSorted([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])]
 # query << [isSorted([1, 2, 3, 4, 10, 6, 7, 8, 9, 10])]
-# query << [permutation_([1, 2, 3], "X")]
-# query << [permutation_([1, 2], [2, 1])]
-# query << [permutation_([1, 2, 3], [2, 3, 1])]
+# query << [permutation([1, 2, 3], "X")]
+# query << [permutation([1, 2], [2, 1])]
+# query << [permutation([1, 2, 3], [2, 3, 1])]
 # query << [bad_sort([5, 3, 1, 10, 3], "Y")]
 # query << [ismember2(1, [1, 2, 3, 1])]
 # query << [ismember2("X", [1, 2, 3, 1])]
@@ -276,7 +274,7 @@ studies("alex", "physics") >> []
 # query << [newPos(11, 1, "s", "NewR", "NewC")]
 # query << [move(11, 1, "NewR", "NewC", [[11, 2]], "Visited", ["w", "w", "w"], "Dirs")]
 # query << [reverse_([1,2,3], "X")]
-# query << [printUnsolvedMaze()]
+query << [printUnsolvedMaze()]
 # query << [not_(male("bob"))]
 # query << [printSolvedMaze()]
 # query << [between(1, 5, "X"), not_(setEqual("X", 3))]
@@ -288,11 +286,9 @@ studies("alex", "physics") >> []
 ### Testing Zone ###
 
 
-# query << [is_("X", 4 |plus| 5 |times| 2)]
+# query << [is_("X", "(4 + 5) * 2")]
 
-# query << [is_("X", (4 |plus| 5) |times| 2)]     #*** Uh oh. This fails.
-# query << [is_("X", "(4 + 5) * 2")]     #*** Uh oh. This fails.
-
+print(query)
 
 
 #### Test queries below FAIL ####  ***
@@ -304,5 +300,3 @@ studies("alex", "physics") >> []
 #     # # If you want to use the results, you can do something like this:
 #     # X = result["X"]
 #     # print(X)
-
-print(query)

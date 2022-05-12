@@ -70,5 +70,13 @@ flights("D", "A") >> [
 # run a flights query, but starting with the city name (translate to airport codes)
 flights("DC", "AC") >> [airport("DC", "D"), airport("AC", "A"), flights("D", "A")]
 
-query << [flights("'Nanaimo'", "'Calgary'")]
-# print(query)
+# Example query:
+# query << [flights("'Nanaimo'", "'Calgary'")] 
+
+# This query prints the following output:
+
+# Direct flight Nanaimo(YCD) to Calgary(YYC)
+# Flight Nanaimo(YCD) to Calgary(YYC) via Vancouver(YVR)
+# Flight Nanaimo(YCD) to Calgary(YYC) via Vancouver(YVR) and Lethbridge(YQL)
+# Flight Nanaimo(YCD) to Calgary(YYC) via Vancouver(YVR) and Victoria(YYJ)
+

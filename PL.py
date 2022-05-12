@@ -20,6 +20,8 @@ def create(term, memo = {}):
             else:
                 vars = []
             memo[str(term)] = Goal(term.pred, [strToWrite, vars])
+        elif term.name == "setEqual":
+            memo[str(term)] = Goal(term.pred, [create(term.args[0], memo), create("'" + term.args[1] + "'", memo)])
         else:
             memo[str(term)] = Goal(term.pred, [create(arg, memo) for arg in term.args])
     elif term[0].isupper() and " " not in term:
@@ -215,63 +217,23 @@ class Math(Term):
         return eval("".join([str(term) for term in toEval]))
     # This takes a string of math and turns it into a list of numbers and operators
     def mathToList(self, mathStr, memo = {}):
-        mathStr = mathStr
+        # Add more operators here! ***
         mathStr = mathStr.replace(" ", "")
         mathStr = mathStr.replace("+", " + ")
         mathStr = mathStr.replace("-", " - ")
         mathStr = mathStr.replace("*", " * ")
         mathStr = mathStr.replace("**", " ** ")
-        mathStr = mathStr.replace("^", " ** ")        # Alternative style for exponentiation.
+        mathStr = mathStr.replace("^", " ** ")        # Prolog style for exponentiation.
         mathStr = mathStr.replace("/", " / ")
         mathStr = mathStr.replace("//", " // ")
         mathStr = mathStr.replace("(", " ( ")
         mathStr = mathStr.replace(")", " ) ")
         mathStr = mathStr.replace("%", " % ")
+        mathStr = mathStr.replace("mod", " % ")   # Prolog style for modulo.
         self.mathList = mathStr.split()
         for i in range(len(self.mathList)):
-            if self.mathList[i] not in ["+", "-", "*", "**", "/", "//", "(", ")", "%"]:
+            if self.mathList[i] not in ["+", "-", "*", "**", "/", "//", "(", ")", "%", "mod"]:
                 self.mathList[i] = create(self.mathList[i], memo)
-        # return self.mathList
-
-
-# # To use math, write the operation surrounded with |.
-# # For example, '3 + 4' would be written as '3 |plus| 4'.
-# # (Idea from: https://code.activestate.com/recipes/384122/)
-# class Math(Term):
-#     def __init__(self, function):
-#         self.mathList = []
-#         self.function = function
-#         self.children = []     # The children are the variables that will change if this term has a value.
-#     def __ror__(self, other):
-#         # Make a new Math object so built-in objects won't change.
-#         newMath = Math(self.function)
-#         newMath.mathList = [other, self.function]
-#         return newMath
-#     def __or__(self, other):
-#         if other is plus or other is minus:
-#             other = other.function
-#         if self.mathList[-1] is times or self.mathList[-1] is div or self.mathList[-1] is mod or self.mathList[-1] is floorDiv:
-#             op = self.mathList.pop()
-#             addend = self.mathList.pop()
-#             newMath = addend | op | other
-#             self.mathList.append(newMath)
-#         self.mathList.append(other)
-#         return self
-#     # This gives the object the .value attribute.
-#     @property
-#     def value(self):
-#         result = self.mathList[0].value
-#         for index, item in enumerate(self.mathList):
-#             if callable(item):
-#                 addend = self.mathList[index+1].value
-#                 result = item(result, addend)
-#         return result
-#     def __str__(self):
-#         return str(self.mathList)
-#     def __repr__(self):
-#         return str(self)
-#     def __hash__(self):
-#         return hash(tuple(self.mathList))
 
 
 class ListPL(Term):
@@ -343,19 +305,19 @@ def tryGoal(goal):
         varsToFill = [flatten(arg.value) for arg in goal.args[1]]
         print(strToWrite.format(*varsToFill), end="")
         yield True, wasCut
-    elif goal.pred == write_:
+    elif goal.pred == write:
         print(flatten(goal.args[0].value), end="")
         yield True, wasCut
-    elif goal.pred == nl_:
+    elif goal.pred == nl:
         print()
         yield True, wasCut
-    elif goal.pred == lt_:
+    elif goal.pred == lt:
         yield (goal.args[0].value < goal.args[1].value, wasCut)
-    elif goal.pred == le_:
+    elif goal.pred == le:
         yield (goal.args[0].value <= goal.args[1].value, wasCut)
-    elif goal.pred == gt_:
+    elif goal.pred == gt:
         yield (goal.args[0].value > goal.args[1].value, wasCut)
-    elif goal.pred == ge_:
+    elif goal.pred == ge:
         yield (goal.args[0].value >= goal.args[1].value, wasCut)
     elif goal.pred == cut:
         wasCut = True
@@ -366,7 +328,7 @@ def tryGoal(goal):
     elif goal.pred == notEqual:
         if goal.args[0].value != goal.args[1].value:
             yield (findVars(goal.args) or True, wasCut)
-    elif goal.pred == call_:
+    elif goal.pred == call:
         goalToCall = goal.args[0].value
         result = next(tryGoal(goalToCall))
         yield (result[0], wasCut)
@@ -467,24 +429,24 @@ is_ = Predicate("is_")
 is_("Q", "Q") >> []
 
 # fail/0.
-fail_ = Predicate("fail_")
+fail = Predicate("fail")
 
 # write/1.
-write_ = Predicate("write_")
+write = Predicate("write")
 
 # format/2: arg1 is a string with {}s for vars and arg2 is a list of vars.
 # e.g. format_("{} likes you.", ["X"]) or format_("{}", ["X"]).
 format_ = Predicate("format_")
 
-nl_ = Predicate("nl_")
+nl = Predicate("nl")
 
-member_ = Predicate("member_")
-member_("H", ["H", "|", "_"]) >> []
-member_("H", ["_", "|", "T"]) >> [member_("H", "T")]
+member = Predicate("member")
+member("H", ["H", "|", "_"]) >> []
+member("H", ["_", "|", "T"]) >> [member("H", "T")]
 
-append_ = Predicate("append_")
-append_([], "W", "W") >> []
-append_(["H", "|", "T"], "X", ["H", "|", "S"]) >> [append_("T", "X", "S")]
+append = Predicate("append")
+append([], "W", "W") >> []
+append(["H", "|", "T"], "X", ["H", "|", "S"]) >> [append("T", "X", "S")]
 
 
 # cut (!) predicate.
@@ -495,25 +457,25 @@ setEqual = Predicate("setEqual")
 # \=/2 predicate.
 notEqual = Predicate("notEqual")
 
-call_ = Predicate("call_")
+# This allows a goal to be used as an argument for another goal.
+call = Predicate("call")
 
-
+# \+/1 predicate.
 not_ = Predicate("not_")
-not_("A") >> [call_("A"), cut(), fail_()]
+not_("A") >> [call("A"), cut(), fail()]
 not_("_") >> []
 
 
-# </2 predicate.
-lt_ = Predicate("less than")
-le_ = Predicate("less than or equal")
-gt_ = Predicate("greater than")
-ge_ = Predicate("greater than or equal")
+# The comparison predicates.
+lt = Predicate("less than")
+le = Predicate("less than or equal")
+gt = Predicate("greater than")
+ge = Predicate("greater than or equal")
 
 
 between = Predicate("between")
-between("N", "M", "K") >> [le_("N", "M"), setEqual("K", "N")]
-between("N", "M", "K") >> [lt_("N", "M"), is_("N1", "N + 1"), between("N1", "M", "K")]
-
+between("N", "M", "K") >> [le("N", "M"), setEqual("K", "N")]
+between("N", "M", "K") >> [lt("N", "M"), is_("N1", "N + 1"), between("N1", "M", "K")]
 
 
 len_ = Predicate("len_")
@@ -521,12 +483,12 @@ len_([], 0) >> []
 len_(["_", "|", "T"], "A") >> [len_("T", "B"), is_("A", "B + 1")]
 
 
-permutation_ = Predicate("permutation_")
-permutation_([], []) >> []
-permutation_(["H", "|", "T"], "S") >> [permutation_("T", "P"), append_("X", "Y", "P"), append_("X", ["H", "|", "Y"], "S")]
+permutation = Predicate("permutation")
+permutation([], []) >> []
+permutation(["H", "|", "T"], "S") >> [permutation("T", "P"), append("X", "Y", "P"), append("X", ["H", "|", "Y"], "S")]
 
 
-reverse_ = Predicate("reverse_")
-reverse_("Xs", "Ys") >> [reverse_("Xs", [], "Ys", "Ys")]
-reverse_([], "Ys", "Ys", []) >> []
-reverse_(["X", "|", "Xs"], "Rs", "Ys", ["_", "|", "Bound"]) >> [reverse_("Xs", ["X", "|", "Rs"], "Ys", "Bound")]
+reverse = Predicate("reverse")
+reverse("Xs", "Ys") >> [reverse("Xs", [], "Ys", "Ys")]
+reverse([], "Ys", "Ys", []) >> []
+reverse(["X", "|", "Xs"], "Rs", "Ys", ["_", "|", "Bound"]) >> [reverse("Xs", ["X", "|", "Rs"], "Ys", "Bound")]
