@@ -286,8 +286,6 @@ studies("alex", "physics") >> []
 
 
 
-query << [var("X")]
-
 # query << [equals("3", 2), equals("X + 2", 4)]
 # query << [equals("X + 2", 4)]
 # equals("X + 2", 4)

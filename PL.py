@@ -78,7 +78,6 @@ class Query(list):
             wasCut = attempt[1]
             if not success:     # Check if this can be removed so False shows up. ***
                 break
-                # continue      # ***
             args = {}
             for argName in memo:
                 if isinstance(memo[argName], Var):
@@ -328,10 +327,6 @@ def tryGoal(goal):
         goalToCall = Goal(goalToCall.pred, goalToCall.args)
         result = next(tryGoal(goalToCall))
         yield (result[0], wasCut)
-    # elif goal.pred == var:
-    #     # if 
-    #     # print(goal.args[0].value == "Undefined")
-    #     yield (goal.args[0].value == "Undefined", wasCut)
     yield False, wasCut               # If all the alts failed, then the goal failed.
 
 
@@ -489,4 +484,3 @@ reverse("Xs", "Ys") >> [reverse("Xs", [], "Ys", "Ys")]
 reverse([], "Ys", "Ys", []) >> []
 reverse(["X", "|", "Xs"], "Rs", "Ys", ["_", "|", "Bound"]) >> [reverse("Xs", ["X", "|", "Rs"], "Ys", "Bound")]
 
-var = Predicate("var")
