@@ -155,7 +155,7 @@ ismember2("H", ["H", "|", "_"]) >> [cut()]
 ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 
 all_diff([]) >> []
-all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]    # Problem is member args are never created. ***
+all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]
 
 splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append("FirstPart", "SecondPart", "List"), length("FirstPart", "Pos")]
 
@@ -285,28 +285,9 @@ studies("alex", "physics") >> []
 ### Testing Zone ###
 
 
-
-# query << [equals("3", 2), equals("X + 2", 4)]
-# query << [equals("X + 2", 4)]
-# equals("X + 2", 4)
-
-# query << [equals(4, "X")]   # [{'X': '4'}]
-# query << [equals("X", "(4 + 5) * 2")]   # [{'X': '18'}]
-
-
-
-
-
-#### Test queries below FAIL ####  ***
-
-
-
-
-print(query)
-
-# ### To see results ###
-# for result in query:
-#     print(result)
-#     # # If you want to use the results, you can do something like this:
-#     # X = result["X"]
-#     # print(X)
+### Print results on seperate lines ###
+for result in query:
+    print(result)
+    # # If you want to use the results, you can do something like this:
+    # X = result["X"]
+    # print(X)

@@ -76,7 +76,7 @@ class Query(list):
         for attempt in itertools.islice(attempt, self.size):
             success = attempt[0]
             wasCut = attempt[1]
-            if not success:     # Check if this can be removed so False shows up. ***
+            if not success:
                 break
             args = {}
             for argName in memo:
@@ -99,7 +99,7 @@ class Query(list):
 
 # Goals must be completed in order to satisfy a query.
 class Goal():
-    def __init__(self, pred = [], args = []):       # Maybe change, since preds can't be empty. ***
+    def __init__(self, pred = [], args = []):
         self.name = pred.name
         self.pred = pred            # The predicate that is being queried.
         self.args = list(args)      # Create a list of the goal's arguments.
@@ -128,7 +128,6 @@ class Alt():
         self.args = args
         self.goals = goals
     def __str__(self):
-        # return "altArgs: " + str(self.args) + "\naltGoals: " + str(self.goals) + "\n"
         return "alt from pred: " + self.pred.name + "\naltArgs: " + str(self.args) + "\naltGoals: " + str(self.goals) + "\n"
     def __repr__(self):
         return "alt from pred: " + self.pred.name
@@ -149,7 +148,7 @@ class Term():
     def __init__(self, name, value):
         self.name = name
         self.value = value
-        self.children = []                  # The children are the variables that will change if this term has a value.
+        self.children = []      # The children are the variables that will change if this term has a value.
     @staticmethod
     def changeType(word):
         if isinstance(word, list):
@@ -172,10 +171,10 @@ class Term():
     def __hash__(self):
         return hash(repr(self))
     def unifyWith(self, altArg):
-        altArg.children.append(self)                        # The children are the variables we want to find out.
+        altArg.children.append(self)        # The children are the variables we want to find out.
         if self:
             altArg.value = self.value
-        changePath(altArg, altArg.value)  # Set all unified terms to new value.
+        changePath(altArg, altArg.value)    # Set all unified terms to new value.
         return True
 
 
@@ -191,7 +190,6 @@ class Var(Term):
 class Const(Term):  # A constant, aka an atom.
     def __init__(self, value):
         super().__init__(name = value, value = value)
-
 
 
 class Math(Term):
@@ -214,19 +212,18 @@ class Math(Term):
         return eval("".join([str(term) for term in toEval]))
     # This takes a string of math and turns it into a list of numbers and operators
     def mathToList(self, mathStr, memo = {}):
-        # Add more operators here! ***
         mathStr = mathStr.replace(" ", "")
         mathStr = mathStr.replace("+", " + ")
         mathStr = mathStr.replace("-", " - ")
         mathStr = mathStr.replace("*", " * ")
         mathStr = mathStr.replace("**", " ** ")
-        mathStr = mathStr.replace("^", " ** ")        # Prolog style for exponentiation.
+        mathStr = mathStr.replace("^", " ** ")          # Prolog style for exponentiation.
         mathStr = mathStr.replace("/", " / ")
         mathStr = mathStr.replace("//", " // ")
         mathStr = mathStr.replace("(", " ( ")
         mathStr = mathStr.replace(")", " ) ")
         mathStr = mathStr.replace("%", " % ")
-        mathStr = mathStr.replace("mod", " % ")   # Prolog style for modulo.
+        mathStr = mathStr.replace("mod", " % ")         # Prolog style for modulo.
         self.mathList = mathStr.split()
         for i in range(len(self.mathList)):
             if self.mathList[i] not in ["+", "-", "*", "**", "/", "//", "(", ")", "%", "mod"]:
@@ -270,7 +267,7 @@ def tryGoal(goal):
     # Make the goal a copy of itself, so that changing args here doesn't mess up the original args.
     goal = Goal(goal.pred, goal.args)   
     if len(goal.args) in goal.pred.alternatives:
-        alts = goal.pred.alternatives[len(goal.args)]       # The list of all alts with matching arity.
+        alts = goal.pred.alternatives[len(goal.args)]   # The list of all alts with matching arity.
         # If a variable already has a value, this goal cannot change it.
         # To ensure the value does not get reset, the variable must be changed to a Const.
         for argIndex, arg in enumerate(goal.args):
@@ -338,10 +335,10 @@ def tryAlt(query, alt):
     memo = {}
     altArgs = [create(arg, memo) for arg in alt.args]
     altGoals = [create(goal, memo) for goal in alt.goals]
-    goalsToTry = altGoals          # A list of goals that must be satisfied for this alt to succeed.
-    if not tryUnify(query.args, altArgs):    # If the alt can't be unified, then it fails.
+    goalsToTry = altGoals                   # A list of goals that must be satisfied for this alt to succeed.
+    if not tryUnify(query.args, altArgs):   # If the alt can't be unified, then it fails.
         yield False, wasCut
-    elif len(goalsToTry) > 0:       # If this alt has goals, try them.
+    elif len(goalsToTry) > 0:               # If this alt has goals, try them.
         for attempt in tryGoals(goalsToTry):
             wasCut = attempt[1]
             yield attempt
@@ -375,8 +372,8 @@ def tryGoals(goalsToTry):
                 goals[currGoal] = tryGoal(goalsToTry[currGoal])  # Reset the generator.
                 currGoal -= 1
         if not failed:
-            yield True, wasCut     # If we got here, then all the goals succeeded.
-            currGoal -= 1       # Go back a goal to try for another solution.
+            yield True, wasCut      # If we got here, then all the goals succeeded.
+            currGoal -= 1           # Go back a goal to try for another solution.
     yield False, wasCut
 
 
@@ -384,7 +381,7 @@ def changePath(arg, newValue):
     if isinstance(arg, Var):
         arg.value = newValue
     for child in arg.children:
-        changePath(child, newValue)         # Change each parent to the new value.
+        changePath(child, newValue)     # Change each child to the new value.
 
 
 # Returns a list of all Vars found in a list.
@@ -421,26 +418,28 @@ query = Query()
 equals = Predicate("equals")
 equals("Q", "Q") >> []
 
-# fail/0.
+# fail/0 predicate.
 fail = Predicate("fail")
 
-# write/1.
+# write/1 predicate.
 write = Predicate("write")
 
 # format/2: arg1 is a string with {}s for vars and arg2 is a list of vars.
 # e.g. format_("{} likes you.", ["X"]) or format_("{}", ["X"]).
 format_ = Predicate("format_")
 
+# nl/0 predicate.
 nl = Predicate("nl")
 
+# member/2 predicate.
 member = Predicate("member")
 member("H", ["H", "|", "_"]) >> []
 member("H", ["_", "|", "T"]) >> [member("H", "T")]
 
+# append/3 predicate.
 append = Predicate("append")
 append([], "W", "W") >> []
 append(["H", "|", "T"], "X", ["H", "|", "S"]) >> [append("T", "X", "S")]
-
 
 # cut (!) predicate.
 cut = Predicate("cut")
@@ -456,29 +455,28 @@ not_ = Predicate("not_")
 not_("A") >> [call("A"), cut(), fail()]
 not_("_") >> []
 
-
 # The comparison predicates.
 lt = Predicate("less than")
 le = Predicate("less than or equal")
 gt = Predicate("greater than")
 ge = Predicate("greater than or equal")
 
-
+# between/3 predicate.
 between = Predicate("between")
 between("N", "M", "K") >> [le("N", "M"), equals("K", "N")]
 between("N", "M", "K") >> [lt("N", "M"), equals("N1", "N + 1"), between("N1", "M", "K")]
 
-
+# len/2 predicate.
 length = Predicate("length")
 length([], 0) >> []
 length(["_", "|", "T"], "A") >> [length("T", "B"), equals("A", "B + 1")]
 
-
+# permutation/2 predicate.
 permutation = Predicate("permutation")
 permutation([], []) >> []
 permutation(["H", "|", "T"], "S") >> [permutation("T", "P"), append("X", "Y", "P"), append("X", ["H", "|", "Y"], "S")]
 
-
+# reverse/2 predicate.
 reverse = Predicate("reverse")
 reverse("Xs", "Ys") >> [reverse("Xs", [], "Ys", "Ys")]
 reverse([], "Ys", "Ys", []) >> []

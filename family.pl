@@ -63,23 +63,17 @@ child(eva, emma).
 child(jiri, alphonse).
 child(jiri, emma).
 
-% Sawyer added
 parent(A, B) :- child(B, A).
 
-% Question 3
 father(A, B) :- male(A), parent(A, B).
 mother(A, B) :- female(A), parent(A, B).
 
-% Question 4
 sibling(A, B) :- parent(X, A), parent(X, B), A \= B.
 
-% Question 5
 uncle(A, B) :- parent(X, B), sibling(A, X), male(A).
 aunt(A, B) :- parent(X, B), sibling(A, X), female(A).
 
-% Question 6
 ancestor(A, B) :- parent(A, B).
 ancestor(A, B) :- parent(A, X), ancestor(X, B).
 
-% Question 7
 first_cousin(A, B) :- parent(X, A), sibling(Y, X), parent(Y, B).
