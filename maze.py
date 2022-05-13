@@ -215,25 +215,25 @@ direction("w") >> []
 #    false.
 
 newPos("OldRow", "OldCol", "e", "OldRow", "NewCol") >> [
-    is_("NewCol", "OldCol + 1"), 
+    equals("NewCol", "OldCol + 1"), 
     not_(mazeWall("OldRow", "NewCol")), 
     mazeDimension("_", "Y"), 
     lt("NewCol", "Y"), 
     ge("NewCol", 0)]
 newPos("OldRow", "OldCol", "w", "OldRow", "NewCol") >> [
-    is_("NewCol", "OldCol - 1"), 
+    equals("NewCol", "OldCol - 1"), 
     not_(mazeWall("OldRow", "NewCol")), 
     mazeDimension("_", "Y"), 
     lt("NewCol", "Y"), 
     ge("NewCol", 0)]
 newPos("OldRow", "OldCol", "n", "NewRow", "OldCol") >> [
-    is_("NewRow", "OldRow - 1"), 
+    equals("NewRow", "OldRow - 1"), 
     not_(mazeWall("NewRow", "OldCol")), 
     mazeDimension("X", "_"), 
     lt("NewRow", "X"), 
     ge("NewRow", 0)]
 newPos("OldRow", "OldCol", "s", "NewRow", "OldCol") >> [
-    is_("NewRow", "OldRow + 1"), 
+    equals("NewRow", "OldRow + 1"), 
     not_(mazeWall("NewRow", "OldCol")), 
     mazeDimension("X", "_"), 
     lt("NewRow", "X"), 
@@ -275,3 +275,8 @@ solve("R", "C", "_NextR", "_NextC", "VisitedIn", "VisitedOut", "MoveListIn", "Mo
     solve("NewR", "NewC", "_", "_", "V2", "VisitedOut", "M2", "MoveListOut")]
 
 
+# Uncomment below to see unsolved maze:
+# query << [printUnsolvedMaze()]
+
+# Uncomment below to see solved maze:
+# query << [printSolvedMaze()]

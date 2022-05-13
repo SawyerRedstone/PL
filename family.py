@@ -85,3 +85,15 @@ ancestor("A", "B") >> [parent("A", "B")]
 ancestor("A", "B") >> [parent("A", "X"), ancestor("X", "B")]
 
 first_cousin("A", "B") >> [parent("X", "A"), sibling("Y", "X"), parent("Y", "B")]
+
+######################################
+# Examples below. Uncomment to test. #
+######################################
+
+# query << [male("X")]
+# query << [child("X", "emma"), male("X")]    # Compound query.
+# query << [parent("rosa", "kathryn")]
+# query << [father("john", "X")]
+# query << [ancestor("X", "bob")]
+
+# print(query)

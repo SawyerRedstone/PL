@@ -120,12 +120,12 @@ first_cousin("A", "B") >> [parent("X", "A"), sibling("Y", "X"), parent("Y", "B")
 
 collatz("N", "N") >> []
 collatz("N0", "N") >> [
-    is_(0, "N0 % 2"), 
-    is_("N1", "N0 / 2"), 
+    equals(0, "N0 % 2"), 
+    equals("N1", "N0 / 2"), 
     collatz("N1", "N")]
 collatz("N0", "N") >> [
-    is_(1, "N0 % 2"), 
-    is_("N1", "3 * N0 + 1"), 
+    equals(1, "N0 % 2"), 
+    equals("N1", "3 * N0 + 1"), 
     collatz("N1", "N")]
 
 inboth("A", "B", "X") >> [member("X", "A"), member("X", "B")]
@@ -137,19 +137,19 @@ is_digesting("A", "B") >> [just_ate("A", "B")]
 is_digesting("A", "B") >> [just_ate("A", "C"), is_digesting("C", "B")]
 
 count("A", "A") >> []
-count("A", "C") >> [is_("B", "A + 1"), count("B", "C")]
+count("A", "C") >> [equals("B", "A + 1"), count("B", "C")]
 
 always_true() >> []
 
-increment_all([], "X") >> [setEqual("X", [])]
-increment_all(["H", "|", "T"], "X") >> [is_("Y", "H + 1"), increment_all("T", "Z"), setEqual("X", ["Y", "|", "Z"])]
+increment_all([], "X") >> [equals("X", [])]
+increment_all(["H", "|", "T"], "X") >> [equals("Y", "H + 1"), increment_all("T", "Z"), equals("X", ["Y", "|", "Z"])]
 
 basicList(["a", "b", "c"]) >> []
 
 merge("A", [], "A") >> []
 merge([], "B", "B") >> []
-merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [lt("H1", "H2"), merge("T1", ["H2", "|", "T2"], "Z"), setEqual("X", ["H1", "|", "Z"])]
-merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [ge("H1", "H2"), merge(["H1", "|", "T1"], "T2", "Z"), setEqual("X", ["H2", "|", "Z"])]
+merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [lt("H1", "H2"), merge("T1", ["H2", "|", "T2"], "Z"), equals("X", ["H1", "|", "Z"])]
+merge(["H1", "|", "T1"], ["H2", "|", "T2"], "X") >> [ge("H1", "H2"), merge(["H1", "|", "T1"], "T2", "Z"), equals("X", ["H2", "|", "Z"])]
 
 ismember2("H", ["H", "|", "_"]) >> [cut()]
 ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
@@ -157,7 +157,7 @@ ismember2("H", ["_", "|", "T"]) >> [ismember2("H", "T")]
 all_diff([]) >> []
 all_diff(["H", "|", "T"]) >> [not_(member("H", "T")), all_diff("T")]    # Problem is member args are never created. ***
 
-splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append("FirstPart", "SecondPart", "List"), len_("FirstPart", "Pos")]
+splitAt("Pos", "List", "FirstPart", "SecondPart") >> [append("FirstPart", "SecondPart", "List"), length("FirstPart", "Pos")]
 
 sublist("A", "B") >> [append("A", "_", "B")]
 sublist("A", ["_", "|", "T"]) >> [sublist("A", "T")]
@@ -215,29 +215,29 @@ studies("alex", "physics") >> []
 # query << [all_diff(["a", "b", "c"])]
 # query << [all_diff(["a", "b", "c", "b"])]
 # query << [between(1, 3, "X"), between(1, 3, "Y"), between(1, 3, "Z"), all_diff(["X", "Y", "Z"])]
-# query << [not_(member("X", ["a", "b", "c"])), setEqual("X", "f")]
-# query << [setEqual("X", "f"), not_(member("X", ["a", "b", "c"]))]
-# query << [setEqual("X", ["q", "y", "z", "w"]), not_(len_("X", 4))]
-# query << [setEqual("X", "3 + 4"), not_(setEqual("X", 99))]
+# query << [not_(member("X", ["a", "b", "c"])), equals("X", "f")]
+# query << [equals("X", "f"), not_(member("X", ["a", "b", "c"]))]
+# query << [equals("X", ["q", "y", "z", "w"]), not_(length("X", 4))]
+# query << [equals("X", "3 + 4"), not_(equals("X", 99))]
 # query << [write("hi")]
-# query << [is_("X", "2 + 4")]
-# query << [is_(6, "2 + 4")]
-# query << [is_(6, "2 + 8")]
-# query << [is_("X", "2 + hi")]
+# query << [equals("X", "2 + 4")]
+# query << [equals(6, "2 + 4")]
+# query << [equals(6, "2 + 8")]
+# query << [equals("X", "2 + hi")]
 # query << [fail()]
 # query << [is_digesting("tiger", "grass")]
 # query << [is_digesting("X", "Y")]
 # query(3) << [collatz(10, "L")]          # To see only some results, use query(number_of_results).
 # query(10) << [count(0, "X")]
 # query << [always_true()]
-# query << [setEqual("X", [])]
+# query << [equals("X", [])]
 # query << [basicList(["X", "Y", "Z"])]
-# query << [is_("X", "2 + (4 * 5)")]
-# query << [is_("X", "2 + 4 * 5")]
-# query << [is_("X", "2 * 4 + 5")]
-# query << [is_("X", "2 * 4 * 5 + 2")]
-# query << [is_("X", "4 - 3")]
-# query << [is_(4, "2 + X + 5")]     # is_ pred can't have vars on right side.
+# query << [equals("X", "2 + (4 * 5)")]
+# query << [equals("X", "2 + 4 * 5")]
+# query << [equals("X", "2 * 4 + 5")]
+# query << [equals("X", "2 * 4 * 5 + 2")]
+# query << [equals("X", "4 - 3")]
+# query << [equals(4, "2 + X + 5")]     # equals/2 pred can't have ununified vars on right side.
 # query << [append([1, 2, 3], ["a", "b"], "X")]
 # query << [append("A", "B", [1, 2, 3, 4, 5])]
 # query << [member(1, [1, 2, 3, 1])]
@@ -250,10 +250,10 @@ studies("alex", "physics") >> []
 # query << [sublist(["a", "b", "a"], ["b", "a", "a", "b"])]
 # query << [sublist(["a"], ["b", "a", "a", "b"])]
 # query << [sublist(["a", "b", "d"], ["a", "b", "c", "d"])]
-# query << [member("X", [4, 5, 14, 15, 24, 25]), gt("X", 10), cut(), is_(0, "X % 2")]
-# query << [member("X", [4, 5, 14, 15, 24, 25]), gt("X", 10), is_(0, "X % 2")]
-# query << [member("X", [4, 5, 14, 15, 24, 25]), cut(), gt("X", 10), is_(0, "X % 2")]
-# query << [member("X", [3, 4, 5, 13, 14, 15, 23, 24, 25]), gt("X", 10), cut(), is_(0, "X % 2")]
+# query << [member("X", [4, 5, 14, 15, 24, 25]), gt("X", 10), cut(), equals(0, "X % 2")]
+# query << [member("X", [4, 5, 14, 15, 24, 25]), gt("X", 10), equals(0, "X % 2")]
+# query << [member("X", [4, 5, 14, 15, 24, 25]), cut(), gt("X", 10), equals(0, "X % 2")]
+# query << [member("X", [3, 4, 5, 13, 14, 15, 23, 24, 25]), gt("X", 10), cut(), equals(0, "X % 2")]
 # query << [isSorted([1, 2])]
 # query << [isSorted([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])]
 # query << [isSorted([1, 2, 3, 4, 10, 6, 7, 8, 9, 10])]
@@ -273,11 +273,11 @@ studies("alex", "physics") >> []
 # query << [newPos(11, 1, "e", "NewR", "NewC")]
 # query << [newPos(11, 1, "s", "NewR", "NewC")]
 # query << [move(11, 1, "NewR", "NewC", [[11, 2]], "Visited", ["w", "w", "w"], "Dirs")]
-# query << [reverse_([1,2,3], "X")]
-query << [printUnsolvedMaze()]
+# query << [reverse([1,2,3], "X")]
+# query << [printUnsolvedMaze()]
 # query << [not_(male("bob"))]
 # query << [printSolvedMaze()]
-# query << [between(1, 5, "X"), not_(setEqual("X", 3))]
+# query << [between(1, 5, "X"), not_(equals("X", 3))]
 # query << [format_("Hello, I'm {} and you are {}.", ["sawyer", "john"])]
 # query << [format_("{}'s brother is {}.", ["Child1", "Child2"])]
 # query << [prime_factors(12, "X")]
@@ -286,7 +286,15 @@ query << [printUnsolvedMaze()]
 ### Testing Zone ###
 
 
-# query << [is_("X", "(4 + 5) * 2")]
+# query << [equals("3", 2), equals("X + 2", 4)]
+# query << [equals("X + 2", 4)]
+# equals("X + 2", 4)
+
+# query << [equals(4, "X")]   # [{'X': '4'}]
+# query << [equals("X", "(4 + 5) * 2")]   # [{'X': '18'}]
+
+
+
 
 print(query)
 

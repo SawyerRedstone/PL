@@ -20,8 +20,6 @@ def create(term, memo = {}):
             else:
                 vars = []
             memo[str(term)] = Goal(term.pred, [strToWrite, vars])
-        elif term.name == "setEqual":
-            memo[str(term)] = Goal(term.pred, [create(term.args[0], memo), create("'" + term.args[1] + "'", memo)])
         else:
             memo[str(term)] = Goal(term.pred, [create(arg, memo) for arg in term.args])
     elif term[0].isupper() and " " not in term:
@@ -322,9 +320,6 @@ def tryGoal(goal):
     elif goal.pred == cut:
         wasCut = True
         yield True, wasCut
-    elif goal.pred == setEqual:
-        if tryUnify([goal.args[0]], [goal.args[1]]):
-            yield (findVars(goal.args) or True, wasCut)
     elif goal.pred == notEqual:
         if goal.args[0].value != goal.args[1].value:
             yield (findVars(goal.args) or True, wasCut)
@@ -424,9 +419,9 @@ def flatten(toFlatten):
 # Use to make queries.
 query = Query()
 
-# The Prolog is/2 predicate.
-is_ = Predicate("is_")
-is_("Q", "Q") >> []
+# Evaluates both sides and then tries to unify.
+equals = Predicate("equals")
+equals("Q", "Q") >> []
 
 # fail/0.
 fail = Predicate("fail")
@@ -452,8 +447,6 @@ append(["H", "|", "T"], "X", ["H", "|", "S"]) >> [append("T", "X", "S")]
 # cut (!) predicate.
 cut = Predicate("cut")
 
-# =/2 predicate.
-setEqual = Predicate("setEqual")
 # \=/2 predicate.
 notEqual = Predicate("notEqual")
 
@@ -474,13 +467,13 @@ ge = Predicate("greater than or equal")
 
 
 between = Predicate("between")
-between("N", "M", "K") >> [le("N", "M"), setEqual("K", "N")]
-between("N", "M", "K") >> [lt("N", "M"), is_("N1", "N + 1"), between("N1", "M", "K")]
+between("N", "M", "K") >> [le("N", "M"), equals("K", "N")]
+between("N", "M", "K") >> [lt("N", "M"), equals("N1", "N + 1"), between("N1", "M", "K")]
 
 
-len_ = Predicate("len_")
-len_([], 0) >> []
-len_(["_", "|", "T"], "A") >> [len_("T", "B"), is_("A", "B + 1")]
+length = Predicate("length")
+length([], 0) >> []
+length(["_", "|", "T"], "A") >> [length("T", "B"), equals("A", "B + 1")]
 
 
 permutation = Predicate("permutation")
