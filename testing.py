@@ -237,11 +237,12 @@ studies("alex", "physics") >> []
 # query << [equals("X", "2 * 4 + 5")]
 # query << [equals("X", "2 * 4 * 5 + 2")]
 # query << [equals("X", "4 - 3")]
-# query << [equals(4, "2 + X + 5")]     # equals/2 pred can't have ununified vars on right side.
+# query << [equals(4, "2 + X + 5")]     # Math can't have ununified vars within equation.
 # query << [append([1, 2, 3], ["a", "b"], "X")]
 # query << [append("A", "B", [1, 2, 3, 4, 5])]
 # query << [member(1, [1, 2, 3, 1])]
 # query << [between(1, 5, "K")]
+# query << [between(1, 5, "X"), not_(equals("X", 3))]
 # query << [lt(1, "1 + 2")]
 # query << [lt("1 + 2", 1)]
 # query << [splitAt(3, ["a", "b", "c", "d", "e", "f", "g", "h"], "A", "B")]
@@ -277,14 +278,15 @@ studies("alex", "physics") >> []
 # query << [printUnsolvedMaze()]
 # query << [not_(male("bob"))]
 # query << [printSolvedMaze()]
-# query << [between(1, 5, "X"), not_(equals("X", 3))]
 # query << [format_("Hello, I'm {} and you are {}.", ["sawyer", "john"])]
 # query << [format_("{}'s brother is {}.", ["Child1", "Child2"])]
-# query << [prime_factors(12, "X")]
 
 
 ### Testing Zone ###
 
+
+
+query << [var("X")]
 
 # query << [equals("3", 2), equals("X + 2", 4)]
 # query << [equals("X + 2", 4)]
@@ -296,11 +298,13 @@ studies("alex", "physics") >> []
 
 
 
-print(query)
-
 
 #### Test queries below FAIL ####  ***
 
+
+
+
+print(query)
 
 # ### To see results ###
 # for result in query:

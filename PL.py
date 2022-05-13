@@ -78,6 +78,7 @@ class Query(list):
             wasCut = attempt[1]
             if not success:     # Check if this can be removed so False shows up. ***
                 break
+                # continue      # ***
             args = {}
             for argName in memo:
                 if isinstance(memo[argName], Var):
@@ -99,7 +100,7 @@ class Query(list):
 
 # Goals must be completed in order to satisfy a query.
 class Goal():
-    def __init__(self, pred = [], args = []):       # Maybe change order, since preds can't be empty. ***
+    def __init__(self, pred = [], args = []):       # Maybe change, since preds can't be empty. ***
         self.name = pred.name
         self.pred = pred            # The predicate that is being queried.
         self.args = list(args)      # Create a list of the goal's arguments.
@@ -119,7 +120,6 @@ class Goal():
         if isinstance(other, Var):
             other.value = self
         return True
-
 
 
 # Alts are individual alternatives that were added to a predicate.
@@ -268,9 +268,8 @@ def tryGoal(goal):
     if isinstance(goal, Var):
         goal = goal.value
     wasCut = False
-    # Keep copy of original goal args. This is not a deep copy, so changed values will remain changed here.
-    # This allows Vars that are temporary changed to Consts to return back to their Var form.
-    originalArgs = [arg for arg in goal.args]
+    # Make the goal a copy of itself, so that changing args here doesn't mess up the original args.
+    goal = Goal(goal.pred, goal.args)   
     if len(goal.args) in goal.pred.alternatives:
         alts = goal.pred.alternatives[len(goal.args)]       # The list of all alts with matching arity.
         # If a variable already has a value, this goal cannot change it.
@@ -325,10 +324,14 @@ def tryGoal(goal):
             yield (findVars(goal.args) or True, wasCut)
     elif goal.pred == call:
         goalToCall = goal.args[0].value
+        # Make the called goal a copy of itself, so that changing args here doesn't mess up the original args.
+        goalToCall = Goal(goalToCall.pred, goalToCall.args)
         result = next(tryGoal(goalToCall))
         yield (result[0], wasCut)
-    # After trying all alts, reset any Vars that were turned into Consts.
-    goal.args = originalArgs
+    # elif goal.pred == var:
+    #     # if 
+    #     # print(goal.args[0].value == "Undefined")
+    #     yield (goal.args[0].value == "Undefined", wasCut)
     yield False, wasCut               # If all the alts failed, then the goal failed.
 
 
@@ -485,3 +488,5 @@ reverse = Predicate("reverse")
 reverse("Xs", "Ys") >> [reverse("Xs", [], "Ys", "Ys")]
 reverse([], "Ys", "Ys", []) >> []
 reverse(["X", "|", "Xs"], "Rs", "Ys", ["_", "|", "Bound"]) >> [reverse("Xs", ["X", "|", "Rs"], "Ys", "Bound")]
+
+var = Predicate("var")

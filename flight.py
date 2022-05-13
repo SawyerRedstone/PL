@@ -49,19 +49,24 @@ flight("'YYC'", "'YVR'") >> []
 #    the departure airport to the arrival airport
 
 # direct flight
-flights("D", "A") >> [airport("Dname", "D"), airport("Aname", "A"), 
-    flight("D", "A"), format_("Direct flight {}({}) to {}({})\n", ["Dname", "D", "Aname", "A"])]
+flights("D", "A") >> [
+    airport("Dname", "D"), 
+    airport("Aname", "A"), 
+    flight("D", "A"), 
+    format_("Direct flight {}({}) to {}({})\n", ["Dname", "D", "Aname", "A"])]
 
 
 # one-stop
 flights("D", "A") >> [
-    flight("D", "I"), notEqual("I", "A"), flight("I", "A"), airport("Dname", "D"), airport("Iname", "I"), airport("Aname", "A"),
+    flight("D", "I"), notEqual("I", "A"), flight("I", "A"), 
+    airport("Dname", "D"), airport("Iname", "I"), airport("Aname", "A"),
     format_("Flight {}({}) to {}({}) via {}({})\n", ["Dname", "D", "Aname", "A", "Iname", "I"])]
 
 
 # two-stop
 flights("D", "A") >> [
-    flight("D", "I"), notEqual("I", "A"), flight("I", "J"), notEqual("J", "A"), notEqual("J", "D"), flight("J", "A"), airport("Dname", "D"),
+    flight("D", "I"), notEqual("I", "A"), flight("I", "J"), notEqual("J", "A"),
+    notEqual("J", "D"), flight("J", "A"), airport("Dname", "D"),
     airport("Aname", "A"), airport("Iname", "I"), airport("Jname", "J"),
     format_("Flight {}({}) to {}({}) via {}({}) and {}({})\n", ["Dname", "D", "Aname", "A", "Iname", "I", "Jname", "J"])]
 
